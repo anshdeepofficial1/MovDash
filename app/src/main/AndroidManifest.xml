@@ -12,6 +12,7 @@
         android:usesCleartextTraffic="true">
         <activity
             android:name=".player.PlayerActivity"
+            android:screenOrientation="sensorLandscape"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"
             android:hardwareAccelerated="true"
             android:theme="@style/Theme.MovDash"

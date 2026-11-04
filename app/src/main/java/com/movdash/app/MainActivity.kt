@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.movdash.app.data.*
 import com.movdash.app.player.PlayerActivity
+import com.movdash.app.ui.onboarding.OnboardingScreen
 import com.movdash.app.ui.theme.MovDashTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -63,6 +64,20 @@ private enum class AppTab { HOME, DISCOVER, LIBRARY, PROFILE }
 private fun MovDashApp() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("movdash", Context.MODE_PRIVATE) }
+    var showOnboarding by remember {
+        mutableStateOf(!prefs.getBoolean("has_completed_onboarding", false))
+    }
+
+    if (showOnboarding) {
+        OnboardingScreen(
+            onFinished = {
+                prefs.edit().putBoolean("has_completed_onboarding", true).apply()
+                showOnboarding = false
+            }
+        )
+        return
+    }
+
     var apiBase by remember {
         mutableStateOf(prefs.getString("api_base", "https://movdash-production.up.railway.app/") ?: "https://movdash-production.up.railway.app/")
     }
@@ -321,7 +336,8 @@ private fun MovDashApp() {
                     AppTab.PROFILE -> ProfileScreen(
                         watchlistCount = watchlist.size,
                         historyCount = history.size,
-                        onOpenSettings = { showAppSettings = true }
+                        onOpenSettings = { showAppSettings = true },
+                        onOpenOnboarding = { showOnboarding = true }
                     )
                 }
             }
@@ -1013,7 +1029,8 @@ private fun LibraryScreen(
 private fun ProfileScreen(
     watchlistCount: Int,
     historyCount: Int,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onOpenOnboarding: () -> Unit
 ) {
     val context = LocalContext.current
     var userName by remember { mutableStateOf("Movie Enthusiast") }
@@ -1103,6 +1120,17 @@ private fun ProfileScreen(
             Icon(Icons.Default.Tune, contentDescription = null, tint = Color(0xFFE9B96E))
             Spacer(Modifier.width(8.dp))
             Text("Customize Playback & Audio Preferences")
+        }
+
+        Button(
+            onClick = onOpenOnboarding,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF161F2E), contentColor = Color(0xFFE9B96E))
+        ) {
+            Icon(Icons.Default.HelpOutline, contentDescription = null, tint = Color(0xFFE9B96E))
+            Spacer(Modifier.width(8.dp))
+            Text("Revisit Welcome Tour & Features")
         }
 
         // Cache & About
