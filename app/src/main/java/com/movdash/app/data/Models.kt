@@ -38,7 +38,8 @@ data class MediaDetails(
     val status: String? = null,
     @SerializedName("number_of_seasons") val numberOfSeasons: Int? = null,
     @SerializedName("number_of_episodes") val numberOfEpisodes: Int? = null,
-    val seasons: List<SeasonSummary> = emptyList()
+    val seasons: List<SeasonSummary> = emptyList(),
+    @SerializedName("watch_providers") val watchProviders: Map<String, WatchProviderRegion> = emptyMap()
 )
 
 data class SeasonSummary(
@@ -95,3 +96,20 @@ data class SourceInfo(
 )
 
 data class HealthStatus(val status: String, val app: String? = null)
+
+
+data class WatchProviderRegion(
+    val link: String? = null,
+    @SerializedName("flatrate") val streaming: List<WatchProvider> = emptyList(),
+    val free: List<WatchProvider> = emptyList(),
+    val ads: List<WatchProvider> = emptyList(),
+    val rent: List<WatchProvider> = emptyList(),
+    val buy: List<WatchProvider> = emptyList()
+)
+
+data class WatchProvider(
+    @SerializedName("provider_id") val providerId: Int? = null,
+    @SerializedName("provider_name") val providerName: String = "Streaming provider",
+    @SerializedName("logo_path") val logoPath: String? = null,
+    @SerializedName("display_priority") val displayPriority: Int? = null
+)
