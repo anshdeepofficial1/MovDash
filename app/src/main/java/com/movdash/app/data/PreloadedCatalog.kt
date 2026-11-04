@@ -374,7 +374,8 @@ object PreloadedCatalog {
         "Crime", "Drama", "Fantasy", "Horror", "Mystery", "Thriller"
     )
 
-    val allDiscover = (spotlightItems + trendingMovies + trendingSeries + popularMovies + popularSeries + upcomingTitles)
+    val allDiscover: List<Movie>
+        get() = (spotlightItems + trendingMovies + trendingSeries + popularMovies + popularSeries + upcomingTitles + UniverseData.allUniverses.flatMap { u -> u.items.map { it.movie } })
         .distinctBy { "${it.mediaType}-${it.id}" }
 
     val preloadedSeasons: Map<Pair<Int, Int>, SeasonDetails> = mapOf(

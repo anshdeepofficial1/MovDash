@@ -9,8 +9,11 @@ object LibraryManager {
     private const val KEY_WATCHLIST = "watchlist"
     private const val KEY_HISTORY = "history"
     private const val KEY_FAVORITES = "favorites"
+    private const val KEY_DOWNLOADS = "downloads"
+    private const val KEY_WATCHED_IDS = "watched_timeline_ids"
     private val gson = Gson()
 
+    // WATCHLIST
     fun getWatchlist(context: Context): List<Movie> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(KEY_WATCHLIST, null) ?: return emptyList()
@@ -49,6 +52,7 @@ object LibraryManager {
         }
     }
 
+    // HISTORY
     fun getHistory(context: Context): List<Movie> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(KEY_HISTORY, null) ?: return emptyList()
@@ -75,6 +79,7 @@ object LibraryManager {
         saveList(context, KEY_HISTORY, emptyList())
     }
 
+    // FAVORITES
     fun getFavorites(context: Context): List<Movie> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(KEY_FAVORITES, null) ?: return emptyList()
@@ -100,6 +105,69 @@ object LibraryManager {
 
     fun isFavorite(context: Context, movieId: Int, mediaType: String): Boolean {
         return getFavorites(context).any { it.id == movieId && it.mediaType == mediaType }
+    }
+
+    // OFFLINE DOWNLOADS
+    fun getDownloads(context: Context): List<DownloadedItem> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val json = prefs.getString(KEY_DOWNLOADS, null) ?: return emptyList()
+        return try {
+            val type = object : TypeToken<List<DownloadedItem>>() {}.type
+            gson.fromJson(json, type) ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun addDownload(context: Context, item: DownloadedItem) {
+        val list = getDownloads(context).toMutableList()
+        list.removeAll { it.id == item.id && it.episodeNumber == item.episodeNumber }
+        list.add(0, item)
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_DOWNLOADS, gson.toJson(list)).apply()
+    }
+
+    fun removeDownload(context: Context, id: Int, episodeNumber: Int?) {
+        val list = getDownloads(context).toMutableList()
+        list.removeAll { it.id == id && it.episodeNumber == episodeNumber }
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_DOWNLOADS, gson.toJson(list)).apply()
+    }
+
+    fun isDownloaded(context: Context, id: Int, episodeNumber: Int?): Boolean {
+        return getDownloads(context).any { it.id == id && it.episodeNumber == episodeNumber }
+    }
+
+    fun getTotalDownloadSizeMb(context: Context): Int {
+        return getDownloads(context).sumOf { it.fileSizeMb }
+    }
+
+    // UNIVERSE WATCHED TIMELINE TRACKING
+    fun isWatched(context: Context, movieId: Int): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val watchedSet = prefs.getStringSet(KEY_WATCHED_IDS, emptySet()) ?: emptySet()
+        return watchedSet.contains(movieId.toString())
+    }
+
+    fun toggleWatched(context: Context, movieId: Int): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val watchedSet = prefs.getStringSet(KEY_WATCHED_IDS, emptySet())?.toMutableSet() ?: mutableSetOf()
+        val idStr = movieId.toString()
+        val isNowWatched = if (watchedSet.contains(idStr)) {
+            watchedSet.remove(idStr)
+            false
+        } else {
+            watchedSet.add(idStr)
+            true
+        }
+        prefs.edit().putStringSet(KEY_WATCHED_IDS, watchedSet).apply()
+        return isNowWatched
+    }
+
+    fun getWatchedCountForUniverse(context: Context, universe: Universe): Int {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val watchedSet = prefs.getStringSet(KEY_WATCHED_IDS, emptySet()) ?: emptySet()
+        return universe.items.count { watchedSet.contains(it.movie.id.toString()) }
     }
 
     private fun saveList(context: Context, key: String, list: List<Movie>) {
