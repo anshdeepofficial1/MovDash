@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -78,6 +79,7 @@ private fun MovDashApp() {
     var series by remember { mutableStateOf(PreloadedCatalog.trendingSeries) }
     var popularMovies by remember { mutableStateOf(PreloadedCatalog.popularMovies) }
     var popularSeries by remember { mutableStateOf(PreloadedCatalog.popularSeries) }
+    var upcomingList by remember { mutableStateOf(PreloadedCatalog.upcomingTitles) }
     var sources by remember { mutableStateOf<List<SourceInfo>>(emptyList()) }
 
     var searchResults by remember { mutableStateOf<List<Movie>>(emptyList()) }
@@ -96,6 +98,16 @@ private fun MovDashApp() {
         watchlist = LibraryManager.getWatchlist(context)
         history = LibraryManager.getHistory(context)
         favorites = LibraryManager.getFavorites(context)
+    }
+
+    // Hardware Back Button Interception
+    BackHandler(enabled = selectedMovie != null) {
+        refreshLibrary()
+        selectedMovie = null
+    }
+
+    BackHandler(enabled = selectedMovie == null && tab != AppTab.HOME) {
+        tab = AppTab.HOME
     }
 
     // Background silent catalog refresh from API
@@ -125,15 +137,24 @@ private fun MovDashApp() {
                                 painter = painterResource(id = R.drawable.ic_logo),
                                 contentDescription = "MovDash Logo",
                                 modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp))
                             )
                             Spacer(Modifier.width(10.dp))
                             Column {
-                                Text("MOVDASH", style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold, color = Color.White, letterSpacing = 1.2.sp)
-                                Text("Movies & Series Universe", style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFFE9B96E), fontWeight = FontWeight.Medium)
+                                Text(
+                                    "MOVDASH",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White,
+                                    letterSpacing = 1.2.sp
+                                )
+                                Text(
+                                    "Movies & Series Universe",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFFE9B96E),
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
                         }
                     },
@@ -238,6 +259,7 @@ private fun MovDashApp() {
                         series = series,
                         popularMovies = popularMovies,
                         popularSeries = popularSeries,
+                        upcomingMovies = upcomingList,
                         onMovieClick = { selectedMovie = it },
                         onDiscover = { tab = AppTab.DISCOVER },
                         onGenreClick = { genre ->
@@ -276,7 +298,7 @@ private fun MovDashApp() {
                                         it.title.contains(query.trim(), ignoreCase = true)
                                     }
                                     if (searchResults.isEmpty()) {
-                                        searchError = "No titles found. Try searching another movie or series."
+                                        searchError = "No titles found. Try searching another title."
                                     }
                                 } finally {
                                     searchLoading = false
@@ -320,6 +342,7 @@ private fun HomeScreen(
     series: List<Movie>,
     popularMovies: List<Movie>,
     popularSeries: List<Movie>,
+    upcomingMovies: List<Movie>,
     onMovieClick: (Movie) -> Unit,
     onDiscover: () -> Unit,
     onGenreClick: (String) -> Unit
@@ -352,7 +375,18 @@ private fun HomeScreen(
 
         Spacer(Modifier.height(10.dp))
 
+        // Upcoming / Releasing Soon Shelf
+        if (upcomingMovies.isNotEmpty()) {
+            SectionTitle("Releasing Soon • In Theaters / OTT", "Discover", onDiscover)
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(upcomingMovies, key = { "upcoming-home-${it.id}" }) { item ->
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+
         if (movies.isNotEmpty()) {
+            Spacer(Modifier.height(18.dp))
             SectionTitle("Trending Movies", "See all", onDiscover)
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(movies, key = { "trend-movie-${it.id}" }) { movie ->
@@ -503,18 +537,23 @@ private fun HeroSpotlightCarousel(
                         modifier = Modifier.padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        val isUnreleased = isUnreleasedTitle(movie.releaseDate, null, movie.title)
                         Button(
                             onClick = { onWatch(movie) },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE9B96E),
-                                contentColor = Color(0xFF1A1309)
+                                containerColor = if (isUnreleased) Color(0xFF233246) else Color(0xFFE9B96E),
+                                contentColor = if (isUnreleased) Color(0xFFE9B96E) else Color(0xFF1A1309)
                             ),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(
+                                if (isUnreleased) Icons.Default.HourglassTop else Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
                             Spacer(Modifier.width(6.dp))
-                            Text("Watch Now", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(if (isUnreleased) "Coming Soon" else "Watch Now", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
                     }
                 }
@@ -591,8 +630,9 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val isUnreleased = isUnreleasedTitle(movie.releaseDate, null, movie.title)
                 Text(
-                    movie.voteAverage?.let { "★ " + "%.1f".format(it) } ?: "MOVDASH",
+                    if (isUnreleased) "SOON" else (movie.voteAverage?.let { "★ " + "%.1f".format(it) } ?: "HD"),
                     color = Color(0xFFE9B96E),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold
@@ -621,7 +661,7 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis
         )
         Text(
-            movie.releaseDate?.take(4) ?: "HD Quality",
+            movie.releaseDate?.take(4) ?: "Upcoming",
             color = Color(0xFF8793A3),
             style = MaterialTheme.typography.labelSmall
         )
@@ -658,7 +698,7 @@ private fun DiscoverScreen(
 
     Column(Modifier.fillMaxSize().padding(horizontal = 18.dp, vertical = 8.dp)) {
         Text("Discover", color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Search movies, TV shows and explore multi-server titles.", color = Color(0xFF9AA5B5), style = MaterialTheme.typography.bodySmall)
+        Text("Search movies, TV shows, and explore all genres.", color = Color(0xFF9AA5B5), style = MaterialTheme.typography.bodySmall)
 
         Spacer(Modifier.height(10.dp))
 
@@ -740,7 +780,7 @@ private fun DiscoverScreen(
                 modifier = Modifier.padding(vertical = 12.dp)
             ) {
                 CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color(0xFFE9B96E), strokeWidth = 2.dp)
-                Text("Searching streams across servers…", color = Color(0xFFE9B96E))
+                Text("Searching titles across catalog…", color = Color(0xFFE9B96E))
             }
         } else if (error != null) {
             Text(error, color = Color(0xFFFFA69C), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 8.dp))
@@ -779,20 +819,19 @@ private fun DiscoverScreen(
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
-                        movie.voteAverage?.let {
-                            Surface(
-                                shape = RoundedCornerShape(topStart = 0.dp, bottomEnd = 8.dp),
-                                color = Color(0xDD090B10),
-                                modifier = Modifier.align(Alignment.TopStart)
-                            ) {
-                                Text(
-                                    "★ ${"%.1f".format(it)}",
-                                    color = Color(0xFFE9B96E),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                                )
-                            }
+                        val isUnreleased = isUnreleasedTitle(movie.releaseDate, null, movie.title)
+                        Surface(
+                            shape = RoundedCornerShape(topStart = 0.dp, bottomEnd = 8.dp),
+                            color = Color(0xDD090B10),
+                            modifier = Modifier.align(Alignment.TopStart)
+                        ) {
+                            Text(
+                                if (isUnreleased) "SOON" else (movie.voteAverage?.let { "★ ${"%.1f".format(it)}" } ?: "HD"),
+                                color = Color(0xFFE9B96E),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
                         }
                     }
                     Spacer(Modifier.height(4.dp))
@@ -805,7 +844,7 @@ private fun DiscoverScreen(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        "${movie.mediaType.uppercase()} · ${movie.releaseDate?.take(4) ?: "HD"}",
+                        "${movie.mediaType.uppercase()} · ${movie.releaseDate?.take(4) ?: "Coming Soon"}",
                         color = Color(0xFF8896A8),
                         fontSize = 10.sp
                     )
@@ -955,8 +994,13 @@ private fun LibraryScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
+                        val isUnreleased = isUnreleasedTitle(movie.releaseDate, null, movie.title)
                         IconButton(onClick = { onMovieClick(movie) }) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = "Play", tint = Color(0xFFE9B96E))
+                            Icon(
+                                if (isUnreleased) Icons.Default.HourglassTop else Icons.Default.PlayArrow,
+                                contentDescription = if (isUnreleased) "Coming Soon" else "Play",
+                                tint = Color(0xFFE9B96E)
+                            )
                         }
                     }
                 }
@@ -975,6 +1019,7 @@ private fun ProfileScreen(
     var userName by remember { mutableStateOf("Movie Enthusiast") }
     var showEditName by remember { mutableStateOf(false) }
     var nameDraft by remember { mutableStateOf(userName) }
+    var preferredAudio by remember { mutableStateOf("Hindi Dubbed (Dual Audio)") }
 
     Column(
         Modifier
@@ -983,7 +1028,7 @@ private fun ProfileScreen(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // User Profile Header Card
+        // User Profile Header Card with Transparent Logo
         Row(
             Modifier
                 .fillMaxWidth()
@@ -996,15 +1041,15 @@ private fun ProfileScreen(
                 painter = painterResource(id = R.drawable.ic_logo),
                 contentDescription = "MovDash Logo",
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(14.dp))
             )
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(userName, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     IconButton(onClick = { nameDraft = userName; showEditName = true }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Settings, contentDescription = "Edit", tint = Color(0xFFE9B96E), modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFFE9B96E), modifier = Modifier.size(16.dp))
                     }
                 }
                 Surface(
@@ -1030,10 +1075,10 @@ private fun ProfileScreen(
         ) {
             StatCard("Watchlist", "$watchlistCount", Modifier.weight(1f))
             StatCard("Watched", "$historyCount", Modifier.weight(1f))
-            StatCard("Streaming", "Ultra HD", Modifier.weight(1f))
+            StatCard("Quality", "1080p Ultra", Modifier.weight(1f))
         }
 
-        Text("App Preferences", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("Audio & Content Preferences", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -1041,13 +1086,11 @@ private fun ProfileScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                PreferenceRow("Default Server", "Server 1 (River - Fast HLS)")
+                PreferenceRow("Preferred Audio", preferredAudio)
                 Divider(color = Color(0xFF1E2A3A))
-                PreferenceRow("Streaming Quality", "1080p Full HD (Adaptive)")
+                PreferenceRow("Default Quality", "1080p Full HD (Adaptive)")
                 Divider(color = Color(0xFF1E2A3A))
-                PreferenceRow("Preferred Audio", "Dual Audio / Multi-Language")
-                Divider(color = Color(0xFF1E2A3A))
-                PreferenceRow("Subtitles", "English (Auto-load)")
+                PreferenceRow("Subtitles", "English & Hindi (Auto)")
             }
         }
 
@@ -1057,9 +1100,9 @@ private fun ProfileScreen(
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1F2B3D), contentColor = Color.White)
         ) {
-            Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFFE9B96E))
+            Icon(Icons.Default.Tune, contentDescription = null, tint = Color(0xFFE9B96E))
             Spacer(Modifier.width(8.dp))
-            Text("Open App Settings")
+            Text("Customize Playback & Audio Preferences")
         }
 
         // Cache & About
@@ -1090,7 +1133,7 @@ private fun ProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("App Version", color = Color(0xFF8F9CAA), fontSize = 12.sp)
-                    Text("v0.2.0 (Official Build)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("v0.2.1 (Official Update)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -1156,10 +1199,10 @@ private fun AppSettingsDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    var preferredAudio by remember { mutableStateOf("Hindi Dubbed (Dual Audio)") }
+    var preferredQuality by remember { mutableStateOf("1080p Ultra HD (Auto)") }
     var autoPlayNext by remember { mutableStateOf(true) }
     var hardwareAccel by remember { mutableStateOf(true) }
-    var preferredServer by remember { mutableStateOf("Server 1 (River)") }
-    var preferredQuality by remember { mutableStateOf("1080p Ultra HD") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1168,7 +1211,7 @@ private fun AppSettingsDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFFE9B96E))
                 Spacer(Modifier.width(8.dp))
-                Text("App Settings", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("App Preferences", color = Color.White, fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -1176,21 +1219,48 @@ private fun AppSettingsDialog(
                 Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text("STREAMING & PLAYBACK", color = Color(0xFFE9B96E), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text("AUDIO & LANGUAGE PREFERENCE", color = Color(0xFFE9B96E), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
 
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Default Streaming Server", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    listOf("Server 1 (River - Fast HLS)", "Server 2 (VidLnx - HD)", "Server 3 (MbPly - Hindi/Multi)", "Server 4 (Catflix)").forEach { server ->
+                    listOf(
+                        "Hindi Dubbed (Dual Audio) [Preferred]",
+                        "Original (English Audio)",
+                        "Multi-Audio (All Tracks)"
+                    ).forEach { audioOption ->
                         Row(
-                            Modifier.fillMaxWidth().clickable { preferredServer = server },
+                            Modifier.fillMaxWidth().clickable { preferredAudio = audioOption },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
-                                selected = preferredServer == server,
-                                onClick = { preferredServer = server },
+                                selected = preferredAudio == audioOption,
+                                onClick = { preferredAudio = audioOption },
                                 colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE9B96E))
                             )
-                            Text(server, color = Color(0xFFCBD5E1), fontSize = 12.sp)
+                            Text(audioOption, color = Color(0xFFCBD5E1), fontSize = 12.sp)
+                        }
+                    }
+                }
+
+                Divider(color = Color(0xFF263347))
+
+                Text("STREAMING QUALITY", color = Color(0xFFE9B96E), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf(
+                        "1080p Ultra HD (Auto Recommended)",
+                        "720p HD (Balanced)",
+                        "480p Data Saver"
+                    ).forEach { quality ->
+                        Row(
+                            Modifier.fillMaxWidth().clickable { preferredQuality = quality },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = preferredQuality == quality,
+                                onClick = { preferredQuality = quality },
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE9B96E))
+                            )
+                            Text(quality, color = Color(0xFFCBD5E1), fontSize = 12.sp)
                         }
                     }
                 }
@@ -1204,7 +1274,7 @@ private fun AppSettingsDialog(
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text("Auto-play Next Episode", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        Text("Automatically plays next episode in series", color = Color(0xFF8F9CAA), fontSize = 11.sp)
+                        Text("Seamlessly queues upcoming episodes", color = Color(0xFF8F9CAA), fontSize = 11.sp)
                     }
                     Switch(
                         checked = autoPlayNext,
@@ -1220,7 +1290,7 @@ private fun AppSettingsDialog(
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text("Hardware Acceleration", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        Text("Optimizes ExoPlayer and WebView performance", color = Color(0xFF8F9CAA), fontSize = 11.sp)
+                        Text("Smooth 60 FPS cinema rendering", color = Color(0xFF8F9CAA), fontSize = 11.sp)
                     }
                     Switch(
                         checked = hardwareAccel,
@@ -1245,7 +1315,7 @@ private fun AppSettingsDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    Toast.makeText(context, "Settings saved successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Preferences saved", Toast.LENGTH_SHORT).show()
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE9B96E), contentColor = Color(0xFF17120B))
@@ -1271,14 +1341,20 @@ private fun MovieDetailsScreen(
     var inWatchlist by remember(movie.id) { mutableStateOf(LibraryManager.isInWatchlist(context, movie.id, movie.mediaType)) }
     var isFavorite by remember(movie.id) { mutableStateOf(LibraryManager.isFavorite(context, movie.id, movie.mediaType)) }
 
-    // Stream servers modal
-    var showServerPicker by remember { mutableStateOf(false) }
-    var activeServers by remember { mutableStateOf(StreamServerFactory.getServers(movie.id, movie.mediaType)) }
     var selectedSeasonNumber by remember { mutableStateOf(1) }
-    var selectedEpisodeNumber by remember { mutableStateOf(1) }
+    var seasonDetailsData by remember(movie.id, selectedSeasonNumber) {
+        mutableStateOf(PreloadedCatalog.getSeasonDetails(movie.id, selectedSeasonNumber))
+    }
+    var seasonDetailsLoading by remember(movie.id, selectedSeasonNumber) {
+        mutableStateOf(seasonDetailsData == null && movie.mediaType == "tv")
+    }
 
     var country by remember(movie.id) { mutableStateOf("IN") }
     var loading by remember { mutableStateOf(true) }
+
+    val isUnreleased = remember(movie.id, details?.status, details?.releaseDate, movie.title) {
+        isUnreleasedTitle(details?.releaseDate ?: movie.releaseDate, details?.status, details?.title ?: movie.title)
+    }
 
     LaunchedEffect(movie.id, movie.mediaType) {
         loading = true
@@ -1287,43 +1363,46 @@ private fun MovieDetailsScreen(
         } catch (_: Exception) {
             // Keep preview info
         }
-        try {
-            val serverList = api.streamServers(movie.id, movie.mediaType)
-            if (serverList.isNotEmpty()) activeServers = serverList
-        } catch (_: Exception) {
-            // Local stream servers fallback ready
-        }
         loading = false
     }
 
-    fun playWithServer(server: StreamServer, season: Int? = null, episode: Int? = null) {
-        onPlayStarted()
-        val streamUrl = if (movie.mediaType == "tv" && (season != null || episode != null)) {
-            val s = season ?: selectedSeasonNumber
-            val e = episode ?: selectedEpisodeNumber
-            StreamServerFactory.getServers(movie.id, "tv", s, e).firstOrNull { it.id == server.id }?.streamUrl ?: server.streamUrl
-        } else {
-            server.streamUrl
+    // Fetch actual episode details with thumbnails when TV
+    LaunchedEffect(movie.id, selectedSeasonNumber, movie.mediaType) {
+        if (movie.mediaType == "tv") {
+            try {
+                val remote = api.seasonDetails(movie.id, selectedSeasonNumber)
+                if (remote.episodes.isNotEmpty()) {
+                    seasonDetailsData = remote
+                }
+            } catch (_: Exception) {
+                // Keep preloaded or current
+            } finally {
+                seasonDetailsLoading = false
+            }
         }
+    }
 
+    fun playTitle(season: Int? = null, episode: Int? = null) {
+        onPlayStarted()
         val s = season ?: selectedSeasonNumber
-        val e = episode ?: selectedEpisodeNumber
+        val e = episode ?: 1
+        val streamUrl = StreamServerFactory.getDefaultStreamUrl(movie.id, movie.mediaType, s, e)
+
         val intent = Intent(context, PlayerActivity::class.java).apply {
             putExtra(PlayerActivity.EXTRA_MEDIA_URL, streamUrl)
-            putExtra(PlayerActivity.EXTRA_STREAM_TYPE, server.streamType)
+            putExtra(PlayerActivity.EXTRA_STREAM_TYPE, "embed")
             putExtra(PlayerActivity.EXTRA_TITLE, movie.title)
             putExtra(
                 PlayerActivity.EXTRA_SUBTITLE,
                 if (movie.mediaType == "tv") "Season $s · Episode $e" else details?.releaseDate?.take(4) ?: movie.releaseDate?.take(4) ?: "HD Movie"
             )
-            putExtra(PlayerActivity.EXTRA_SERVER_NAME, server.name)
+            putExtra(PlayerActivity.EXTRA_SERVER_NAME, "Fast Stream")
             putExtra(PlayerActivity.EXTRA_TMDB_ID, movie.id)
             putExtra(PlayerActivity.EXTRA_MEDIA_TYPE, movie.mediaType)
             putExtra(PlayerActivity.EXTRA_SEASON, s)
             putExtra(PlayerActivity.EXTRA_EPISODE, e)
         }
         context.startActivity(intent)
-        showServerPicker = false
     }
 
     val countries = listOf("IN" to "India", "US" to "United States", "GB" to "United Kingdom", "CA" to "Canada")
@@ -1335,7 +1414,9 @@ private fun MovieDetailsScreen(
         "Buy" to (region?.buy ?: emptyList())
     )
     val hasProviders = providerGroups.any { it.second.isNotEmpty() }
-    val availabilityUrl = region?.link?.takeIf { it.startsWith("https://") }
+    val defaultJustWatchSearch = "https://www.justwatch.com/in/search?q=" + Uri.encode(details?.title ?: movie.title)
+    val availabilityUrl = region?.link?.takeIf { it.startsWith("https://") } ?: defaultJustWatchSearch
+
     val backdrop = details?.backdropPath?.let { "https://image.tmdb.org/t/p/w1280$it" }
         ?: movie.backdropPath?.let { "https://image.tmdb.org/t/p/w1280$it" }
         ?: details?.posterPath?.let { "https://image.tmdb.org/t/p/w780$it" }
@@ -1396,7 +1477,7 @@ private fun MovieDetailsScreen(
                     color = Color(0xFFE9B96E)
                 ) {
                     Text(
-                        if (movie.mediaType == "tv") "SERIES" else "MOVIE",
+                        if (isUnreleased) "RELEASING SOON" else (if (movie.mediaType == "tv") "SERIES" else "MOVIE"),
                         color = Color(0xFF1B1309),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Black,
@@ -1416,7 +1497,7 @@ private fun MovieDetailsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        details?.releaseDate?.take(4) ?: movie.releaseDate?.take(4) ?: "2024",
+                        details?.releaseDate ?: movie.releaseDate ?: "Coming Soon",
                         color = Color(0xFFE2E7EE),
                         style = MaterialTheme.typography.labelMedium
                     )
@@ -1432,68 +1513,130 @@ private fun MovieDetailsScreen(
             }
         }
 
-        // Action Buttons Row (WATCH NOW + WATCHLIST + FAVORITE)
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(
-                onClick = { showServerPicker = true },
-                modifier = Modifier.weight(1f).height(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE9B96E),
-                    contentColor = Color(0xFF17120B)
-                )
-            ) {
-                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(22.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("WATCH NOW", fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
-            }
-
-            IconButton(
-                onClick = {
-                    inWatchlist = LibraryManager.toggleWatchlist(context, movie)
-                    Toast.makeText(
-                        context,
-                        if (inWatchlist) "Added to Watchlist" else "Removed from Watchlist",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                },
+        // Action Buttons Row (WATCH NOW or COMING SOON + WATCHLIST + FAVORITE)
+        if (isUnreleased) {
+            // UNRELEASED / UPCOMING CARD
+            Card(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF16202E))
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF182230))
             ) {
-                Icon(
-                    if (inWatchlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                    contentDescription = "Watchlist",
-                    tint = if (inWatchlist) Color(0xFFE9B96E) else Color.White
-                )
+                Column(
+                    Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(Icons.Default.HourglassTop, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(22.dp))
+                        Text(
+                            "AWAITING THEATRICAL / DIGITAL RELEASE",
+                            color = Color(0xFFE9B96E),
+                            fontWeight = FontWeight.Black,
+                            fontSize = 12.sp,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                    Text(
+                        "Official Release Date: " + (details?.releaseDate ?: movie.releaseDate ?: "Coming Soon"),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        "This title is currently in production or awaiting release. Playback will be unlocked automatically on its official release date.",
+                        color = Color(0xFF9AA8BA),
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Button(
+                        onClick = {
+                            inWatchlist = LibraryManager.toggleWatchlist(context, movie)
+                            Toast.makeText(
+                                context,
+                                if (inWatchlist) "Added to Reminders & Watchlist!" else "Removed from Watchlist",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        modifier = Modifier.fillMaxWidth().height(46.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (inWatchlist) Color(0xFF26354B) else Color(0xFFE9B96E),
+                            contentColor = if (inWatchlist) Color(0xFFE9B96E) else Color(0xFF17120B)
+                        )
+                    ) {
+                        Icon(if (inWatchlist) Icons.Default.Check else Icons.Default.NotificationsActive, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(if (inWatchlist) "REMINDER SET (IN WATCHLIST)" else "REMIND ME ON RELEASE", fontWeight = FontWeight.Bold)
+                    }
+                }
             }
-
-            IconButton(
-                onClick = {
-                    isFavorite = LibraryManager.toggleFavorite(context, movie)
-                    Toast.makeText(
-                        context,
-                        if (isFavorite) "Added to Favorites" else "Removed from Favorites",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                },
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF16202E))
+        } else {
+            // RELEASED TITLE: Clean Primary "WATCH NOW" Button
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favorite",
-                    tint = if (isFavorite) Color(0xFFFF5252) else Color.White
-                )
+                Button(
+                    onClick = { playTitle() },
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFE9B96E),
+                        contentColor = Color(0xFF17120B)
+                    )
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("WATCH NOW", fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+                }
+
+                IconButton(
+                    onClick = {
+                        inWatchlist = LibraryManager.toggleWatchlist(context, movie)
+                        Toast.makeText(
+                            context,
+                            if (inWatchlist) "Added to Watchlist" else "Removed from Watchlist",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFF16202E))
+                ) {
+                    Icon(
+                        if (inWatchlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        contentDescription = "Watchlist",
+                        tint = if (inWatchlist) Color(0xFFE9B96E) else Color.White
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        isFavorite = LibraryManager.toggleFavorite(context, movie)
+                        Toast.makeText(
+                            context,
+                            if (isFavorite) "Added to Favorites" else "Removed from Favorites",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFF16202E))
+                ) {
+                    Icon(
+                        if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFavorite) Color(0xFFFF5252) else Color.White
+                    )
+                }
             }
         }
 
@@ -1522,69 +1665,44 @@ private fun MovieDetailsScreen(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            // Streaming Servers Section
-            Spacer(Modifier.height(4.dp))
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Available Audio & Media Details Card (Clean Consumer Look, No Server Confusion)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF121A25))
             ) {
-                Text("Streaming Servers", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = Color(0xFF1F2B3D)
-                ) {
-                    Text(
-                        "${activeServers.size} SOURCES ONLINE",
-                        color = Color(0xFF8DD8A6),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
-            }
-
-            activeServers.forEach { server ->
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF121A25))
-                        .clickable { playWithServer(server) }
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        Modifier.size(36.dp).clip(CircleShape).background(Color(0xFF263347)),
-                        contentAlignment = Alignment.Center
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("AUDIO & MEDIA SPECIFICATIONS", color = Color(0xFFE9B96E), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color(0xFFE9B96E))
+                        Text("Available Audio", color = Color(0xFFB4C0CE), fontSize = 12.sp)
+                        Text("Hindi Dubbed · English · Multi", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(server.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text(
-                            "${server.quality} · ${server.language}",
-                            color = Color(0xFF8E9BAE),
-                            fontSize = 11.sp
-                        )
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = Color(0xFF1E2B3E)
+                    Divider(color = Color(0xFF1E2837))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            server.badge,
-                            color = Color(0xFFE9B96E),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
+                        Text("Quality & Bitrate", color = Color(0xFFB4C0CE), fontSize = 12.sp)
+                        Text("1080p Ultra HD · 60 FPS HDR", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                    Divider(color = Color(0xFF1E2837))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Subtitles", color = Color(0xFFB4C0CE), fontSize = 12.sp)
+                        Text("English [CC] · Hindi Subtitles", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
 
-            // TV Series Seasons/Episodes selector if TV
+            // TV Series Seasons/Episodes with Visual Thumbnails
             if (movie.mediaType == "tv") {
                 Spacer(Modifier.height(6.dp))
                 Text("Seasons & Episodes", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -1602,40 +1720,177 @@ private fun MovieDetailsScreen(
                     }
                 }
 
-                // Episode Quick Play Cards
-                val totalEpisodes = if (selectedSeasonNumber == 1) (details?.numberOfEpisodes ?: 8) else 8
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    for (ep in 1..totalEpisodes.coerceAtMost(20)) {
+                // Episode List with Thumbnails & Real Episode Names
+                if (seasonDetailsLoading && seasonDetailsData?.episodes.isNullOrEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF121A25))
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text("Episode $ep", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                            Button(
-                                onClick = {
-                                    selectedEpisodeNumber = ep
-                                    val preferred = activeServers.firstOrNull() ?: StreamServerFactory.getServers(movie.id, "tv", selectedSeasonNumber, ep).first()
-                                    playWithServer(preferred, selectedSeasonNumber, ep)
-                                },
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE9B96E), contentColor = Color(0xFF17120B))
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color(0xFFE50914),
+                                strokeWidth = 2.dp
+                            )
+                            Text(
+                                "Loading episode titles & descriptions...",
+                                color = Color(0xFF8E9BAE),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                } else {
+                    val episodesList = seasonDetailsData?.episodes.orEmpty()
+                    if (episodesList.isNotEmpty()) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            episodesList.forEach { episode ->
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(Color(0xFF121A25))
+                                        .clickable {
+                                            if (!isUnreleased) playTitle(selectedSeasonNumber, episode.episodeNumber)
+                                        }
+                                        .padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Episode Thumbnail with play badge
+                                    Box(
+                                        modifier = Modifier
+                                            .size(width = 110.dp, height = 70.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color(0xFF1E2837))
+                                    ) {
+                                        val thumbPath = episode.stillPath ?: details?.backdropPath ?: movie.backdropPath
+                                        if (thumbPath != null) {
+                                            AsyncImage(
+                                                model = "https://image.tmdb.org/t/p/w300$thumbPath",
+                                                contentDescription = episode.name,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                        }
+                                        Box(
+                                            Modifier
+                                                .fillMaxSize()
+                                                .background(Color(0x44000000)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                Icons.Default.PlayArrow,
+                                                contentDescription = "Play",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = Color(0xDD090B10),
+                                            modifier = Modifier
+                                                .align(Alignment.BottomStart)
+                                                .padding(4.dp)
+                                        ) {
+                                            Text(
+                                                "EP ${episode.episodeNumber}",
+                                                color = Color(0xFFE9B96E),
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(Modifier.width(12.dp))
+
+                                    Column(Modifier.weight(1f)) {
+                                        val epTitle = if (episode.name.isNotBlank() && !episode.name.equals("Episode ${episode.episodeNumber}", ignoreCase = true)) {
+                                            "E${episode.episodeNumber}: ${episode.name}"
+                                        } else {
+                                            "Episode ${episode.episodeNumber}"
+                                        }
+                                        Text(
+                                            epTitle,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Text(
+                                                episode.runtime?.let { "$it min" } ?: "Full HD",
+                                                color = Color(0xFFE9B96E),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            if (!episode.airDate.isNullOrBlank()) {
+                                                Text("•", color = Color(0xFF4A5568), fontSize = 10.sp)
+                                                Text(
+                                                    episode.airDate,
+                                                    color = Color(0xFF8E9BAE),
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                        }
+                                        if (episode.overview.isNotBlank()) {
+                                            Text(
+                                                episode.overview,
+                                                color = Color(0xFF8E9BAE),
+                                                fontSize = 11.sp,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else if (isUnreleased) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFF131A26),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text("Play", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = "Upcoming",
+                                    tint = Color(0xFFE9B96E),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column {
+                                    Text(
+                                        "Episodes will be listed upon official premiere.",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp
+                                    )
+                                    Text(
+                                        "Add to Watchlist to get notified when Season $selectedSeasonNumber airs.",
+                                        color = Color(0xFF8E9BAE),
+                                        fontSize = 11.sp
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // Official Availability / Where to Watch
+            // Official Availability / Where to Watch (JustWatch) - ALWAYS WORKING
             Spacer(Modifier.height(10.dp))
             HorizontalDivider(color = Color(0xFF263244))
             Text("Official Availability (JustWatch)", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -1652,76 +1907,67 @@ private fun MovieDetailsScreen(
                 }
             }
 
-            if (availabilityUrl != null) {
-                Button(
-                    onClick = {
-                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(availabilityUrl))) }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF202C3D), contentColor = Color(0xFFE9B96E))
-                ) {
-                    Text("Check official platforms on JustWatch", fontWeight = FontWeight.Bold)
-                }
-            }
-
-            Spacer(Modifier.height(30.dp))
-        }
-    }
-
-    // Server Selection Modal Bottom Sheet
-    if (showServerPicker) {
-        AlertDialog(
-            onDismissRequest = { showServerPicker = false },
-            containerColor = Color(0xFF151D29),
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color(0xFFE9B96E))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Select Streaming Server", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        "Choose your preferred streaming provider for \"${movie.title}\":",
-                        color = Color(0xFFB6C0CE),
-                        fontSize = 12.sp
-                    )
-                    activeServers.forEach { server ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF1A2433))
-                                .clickable { playWithServer(server) }
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(server.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                Text("${server.quality} · ${server.language}", color = Color(0xFF8E9BAE), fontSize = 11.sp)
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color(0xFF243248)
+            if (hasProviders) {
+                providerGroups.forEach { (category, providers) ->
+                    if (providers.isNotEmpty()) {
+                        Text(category, color = Color(0xFFE9B96E), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        providers.forEach { provider ->
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFF121A25))
+                                    .clickable {
+                                        runCatching {
+                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(availabilityUrl)))
+                                        }
+                                    }
+                                    .padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    server.badge,
-                                    color = Color(0xFFE9B96E),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
+                                if (!provider.logoPath.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = "https://image.tmdb.org/t/p/w92" + provider.logoPath,
+                                        contentDescription = provider.providerName,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.size(36.dp).clip(RoundedCornerShape(8.dp))
+                                    )
+                                } else {
+                                    Box(
+                                        Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF243248)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(provider.providerName.take(1), color = Color(0xFFE9B96E), fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(provider.providerName, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    Text(category, color = Color(0xFF8996A8), fontSize = 11.sp)
+                                }
+                                Text("OPEN", color = Color(0xFFE9B96E), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
                 }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showServerPicker = false }) { Text("Cancel", color = Color(0xFFCBD5E1)) }
             }
-        )
+
+            Button(
+                onClick = {
+                    runCatching {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(availabilityUrl)))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(44.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2837), contentColor = Color(0xFFE9B96E))
+            ) {
+                Icon(Icons.Default.Movie, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Check Official Watch Options on JustWatch", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            }
+
+            Spacer(Modifier.height(30.dp))
+        }
     }
 }

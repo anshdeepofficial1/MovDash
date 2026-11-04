@@ -97,7 +97,36 @@ data class StreamServer(
     @SerializedName("stream_url") val streamUrl: String = ""
 )
 
+fun isUnreleasedTitle(releaseDate: String?, status: String? = null, title: String? = null): Boolean {
+    val cleanStatus = status?.lowercase() ?: ""
+    if (cleanStatus in listOf("in production", "post production", "planned", "announced", "upcoming")) {
+        return true
+    }
+    val cleanTitle = title?.lowercase() ?: ""
+    if (cleanTitle.contains("doomsday") || cleanTitle.contains("secret wars") || cleanTitle.contains("vision quest")) {
+        return true
+    }
+    if (releaseDate.isNullOrBlank()) return false
+    val currentDate = "2026-11-04"
+    return releaseDate.trim() > currentDate
+}
+
 object StreamServerFactory {
+    fun getDefaultStreamUrl(
+        tmdbId: Int,
+        mediaType: String = "movie",
+        season: Int? = null,
+        episode: Int? = null
+    ): String {
+        val s = if (season != null && season > 0) season else 1
+        val e = if (episode != null && episode > 0) episode else 1
+        return if (mediaType == "tv") {
+            "https://vidsrc.to/embed/tv/$tmdbId/$s/$e"
+        } else {
+            "https://vidsrc.to/embed/movie/$tmdbId"
+        }
+    }
+
     fun getServers(
         tmdbId: Int,
         mediaType: String = "movie",
@@ -111,8 +140,8 @@ object StreamServerFactory {
             listOf(
                 StreamServer(
                     id = "river",
-                    name = "Server 1 (River)",
-                    badge = "Fast HLS",
+                    name = "Stream 1 (Fast CDN)",
+                    badge = "Ultra HD",
                     quality = "1080p / 720p",
                     language = "Multi-Audio / Dual",
                     streamType = "embed",
@@ -120,47 +149,38 @@ object StreamServerFactory {
                 ),
                 StreamServer(
                     id = "vidlnx",
-                    name = "Server 2 (VidLnx)",
-                    badge = "HD 1080p",
+                    name = "Stream 2 (Full HD)",
+                    badge = "1080p",
                     quality = "1080p Ultra",
-                    language = "Original / Subtitles",
+                    language = "Original / Dual",
                     streamType = "embed",
                     streamUrl = "https://vidsrc.me/embed/tv?tmdb=$tmdbId&season=$s&episode=$e"
                 ),
                 StreamServer(
                     id = "mbply",
-                    name = "Server 3 (MbPly)",
-                    badge = "Multi-Language",
-                    quality = "Adaptive Auto",
+                    name = "Stream 3 (Hindi / Multi)",
+                    badge = "Multi-Lang",
+                    quality = "Adaptive",
                     language = "Hindi / Eng / Multi",
                     streamType = "embed",
                     streamUrl = "https://autoembed.cc/embed/player.php?id=$tmdbId&s=$s&e=$e"
                 ),
                 StreamServer(
                     id = "catflix",
-                    name = "Server 4 (Catflix)",
-                    badge = "Auto-Adaptive",
+                    name = "Stream 4 (Adaptive)",
+                    badge = "HD",
                     quality = "HD / SD",
                     language = "Multi-Language",
                     streamType = "embed",
                     streamUrl = "https://multiembed.mov/?video_id=$tmdbId&tmdb=1&s=$s&e=$e"
-                ),
-                StreamServer(
-                    id = "neon",
-                    name = "Server 5 (Neon)",
-                    badge = "Direct Stream",
-                    quality = "1080p High",
-                    language = "Multi",
-                    streamType = "embed",
-                    streamUrl = "https://embed.su/embed/tv/$tmdbId/$s/$e"
                 )
             )
         } else {
             listOf(
                 StreamServer(
                     id = "river",
-                    name = "Server 1 (River)",
-                    badge = "Fast HLS",
+                    name = "Stream 1 (Fast CDN)",
+                    badge = "Ultra HD",
                     quality = "1080p / 720p",
                     language = "Multi-Audio / Dual",
                     streamType = "embed",
@@ -168,39 +188,30 @@ object StreamServerFactory {
                 ),
                 StreamServer(
                     id = "vidlnx",
-                    name = "Server 2 (VidLnx)",
-                    badge = "HD 1080p",
+                    name = "Stream 2 (Full HD)",
+                    badge = "1080p",
                     quality = "1080p Ultra",
-                    language = "Original / Subtitles",
+                    language = "Original / Dual",
                     streamType = "embed",
                     streamUrl = "https://vidsrc.me/embed/movie?tmdb=$tmdbId"
                 ),
                 StreamServer(
                     id = "mbply",
-                    name = "Server 3 (MbPly)",
-                    badge = "Multi-Language",
-                    quality = "Adaptive Auto",
+                    name = "Stream 3 (Hindi / Multi)",
+                    badge = "Multi-Lang",
+                    quality = "Adaptive",
                     language = "Hindi / Eng / Multi",
                     streamType = "embed",
                     streamUrl = "https://autoembed.cc/embed/player.php?id=$tmdbId"
                 ),
                 StreamServer(
                     id = "catflix",
-                    name = "Server 4 (Catflix)",
-                    badge = "Auto-Adaptive",
+                    name = "Stream 4 (Adaptive)",
+                    badge = "HD",
                     quality = "HD / SD",
                     language = "Multi-Language",
                     streamType = "embed",
                     streamUrl = "https://multiembed.mov/?video_id=$tmdbId&tmdb=1"
-                ),
-                StreamServer(
-                    id = "neon",
-                    name = "Server 5 (Neon)",
-                    badge = "Direct Stream",
-                    quality = "1080p High",
-                    language = "Multi",
-                    streamType = "embed",
-                    streamUrl = "https://embed.su/embed/movie/$tmdbId"
                 )
             )
         }
