@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: movdash-api
+    runtime: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_NAME
+        value: MovDash API
+      - key: APP_ENV
+        value: production
+      - key: TMDB_API_KEY
+        sync: false
+      - key: JELLYFIN_BASE_URL
+        sync: false
+      - key: JELLYFIN_API_KEY
+        sync: false
+      - key: REQUEST_TIMEOUT_SECONDS
+        value: "20"
+      - key: CORS_ORIGINS
+        value: "*"
