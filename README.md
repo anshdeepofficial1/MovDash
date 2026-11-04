@@ -2,42 +2,39 @@
 
 An Android-first movie discovery and authorized multi-source playback platform.
 
-## First milestone
-This repository starts with a modular FastAPI backend:
-- Health and configuration endpoints
-- TMDB movie search for metadata (not video streams)
-- Jellyfin connection health and library listing for servers you own or are authorized to access
-- A provider adapter contract for future authorized integrations
-- Docker setup and basic API tests
+## Repository layout
 
-## Run locally
-```bash
-cd backend
-python -m venv .venv
-# Windows: .venv\\Scripts\\activate
-# macOS/Linux: source .venv/bin/activate
-pip install -r requirements-dev.txt
-cp .env.example .env
-uvicorn app.main:app --reload
-```
-Open http://127.0.0.1:8000/docs
+- `app/` — native Android application (Kotlin + Jetpack Compose + Media3 player foundation)
+- `backend/` — FastAPI API, TMDB catalogue and Jellyfin integration
+- `docs/` — architecture and implementation notes
 
-Configure `TMDB_API_KEY`, `JELLYFIN_BASE_URL`, and `JELLYFIN_API_KEY` in `backend/.env`.
-Never commit real credentials. TMDB provides metadata, not movie streams. Jellyfin is intended for a server you own or are authorized to access.
+## Android app
 
-## API
+Application ID: `com.movdash.app`  
+Minimum Android version: API 26  
+Debug build: `gradle :app:assembleDebug`
+
+The app includes Home, Discover/Search, Library and Profile screens. Configure the backend URL from Settings. Android emulator default: `http://10.0.2.2:8000/`. For a physical phone, use the computer's LAN address or a deployed HTTPS backend.
+
+## Backend
+
+See the [backend README](backend/README.md) and [architecture notes](docs/ARCHITECTURE.md).
+
+The backend provides:
 - `GET /health`
 - `GET /api/v1/config/status`
+- `GET /api/v1/catalog/trending`
 - `GET /api/v1/catalog/search?q=Inception`
 - `GET /api/v1/sources`
 - `GET /api/v1/sources/jellyfin/health`
 - `GET /api/v1/sources/jellyfin/movies`
 
-## Tests
-```bash
-cd backend
-pip install -r requirements-dev.txt
-pytest -q
-```
+TMDB provides metadata, not video streams. Jellyfin integration is for a server the operator/user owns or is authorized to access. The Media3 player module is included; secure playback sessions are the next integration milestone.
 
-See [architecture](docs/ARCHITECTURE.md) and [implementation plan](docs/IMPLEMENTATION_PLAN.md).
+## Android debug APK
+
+GitHub Actions builds a debug APK on relevant pushes and manual workflow dispatch. Download the `movdash-debug-apk` artifact from the [Actions page](https://github.com/anshdeepofficial1/MovDash/actions).
+
+## Security
+
+Never commit API keys or Jellyfin tokens. Before public deployment, add user authentication, per-user encrypted provider credentials, HTTPS, rate limiting and source-rights checks.
