@@ -142,9 +142,13 @@ async def search(
 @router.get("/{media_type}/{item_id}", response_model=MediaDetails)
 async def details(media_type: str, item_id: int):
     media_type = _validate_type(media_type)
-    payload = await _tmdb_get(f"{media_type}/{item_id}", {"append_to_response": "recommendations,watch/providers"})
+    payload = await _tmdb_get(f"{media_type}/{item_id}", {"append_to_response": "recommendations"})
     recommendations = payload.get("recommendations", {}).get("results", [])
-    watch_results = payload.get("watch/providers", {}).get("results", {})
+    try:
+        watch_payload = await _tmdb_get(f"{media_type}/{item_id}/watch/providers")
+        watch_results = watch_payload.get("results", {})
+    except HTTPException:
+        watch_results = {}
     return MediaDetails(
         **_map_item(payload, media_type).model_dump(),
         tagline=payload.get("tagline") or "",
