@@ -3,7 +3,7 @@
 - Native app: Kotlin + Jetpack Compose
 - Application ID: `com.movdash.app`
 - Min SDK: 26
-- Compile/target SDK: 37
+- Compile/target SDK: 36
 - Home, discover/search, library and profile tabs
 - Backend URL can be changed from Settings; the emulator default is `http://10.0.2.2:8000/`
 - Movie cards load poster artwork from TMDB image URLs returned by the backend.
