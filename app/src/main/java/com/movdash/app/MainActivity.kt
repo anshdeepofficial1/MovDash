@@ -72,7 +72,7 @@ private fun MovDashApp() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("movdash", Context.MODE_PRIVATE) }
     var apiBase by remember {
-        mutableStateOf(prefs.getString("api_base", "http://10.0.2.2:8000/") ?: "http://10.0.2.2:8000/")
+        mutableStateOf(prefs.getString("api_base", "https://movdash-production.up.railway.app/") ?: "https://movdash-production.up.railway.app/")
     }
     var apiDraft by remember { mutableStateOf(apiBase) }
     val api = remember(apiBase) { ApiFactory.create(apiBase) }
@@ -231,7 +231,7 @@ private fun MovDashApp() {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        "Enter the deployed HTTPS MovDash API URL. For Android emulator development use http://10.0.2.2:8000/. A physical phone needs a reachable LAN or public HTTPS address.",
+                        "MovDash is preconfigured to use the production Railway API. Change this only when connecting to another MovDash backend.",
                         color = Color(0xFFB6C0CE), style = MaterialTheme.typography.bodySmall
                     )
                     OutlinedTextField(
