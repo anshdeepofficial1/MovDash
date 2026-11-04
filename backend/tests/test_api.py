@@ -73,3 +73,21 @@ def test_trending_tv_uses_tv_endpoint(monkeypatch):
 def test_invalid_media_type_is_rejected():
     response = client.get("/api/v1/catalog/popular/person")
     assert response.status_code == 400
+
+
+def test_stream_servers_movie():
+    response = client.get("/api/v1/stream/servers?tmdb_id=693134&media_type=movie")
+    assert response.status_code == 200
+    servers = response.json()
+    assert len(servers) >= 5
+    assert any("River" in s["name"] for s in servers)
+    assert any("693134" in s["stream_url"] for s in servers)
+
+
+def test_stream_servers_tv():
+    response = client.get("/api/v1/stream/servers?tmdb_id=66732&media_type=tv&season=1&episode=3")
+    assert response.status_code == 200
+    servers = response.json()
+    assert len(servers) >= 5
+    assert any("66732" in s["stream_url"] for s in servers)
+    assert any("1" in s["stream_url"] for s in servers)

@@ -64,3 +64,13 @@ class PlaybackSession(BaseModel):
     supports_direct_play: bool = True
     audio_tracks: list[dict] = []
     subtitle_tracks: list[dict] = []
+
+
+class StreamServer(BaseModel):
+    id: str
+    name: str
+    badge: str = "HD"
+    quality: str = "1080p"
+    language: str = "Multi-Audio"
+    stream_type: str = "embed"
+    stream_url: str

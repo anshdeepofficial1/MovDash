@@ -64,6 +64,14 @@ interface MovDashApi {
         @Path("seasonNumber") seasonNumber: Int
     ): SeasonDetails
 
+    @GET("api/v1/stream/servers")
+    suspend fun streamServers(
+        @Query("tmdb_id") tmdbId: Int,
+        @Query("media_type") mediaType: String = "movie",
+        @Query("season") season: Int? = null,
+        @Query("episode") episode: Int? = null
+    ): List<StreamServer>
+
     @GET("api/v1/sources")
     suspend fun sources(): List<SourceInfo>
 

@@ -2,13 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.routers import catalog, health, sources
+from app.routers import catalog, health, sources, stream
 
 settings = get_settings()
 app = FastAPI(
     title=settings.app_name,
-    version="0.1.0",
-    description="MovDash movie catalogue and authorized media-provider API.",
+    version="0.2.0",
+    description="MovDash movie catalogue and multi-source streaming provider API.",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -24,3 +24,4 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(catalog.router, prefix=settings.api_v1_prefix)
 app.include_router(sources.router, prefix=settings.api_v1_prefix)
+app.include_router(stream.router, prefix=settings.api_v1_prefix)

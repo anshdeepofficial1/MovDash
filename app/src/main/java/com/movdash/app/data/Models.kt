@@ -87,6 +87,126 @@ data class PlaybackSession(
     @SerializedName("subtitle_tracks") val subtitleTracks: List<Map<String, Any?>> = emptyList()
 )
 
+data class StreamServer(
+    val id: String,
+    val name: String,
+    val badge: String = "HD",
+    val quality: String = "1080p",
+    val language: String = "Multi-Audio",
+    @SerializedName("stream_type") val streamType: String = "embed",
+    @SerializedName("stream_url") val streamUrl: String = ""
+)
+
+object StreamServerFactory {
+    fun getServers(
+        tmdbId: Int,
+        mediaType: String = "movie",
+        season: Int? = null,
+        episode: Int? = null
+    ): List<StreamServer> {
+        val s = if (season != null && season > 0) season else 1
+        val e = if (episode != null && episode > 0) episode else 1
+
+        return if (mediaType == "tv") {
+            listOf(
+                StreamServer(
+                    id = "river",
+                    name = "Server 1 (River)",
+                    badge = "Fast HLS",
+                    quality = "1080p / 720p",
+                    language = "Multi-Audio / Dual",
+                    streamType = "embed",
+                    streamUrl = "https://vidsrc.to/embed/tv/$tmdbId/$s/$e"
+                ),
+                StreamServer(
+                    id = "vidlnx",
+                    name = "Server 2 (VidLnx)",
+                    badge = "HD 1080p",
+                    quality = "1080p Ultra",
+                    language = "Original / Subtitles",
+                    streamType = "embed",
+                    streamUrl = "https://vidsrc.me/embed/tv?tmdb=$tmdbId&season=$s&episode=$e"
+                ),
+                StreamServer(
+                    id = "mbply",
+                    name = "Server 3 (MbPly)",
+                    badge = "Multi-Language",
+                    quality = "Adaptive Auto",
+                    language = "Hindi / Eng / Multi",
+                    streamType = "embed",
+                    streamUrl = "https://autoembed.cc/embed/player.php?id=$tmdbId&s=$s&e=$e"
+                ),
+                StreamServer(
+                    id = "catflix",
+                    name = "Server 4 (Catflix)",
+                    badge = "Auto-Adaptive",
+                    quality = "HD / SD",
+                    language = "Multi-Language",
+                    streamType = "embed",
+                    streamUrl = "https://multiembed.mov/?video_id=$tmdbId&tmdb=1&s=$s&e=$e"
+                ),
+                StreamServer(
+                    id = "neon",
+                    name = "Server 5 (Neon)",
+                    badge = "Direct Stream",
+                    quality = "1080p High",
+                    language = "Multi",
+                    streamType = "embed",
+                    streamUrl = "https://embed.su/embed/tv/$tmdbId/$s/$e"
+                )
+            )
+        } else {
+            listOf(
+                StreamServer(
+                    id = "river",
+                    name = "Server 1 (River)",
+                    badge = "Fast HLS",
+                    quality = "1080p / 720p",
+                    language = "Multi-Audio / Dual",
+                    streamType = "embed",
+                    streamUrl = "https://vidsrc.to/embed/movie/$tmdbId"
+                ),
+                StreamServer(
+                    id = "vidlnx",
+                    name = "Server 2 (VidLnx)",
+                    badge = "HD 1080p",
+                    quality = "1080p Ultra",
+                    language = "Original / Subtitles",
+                    streamType = "embed",
+                    streamUrl = "https://vidsrc.me/embed/movie?tmdb=$tmdbId"
+                ),
+                StreamServer(
+                    id = "mbply",
+                    name = "Server 3 (MbPly)",
+                    badge = "Multi-Language",
+                    quality = "Adaptive Auto",
+                    language = "Hindi / Eng / Multi",
+                    streamType = "embed",
+                    streamUrl = "https://autoembed.cc/embed/player.php?id=$tmdbId"
+                ),
+                StreamServer(
+                    id = "catflix",
+                    name = "Server 4 (Catflix)",
+                    badge = "Auto-Adaptive",
+                    quality = "HD / SD",
+                    language = "Multi-Language",
+                    streamType = "embed",
+                    streamUrl = "https://multiembed.mov/?video_id=$tmdbId&tmdb=1"
+                ),
+                StreamServer(
+                    id = "neon",
+                    name = "Server 5 (Neon)",
+                    badge = "Direct Stream",
+                    quality = "1080p High",
+                    language = "Multi",
+                    streamType = "embed",
+                    streamUrl = "https://embed.su/embed/movie/$tmdbId"
+                )
+            )
+        }
+    }
+}
+
 data class SourceInfo(
     val id: String,
     val name: String,
@@ -96,7 +216,6 @@ data class SourceInfo(
 )
 
 data class HealthStatus(val status: String, val app: String? = null)
-
 
 data class WatchProviderRegion(
     val link: String? = null,
