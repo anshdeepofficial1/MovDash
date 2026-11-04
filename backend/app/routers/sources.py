@@ -123,7 +123,7 @@ async def jellyfin_movies():
 
 @router.get("/jellyfin/series", response_model=list[JellyfinItem])
 async def jellyfin_series():
-    return await jellyfin_items(media_type="tv", limit=200)
+    return await jellyfin_items(q=None, media_type="tv", limit=200)
 
 
 @router.get("/jellyfin/series/{series_id}/seasons")
