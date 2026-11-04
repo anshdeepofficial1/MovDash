@@ -2,11 +2,13 @@ package com.movdash.app
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -18,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Movie
@@ -45,6 +48,7 @@ import com.movdash.app.data.Movie
 import com.movdash.app.data.MediaDetails
 import com.movdash.app.data.JellyfinItem
 import com.movdash.app.data.SourceInfo
+import com.movdash.app.data.WatchProvider
 import com.movdash.app.player.PlayerActivity
 import com.movdash.app.ui.theme.MovDashTheme
 import kotlinx.coroutines.delay
@@ -125,7 +129,8 @@ private fun MovDashApp() {
     Scaffold(
         containerColor = Color(0xFF090B10),
         topBar = {
-            TopAppBar(
+            if (selectedMovie == null) {
+                TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -153,10 +158,12 @@ private fun MovDashApp() {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF090B10))
-            )
+                )
+            }
         },
         bottomBar = {
-            NavigationBar(containerColor = Color(0xFF101620), contentColor = Color.White) {
+            if (selectedMovie == null) {
+                NavigationBar(containerColor = Color(0xFF101620), contentColor = Color.White) {
                 NavigationBarItem(selected = tab == AppTab.HOME, onClick = { tab = AppTab.HOME },
                     icon = { Icon(Icons.Default.Home, contentDescription = null) }, label = { Text("Home") })
                 NavigationBarItem(selected = tab == AppTab.DISCOVER, onClick = { tab = AppTab.DISCOVER },
@@ -168,8 +175,17 @@ private fun MovDashApp() {
             }
         }
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding).background(Color(0xFF090B10))) {
-            when (tab) {
+        if (selectedMovie != null) {
+            MovieDetailsScreen(
+                movie = selectedMovie!!,
+                api = api,
+                sources = sources,
+                modifier = Modifier.fillMaxSize().padding(padding),
+                onBack = { selectedMovie = null }
+            )
+        } else {
+            Box(Modifier.fillMaxSize().padding(padding).background(Color(0xFF090B10))) {
+                when (tab) {
                 AppTab.HOME -> HomeScreen(
                     movies = movies,
                     series = series,
@@ -215,12 +231,9 @@ private fun MovDashApp() {
                     onSettings = { apiDraft = apiBase; showSettings = true },
                     onRefresh = { scope.launch { refreshCatalog() } }
                 )
+                }
             }
         }
-    }
-
-    selectedMovie?.let { movie ->
-        MovieDetailsDialog(movie, api, sources) { selectedMovie = null }
     }
 
     if (showSettings) {
@@ -594,11 +607,12 @@ private fun ProfileScreen(
 }
 
 @Composable
-private fun MovieDetailsDialog(
+private fun MovieDetailsScreen(
     movie: Movie,
     api: com.movdash.app.data.MovDashApi,
     sources: List<SourceInfo>,
-    onDismiss: () -> Unit
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -607,27 +621,34 @@ private fun MovieDetailsDialog(
     var seasons by remember(movie.id) { mutableStateOf<List<JellyfinItem>>(emptyList()) }
     var episodes by remember(movie.id) { mutableStateOf<List<JellyfinItem>>(emptyList()) }
     var selectedSeasonId by remember(movie.id) { mutableStateOf<String?>(null) }
+    var country by remember(movie.id) { mutableStateOf("IN") }
     var loading by remember { mutableStateOf(true) }
+    var libraryLoading by remember { mutableStateOf(false) }
     var playing by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf<String?>(null) }
+    var detailError by remember { mutableStateOf<String?>(null) }
+    var libraryError by remember { mutableStateOf<String?>(null) }
     val jellyfinConfigured = sources.any { it.id == "jellyfin" && it.configured }
 
     LaunchedEffect(movie.id, movie.mediaType) {
         loading = true
+        detailError = null
         try {
             details = api.details(movie.mediaType, movie.id)
         } catch (error: Exception) {
-            message = error.localizedMessage?.take(140) ?: "Could not load title details."
+            detailError = error.localizedMessage?.take(160) ?: "Could not load title details."
         }
         if (jellyfinConfigured) {
+            libraryLoading = true
             try {
-                val providerType = if (movie.mediaType == "tv") "tv" else "movie"
-                val candidates = api.jellyfinItems(movie.title, providerType, 100)
+                val type = if (movie.mediaType == "tv") "tv" else "movie"
+                val candidates = api.jellyfinItems(movie.title, type, 100)
                 fun normalize(value: String) = value.lowercase().filter { it.isLetterOrDigit() }
                 jellyfinMatch = candidates.firstOrNull { normalize(it.title) == normalize(movie.title) }
-                if (jellyfinMatch == null) message = "This title was not found in the connected Jellyfin library."
+                if (jellyfinMatch == null) libraryError = "This title was not found in your Jellyfin library."
             } catch (error: Exception) {
-                message = error.localizedMessage?.take(140) ?: "Could not search the Jellyfin library."
+                libraryError = error.localizedMessage?.take(140) ?: "Could not search your Jellyfin library."
+            } finally {
+                libraryLoading = false
             }
         }
         loading = false
@@ -638,11 +659,11 @@ private fun MovieDetailsDialog(
         if (match != null && match.mediaType.equals("Series", ignoreCase = true)) {
             try {
                 seasons = api.jellyfinSeasons(match.id)
-                val firstSeason = seasons.firstOrNull()
-                selectedSeasonId = firstSeason?.id
-                if (firstSeason != null) episodes = api.jellyfinEpisodes(match.id, firstSeason.id)
+                val first = seasons.firstOrNull()
+                selectedSeasonId = first?.id
+                if (first != null) episodes = api.jellyfinEpisodes(match.id, first.id)
             } catch (error: Exception) {
-                message = error.localizedMessage?.take(140) ?: "Could not load episodes."
+                libraryError = error.localizedMessage?.take(140) ?: "Could not load episodes."
             }
         }
     }
@@ -650,136 +671,314 @@ private fun MovieDetailsDialog(
     fun playItem(item: JellyfinItem) {
         scope.launch {
             playing = true
-            message = "Preparing authorized playback…"
+            libraryError = "Preparing playback from your personal library…"
             try {
                 val session = api.playbackSession(item.id)
                 context.startActivity(
                     Intent(context, PlayerActivity::class.java)
                         .putExtra(PlayerActivity.EXTRA_MEDIA_URL, session.mediaUrl)
                 )
-                message = null
+                libraryError = null
             } catch (error: Exception) {
-                message = error.localizedMessage?.take(160) ?: "Playback could not be started."
+                libraryError = error.localizedMessage?.take(160) ?: "Playback could not be started."
             } finally {
                 playing = false
             }
         }
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF151D29),
-        title = { Text(movie.title, color = Color.White, fontWeight = FontWeight.Bold) },
-        text = {
-            Column(
-                Modifier.fillMaxWidth().heightIn(max = 500.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(9.dp)
-            ) {
-                val image = details?.backdropPath?.let { "https://image.tmdb.org/t/p/w780$it" }
-                    ?: movie.backdropPath?.let { "https://image.tmdb.org/t/p/w780$it" }
-                    ?: movie.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
+    fun openOfficialAvailability(url: String?) {
+        if (url.isNullOrBlank() || !url.startsWith("https://")) return
+        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+    }
+
+    val countries = listOf("IN" to "India", "US" to "United States", "GB" to "United Kingdom", "CA" to "Canada")
+    val region = details?.watchProviders?.get(country)
+    val providerGroups: List<Pair<String, List<WatchProvider>>> = listOf(
+        "Subscription" to (region?.streaming ?: emptyList()),
+        "Free / with ads" to (region?.free.orEmpty() + region?.ads.orEmpty()).distinctBy {
+            it.providerId?.toString() ?: it.providerName
+        },
+        "Rent" to (region?.rent ?: emptyList()),
+        "Buy" to (region?.buy ?: emptyList())
+    )
+    val hasProviders = providerGroups.any { it.second.isNotEmpty() }
+    val availabilityUrl = region?.link?.takeIf { it.startsWith("https://") }
+    val backdrop = details?.backdropPath?.let { "https://image.tmdb.org/t/p/w1280" + it }
+        ?: movie.backdropPath?.let { "https://image.tmdb.org/t/p/w1280" + it }
+        ?: details?.posterPath?.let { "https://image.tmdb.org/t/p/w780" + it }
+        ?: movie.posterPath?.let { "https://image.tmdb.org/t/p/w780" + it }
+
+    Column(
+        modifier.fillMaxSize()
+            .background(Color(0xFF090B10))
+            .verticalScroll(rememberScrollState())
+    ) {
+        Box(
+            Modifier.fillMaxWidth().height(330.dp)
+                .background(Brush.linearGradient(listOf(Color(0xFF243248), Color(0xFF101722))))
+        ) {
+            if (backdrop != null) {
                 AsyncImage(
-                    model = image, contentDescription = movie.title, contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth().height(145.dp).clip(RoundedCornerShape(13.dp))
+                    model = backdrop,
+                    contentDescription = movie.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
-                Text("${movie.mediaType.uppercase()} · ${details?.releaseDate?.take(4) ?: movie.releaseDate?.take(4) ?: "Release date unknown"}",
-                    color = Color(0xFFE9B96E), style = MaterialTheme.typography.labelMedium)
-                details?.tagline?.takeIf { it.isNotBlank() }?.let {
-                    Text(it, color = Color(0xFFCED6E0), style = MaterialTheme.typography.bodyMedium)
+            }
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.verticalGradient(listOf(Color(0x88070A10), Color(0x22070A10), Color(0xF5090B10)))
+                )
+            )
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 12.dp)
+                    .size(44.dp).clip(CircleShape).background(Color(0xAA111923))
+            ) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+            Column(
+                Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(22.dp),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                Text(
+                    if (movie.mediaType == "tv") "SERIES DETAILS" else "MOVIE DETAILS",
+                    color = Color(0xFFE9B96E),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.5.sp
+                )
+                Text(
+                    details?.title ?: movie.title,
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        details?.releaseDate?.take(4) ?: movie.releaseDate?.take(4) ?: "Release date unknown",
+                        color = Color(0xFFE2E7EE),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    (details?.voteAverage ?: movie.voteAverage)?.let {
+                        Text("★ " + "%.1f".format(it), color = Color(0xFFE9B96E),
+                            style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    }
                 }
-                Text(details?.overview?.ifBlank { movie.overview } ?: movie.overview,
-                    color = Color(0xFFB7C0CD), style = MaterialTheme.typography.bodySmall)
-                details?.genres?.takeIf { it.isNotEmpty() }?.let { genres ->
-                    Text(genres.joinToString("  ·  ") { it.name }, color = Color(0xFFE9B96E),
-                        style = MaterialTheme.typography.labelSmall)
+            }
+        }
+
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(13.dp)
+        ) {
+            if (loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color(0xFFE9B96E))
+            details?.tagline?.takeIf { it.isNotBlank() }?.let {
+                Text(it, color = Color(0xFFD4DCE6), style = MaterialTheme.typography.titleSmall)
+            }
+            val genreText = details?.genres.orEmpty().joinToString("  ·  ") { it.name }
+            if (genreText.isNotBlank()) Text(genreText, color = Color(0xFFE9B96E), style = MaterialTheme.typography.labelMedium)
+            val metadata = details?.let {
+                if (it.mediaType == "tv") {
+                    (it.numberOfSeasons ?: 0).toString() + " seasons · " +
+                        (it.numberOfEpisodes ?: 0).toString() + " episodes"
+                } else it.runtime?.let { runtime -> runtime.toString() + " min" } ?: ""
+            }.orEmpty()
+            if (metadata.isNotBlank()) Text(metadata, color = Color(0xFF9AA5B5), style = MaterialTheme.typography.labelSmall)
+
+            Text("Synopsis", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                details?.overview?.ifBlank { movie.overview } ?: movie.overview.ifBlank { "No synopsis is available." },
+                color = Color(0xFFB7C0CD),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            detailError?.let { Text(it, color = Color(0xFFFFA69C), style = MaterialTheme.typography.bodySmall) }
+
+            HorizontalDivider(color = Color(0xFF263244))
+            Text("Where to watch", color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                "Official streaming, free, rental and purchase options for the selected country.",
+                color = Color(0xFF929EAE),
+                style = MaterialTheme.typography.bodySmall
+            )
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                countries.forEach { item ->
+                    FilterChip(
+                        selected = country == item.first,
+                        onClick = { country = item.first },
+                        label = { Text(item.second) }
+                    )
                 }
-                details?.let { item ->
-                    val extra = if (item.mediaType == "tv") {
-                        "${item.numberOfSeasons ?: 0} seasons · ${item.numberOfEpisodes ?: 0} episodes"
-                    } else item.runtime?.let { "${it} min" } ?: ""
-                    if (extra.isNotBlank()) Text(extra, color = Color(0xFF9AA5B5), style = MaterialTheme.typography.labelSmall)
+            }
+
+            if (loading && details == null) {
+                Text("Checking availability…", color = Color(0xFF9AA5B5), style = MaterialTheme.typography.bodySmall)
+            } else if (!hasProviders) {
+                Column(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFF121A25)).padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        "No official listings found for " + (countries.firstOrNull { it.first == country }?.second ?: country),
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "There are no provider listings for this title in this region right now. Try another country or check again later.",
+                        color = Color(0xFF929EAE),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
-                if (loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color(0xFFE9B96E))
-                Text("Authorized playback", color = Color.White, fontWeight = FontWeight.Bold)
-                when {
-                    !jellyfinConfigured -> Text("Connect your own Jellyfin server in the backend to play titles from your personal library.",
-                        color = Color(0xFF9AA5B5), style = MaterialTheme.typography.bodySmall)
-                    jellyfinMatch == null && !loading -> Text("No exact match was found in your Jellyfin library. Catalogue metadata alone does not include a playable stream.",
-                        color = Color(0xFF9AA5B5), style = MaterialTheme.typography.bodySmall)
-                    jellyfinMatch?.mediaType.equals("Series", ignoreCase = true) -> {
-                        Text("Choose a season and episode", color = Color(0xFFB7C0CD), style = MaterialTheme.typography.bodySmall)
-                        seasons.forEach { season ->
-                            TextButton(onClick = {
+            } else {
+                providerGroups.forEach { group ->
+                    val groupName = group.first
+                    val providers = group.second
+                    if (providers.isNotEmpty()) {
+                        Text(groupName, color = Color(0xFFE9B96E),
+                            style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        providers.sortedBy { it.displayPriority ?: Int.MAX_VALUE }.forEach { provider ->
+                            WatchProviderRow(
+                                provider = provider,
+                                category = groupName,
+                                onClick = { openOfficialAvailability(availabilityUrl) }
+                            )
+                        }
+                    }
+                }
+                if (availabilityUrl != null) {
+                    Button(
+                        onClick = { openOfficialAvailability(availabilityUrl) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE9B96E),
+                            contentColor = Color(0xFF17120B)
+                        )
+                    ) {
+                        Text("Open official watch options", fontWeight = FontWeight.Bold)
+                    }
+                    Text(
+                        "Provider listings are availability information, not direct video streams. A subscription or rental may be required.",
+                        color = Color(0xFF778496), style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+
+            HorizontalDivider(color = Color(0xFF263244))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("Personal library", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Optional · Jellyfin", color = Color(0xFF929EAE), style = MaterialTheme.typography.labelSmall)
+                }
+                Text(
+                    if (jellyfinConfigured) "CONNECTED" else "NOT CONNECTED",
+                    color = if (jellyfinConfigured) Color(0xFF8DD8A6) else Color(0xFF8994A3),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            if (!jellyfinConfigured) {
+                Text(
+                    "Jellyfin is optional. You do not need your own server to browse official watch options.",
+                    color = Color(0xFF929EAE), style = MaterialTheme.typography.bodySmall
+                )
+            } else if (libraryLoading) {
+                Text("Checking your personal library…", color = Color(0xFF929EAE), style = MaterialTheme.typography.bodySmall)
+            } else if (jellyfinMatch == null) {
+                Text(libraryError ?: "This title is not available in your personal library.",
+                    color = Color(0xFF929EAE), style = MaterialTheme.typography.bodySmall)
+            } else if (jellyfinMatch?.mediaType.equals("Series", ignoreCase = true)) {
+                Text("Choose a season", color = Color(0xFFD1D9E3), style = MaterialTheme.typography.bodySmall)
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    seasons.forEach { season ->
+                        FilterChip(
+                            selected = selectedSeasonId == season.id,
+                            onClick = {
                                 selectedSeasonId = season.id
                                 scope.launch {
-                                    try { episodes = api.jellyfinEpisodes(jellyfinMatch!!.id, season.id) }
-                                    catch (error: Exception) { message = error.localizedMessage }
+                                    try {
+                                        episodes = api.jellyfinEpisodes(jellyfinMatch!!.id, season.id)
+                                    } catch (error: Exception) {
+                                        libraryError = error.localizedMessage?.take(140)
+                                    }
                                 }
-                            }) {
-                                Text(if (selectedSeasonId == season.id) "✓ " + season.title else season.title,
-                                    color = Color(0xFFE9B96E))
-                            }
-                        }
-                        episodes.forEach { episode ->
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text(episode.title, color = Color.White, modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodySmall)
-                                TextButton(onClick = { playItem(episode) }, enabled = !playing) {
-                                    Icon(Icons.Default.PlayArrow, contentDescription = null)
-                                    Text("Play")
-                                }
-                            }
-                        }
-                    }
-                    jellyfinMatch != null -> Button(
-                        onClick = { jellyfinMatch?.let { playItem(it) } },
-                        enabled = !playing,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null)
-                        Spacer(Modifier.width(6.dp))
-                        Text(if (playing) "Preparing…" else "Play from Jellyfin")
+                            },
+                            label = { Text(season.title) }
+                        )
                     }
                 }
-                message?.let { Text(it, color = Color(0xFFFFC875), style = MaterialTheme.typography.bodySmall) }
+                episodes.forEach { episode ->
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
+                            .background(Color(0xFF121A25)).padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(episode.title, color = Color.White, modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodySmall)
+                        TextButton(onClick = { playItem(episode) }, enabled = !playing) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Text("Play")
+                        }
+                    }
+                }
+            } else {
+                Button(onClick = { jellyfinMatch?.let { playItem(it) } }, enabled = !playing,
+                    modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                    Spacer(Modifier.width(7.dp))
+                    Text(if (playing) "Preparing…" else "Play from personal library")
+                }
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close", color = Color(0xFFE9B96E)) } }
-    )
+            if (jellyfinConfigured) {
+                libraryError?.let { Text(it, color = Color(0xFFFFC875), style = MaterialTheme.typography.bodySmall) }
+            }
+            Spacer(Modifier.height(28.dp))
+        }
+    }
 }
+
 @Composable
-private fun MovieDetailsDialog(
-    movie: Movie,
-    connected: Boolean,
-    sources: List<SourceInfo>,
-    onDismiss: () -> Unit
+private fun WatchProviderRow(
+    provider: WatchProvider,
+    category: String,
+    onClick: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF151D29),
-        title = { Text(movie.title, color = Color.White, fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                val image = movie.backdropPath?.let { "https://image.tmdb.org/t/p/w780$it" }
-                    ?: movie.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
-                AsyncImage(
-                    model = image, contentDescription = movie.title, contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth().height(145.dp).clip(RoundedCornerShape(13.dp))
-                )
-                Text(movie.releaseDate?.take(4) ?: "Movie", color = Color(0xFFE9B96E), style = MaterialTheme.typography.labelMedium)
-                Text(movie.overview.ifBlank { "No synopsis is available from the current catalogue." },
-                    color = Color(0xFFB7C0CD), style = MaterialTheme.typography.bodySmall)
-                Text("Playback sources", color = Color.White, fontWeight = FontWeight.Bold)
-                Text(
-                    when {
-                        !connected -> "Connect the MovDash backend to check authorized sources."
-                        sources.any { it.configured } -> "A provider is configured. Playback-session integration is the next milestone."
-                        else -> "No playback provider is configured yet."
-                    },
-                    color = Color(0xFF9AA5B5), style = MaterialTheme.typography.bodySmall
-                )
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFF121A25))
+            .clickable(onClick = onClick)
+            .padding(11.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (!provider.logoPath.isNullOrBlank()) {
+            AsyncImage(
+                model = "https://image.tmdb.org/t/p/w92" + provider.logoPath,
+                contentDescription = provider.providerName,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(42.dp).clip(RoundedCornerShape(10.dp))
+            )
+        } else {
+            Box(
+                Modifier.size(42.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF29384B)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(provider.providerName.take(1), color = Color(0xFFE9B96E), fontWeight = FontWeight.Bold)
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Done", color = Color(0xFFE9B96E)) } }
-    )
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(provider.providerName, color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(category, color = Color(0xFF8996A8), style = MaterialTheme.typography.labelSmall)
+        }
+        Text("OPEN", color = Color(0xFFE9B96E), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+    }
 }
