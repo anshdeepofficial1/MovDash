@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -34,6 +35,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -119,19 +121,13 @@ private fun MovDashApp() {
                 TopAppBar(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_logo),
+                                contentDescription = "MovDash Logo",
                                 modifier = Modifier
                                     .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        Brush.linearGradient(
-                                            listOf(Color(0xFFF1C47C), Color(0xFF9D6D32))
-                                        )
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("M", color = Color(0xFF1B1309), fontWeight = FontWeight.Black, fontSize = 20.sp)
-                            }
+                                    .clip(RoundedCornerShape(10.dp))
+                            )
                             Spacer(Modifier.width(10.dp))
                             Column {
                                 Text("MOVDASH", style = MaterialTheme.typography.titleMedium,
@@ -996,20 +992,13 @@ private fun ProfileScreen(
                 .padding(18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                Modifier
+            Image(
+                painter = painterResource(id = R.drawable.ic_logo),
+                contentDescription = "MovDash Logo",
+                modifier = Modifier
                     .size(64.dp)
-                    .clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(Color(0xFFF1C47C), Color(0xFF9D6D32)))),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    userName.take(1).uppercase(),
-                    color = Color(0xFF1B1309),
-                    fontWeight = FontWeight.Black,
-                    fontSize = 28.sp
-                )
-            }
+                    .clip(RoundedCornerShape(16.dp))
+            )
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1317,10 +1306,21 @@ private fun MovieDetailsScreen(
             server.streamUrl
         }
 
+        val s = season ?: selectedSeasonNumber
+        val e = episode ?: selectedEpisodeNumber
         val intent = Intent(context, PlayerActivity::class.java).apply {
             putExtra(PlayerActivity.EXTRA_MEDIA_URL, streamUrl)
             putExtra(PlayerActivity.EXTRA_STREAM_TYPE, server.streamType)
-            putExtra(PlayerActivity.EXTRA_TITLE, "${movie.title} - ${server.name}")
+            putExtra(PlayerActivity.EXTRA_TITLE, movie.title)
+            putExtra(
+                PlayerActivity.EXTRA_SUBTITLE,
+                if (movie.mediaType == "tv") "Season $s · Episode $e" else details?.releaseDate?.take(4) ?: movie.releaseDate?.take(4) ?: "HD Movie"
+            )
+            putExtra(PlayerActivity.EXTRA_SERVER_NAME, server.name)
+            putExtra(PlayerActivity.EXTRA_TMDB_ID, movie.id)
+            putExtra(PlayerActivity.EXTRA_MEDIA_TYPE, movie.mediaType)
+            putExtra(PlayerActivity.EXTRA_SEASON, s)
+            putExtra(PlayerActivity.EXTRA_EPISODE, e)
         }
         context.startActivity(intent)
         showServerPicker = false
