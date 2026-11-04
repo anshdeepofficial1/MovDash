@@ -865,7 +865,7 @@ private fun MovieDetailsScreen(
                         Text("Open official watch options", fontWeight = FontWeight.Bold)
                     }
                     Text(
-                        "Provider listings are availability information, not direct video streams. A subscription or rental may be required.",
+                        "Availability data is supplied by JustWatch through TMDB. These listings are not direct video streams; a subscription or rental may be required.",
                         color = Color(0xFF778496), style = MaterialTheme.typography.labelSmall
                     )
                 }
