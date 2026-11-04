@@ -10,7 +10,80 @@ data class Movie(
     @SerializedName("backdrop_path") val backdropPath: String? = null,
     @SerializedName("release_date") val releaseDate: String? = null,
     @SerializedName("vote_average") val voteAverage: Double? = null,
+    @SerializedName("media_type") val mediaType: String = "movie",
     val source: String = "tmdb"
+)
+
+data class HomeCatalog(
+    @SerializedName("trending_movies") val trendingMovies: List<Movie> = emptyList(),
+    @SerializedName("trending_series") val trendingSeries: List<Movie> = emptyList(),
+    @SerializedName("popular_movies") val popularMovies: List<Movie> = emptyList(),
+    @SerializedName("popular_series") val popularSeries: List<Movie> = emptyList()
+)
+
+data class MediaGenre(val id: Int, val name: String)
+
+data class MediaDetails(
+    val id: Int,
+    val title: String,
+    val overview: String = "",
+    @SerializedName("poster_path") val posterPath: String? = null,
+    @SerializedName("backdrop_path") val backdropPath: String? = null,
+    @SerializedName("release_date") val releaseDate: String? = null,
+    @SerializedName("vote_average") val voteAverage: Double? = null,
+    @SerializedName("media_type") val mediaType: String = "movie",
+    val tagline: String = "",
+    val runtime: Int? = null,
+    val genres: List<MediaGenre> = emptyList(),
+    val status: String? = null,
+    @SerializedName("number_of_seasons") val numberOfSeasons: Int? = null,
+    @SerializedName("number_of_episodes") val numberOfEpisodes: Int? = null,
+    val seasons: List<SeasonSummary> = emptyList()
+)
+
+data class SeasonSummary(
+    val id: Int,
+    val name: String,
+    @SerializedName("season_number") val seasonNumber: Int,
+    @SerializedName("episode_count") val episodeCount: Int = 0,
+    @SerializedName("air_date") val airDate: String? = null
+)
+
+data class EpisodeSummary(
+    val id: Int,
+    @SerializedName("episode_number") val episodeNumber: Int,
+    val name: String,
+    val overview: String = "",
+    @SerializedName("still_path") val stillPath: String? = null,
+    val runtime: Int? = null,
+    @SerializedName("air_date") val airDate: String? = null
+)
+
+data class SeasonDetails(
+    val id: Int?,
+    val name: String?,
+    @SerializedName("season_number") val seasonNumber: Int?,
+    val episodes: List<EpisodeSummary> = emptyList()
+)
+
+data class JellyfinItem(
+    val id: String,
+    val title: String,
+    val year: Int? = null,
+    val overview: String = "",
+    @SerializedName("media_type") val mediaType: String = "Movie",
+    @SerializedName("image_tag") val imageTag: String? = null,
+    @SerializedName("series_id") val seriesId: String? = null
+)
+
+data class PlaybackSession(
+    val provider: String,
+    @SerializedName("item_id") val itemId: String,
+    @SerializedName("media_url") val mediaUrl: String,
+    @SerializedName("media_type") val mediaType: String,
+    @SerializedName("supports_direct_play") val supportsDirectPlay: Boolean = true,
+    @SerializedName("audio_tracks") val audioTracks: List<Map<String, Any?>> = emptyList(),
+    @SerializedName("subtitle_tracks") val subtitleTracks: List<Map<String, Any?>> = emptyList()
 )
 
 data class SourceInfo(
