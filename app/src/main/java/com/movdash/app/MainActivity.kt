@@ -172,8 +172,9 @@ private fun MovDashApp() {
                     icon = { Icon(Icons.Default.BookmarkBorder, contentDescription = null) }, label = { Text("Library") })
                 NavigationBarItem(selected = tab == AppTab.PROFILE, onClick = { tab = AppTab.PROFILE },
                     icon = { Icon(Icons.Default.PersonOutline, contentDescription = null) }, label = { Text("Profile") })
+                }
             }
-        }
+        },
     ) { padding ->
         if (selectedMovie != null) {
             MovieDetailsScreen(
