@@ -111,7 +111,7 @@ async def jellyfin_items(
 
 @router.get("/jellyfin/movies", response_model=list[JellyfinMovie])
 async def jellyfin_movies():
-    items = await jellyfin_items(media_type="movie", limit=200)
+    items = await jellyfin_items(q=None, media_type="movie", limit=200)
     return [
         JellyfinMovie(
             id=item.id, title=item.title, year=item.year, overview=item.overview,
