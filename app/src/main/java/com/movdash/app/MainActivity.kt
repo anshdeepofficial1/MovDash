@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -41,6 +43,7 @@ import com.movdash.app.data.ApiFactory
 import com.movdash.app.data.Movie
 import com.movdash.app.data.SourceInfo
 import com.movdash.app.ui.theme.MovDashTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -107,16 +110,18 @@ private fun MovDashApp() {
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
-                            modifier = Modifier.size(34.dp).clip(RoundedCornerShape(11.dp))
+                            modifier = Modifier.size(44.dp).clip(CircleShape)
                                 .background(Brush.linearGradient(listOf(Color(0xFFF1C47C), Color(0xFF9D6D32)))),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Movie, contentDescription = null, tint = Color(0xFF1B1309))
+                            Text("M", color = Color(0xFF1B1309), fontWeight = FontWeight.Black, fontSize = 21.sp)
                         }
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(12.dp))
                         Column {
-                            Text("MOVDASH", fontWeight = FontWeight.Black, letterSpacing = 2.sp, color = Color.White)
-                            Text("MOVIES · YOUR WAY", style = MaterialTheme.typography.labelSmall, color = Color(0xFF9AA5B5), letterSpacing = 1.sp)
+                            Text("Welcome back", style = MaterialTheme.typography.labelMedium,
+                                color = Color(0xFFE9B96E), fontWeight = FontWeight.Medium)
+                            Text("Guest", style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 },
@@ -255,7 +260,7 @@ private fun HomeScreen(
     onDiscover: () -> Unit
 ) {
     Column(Modifier.fillMaxSize().padding(bottom = 12.dp).verticalScroll(rememberScrollState())) {
-        HeroCard(onExplore = onDiscover)
+        HeroCard(movies = movies, onExplore = onDiscover)
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -290,30 +295,105 @@ private fun HomeScreen(
 }
 
 @Composable
-private fun HeroCard(onExplore: () -> Unit) {
-    Box(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-            .height(214.dp).clip(RoundedCornerShape(25.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF273246), Color(0xFF111722), Color(0xFF3B2A1A))))
-    ) {
-        Box(Modifier.fillMaxSize().background(
-            Brush.horizontalGradient(listOf(Color(0xEE080B11), Color(0xA0080B11), Color(0x33080B11)))
-        ))
-        Column(Modifier.align(Alignment.CenterStart).padding(22.dp)) {
-            Text("DISCOVER · CONNECT · WATCH", color = Color(0xFFE9B96E),
-                style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, letterSpacing = 1.3.sp)
-            Spacer(Modifier.height(9.dp))
-            Text("Cinema,\nwithout limits.", color = Color.White,
-                style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, lineHeight = 34.sp)
-            Spacer(Modifier.height(13.dp))
-            Button(
-                onClick = onExplore,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE9B96E), contentColor = Color(0xFF1A1309)),
-                contentPadding = PaddingValues(horizontal = 17.dp, vertical = 9.dp)
+private fun HeroCard(movies: List<Movie>, onExplore: () -> Unit) {
+    val spotlightMovies = movies.take(5).ifEmpty { demoMovies }
+    val pagerState = rememberPagerState(pageCount = { spotlightMovies.size })
+
+    LaunchedEffect(pagerState, spotlightMovies.size) {
+        if (spotlightMovies.size > 1) {
+            while (true) {
+                delay(5500)
+                pagerState.animateScrollToPage((pagerState.currentPage + 1) % spotlightMovies.size)
+            }
+        }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+        HorizontalPager(
+            state = pagerState,
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            pageSpacing = 10.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) { page ->
+            val movie = spotlightMovies[page]
+            Box(
+                Modifier.fillMaxWidth().height(250.dp).clip(RoundedCornerShape(23.dp))
+                    .background(Brush.linearGradient(listOf(Color(0xFF273246), Color(0xFF111722), Color(0xFF3B2A1A))))
             ) {
-                Icon(Icons.Default.PlayArrow, contentDescription = null)
-                Spacer(Modifier.width(4.dp))
-                Text("Explore movies", fontWeight = FontWeight.Bold)
+                val backdrop = movie.backdropPath?.let { "https://image.tmdb.org/t/p/w1280$it" }
+                if (backdrop != null) {
+                    AsyncImage(
+                        model = backdrop,
+                        contentDescription = movie.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                Box(
+                    Modifier.fillMaxSize().background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color(0x22080B11), Color(0x55080B11), Color(0xF5080B11))
+                        )
+                    )
+                )
+                Column(
+                    Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        "SPOTLIGHT · MOVDASH",
+                        color = Color(0xFFE9B96E),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.3.sp
+                    )
+                    Text(
+                        movie.title,
+                        color = Color.White,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(9.dp), verticalAlignment = Alignment.CenterVertically) {
+                        movie.releaseDate?.take(4)?.let {
+                            Text(it, color = Color(0xFFD3D8E0), style = MaterialTheme.typography.labelMedium)
+                        }
+                        movie.voteAverage?.let {
+                            Text("★ ${"%.1f".format(it)}", color = Color(0xFFE9B96E),
+                                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Button(
+                        onClick = onExplore,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE9B96E),
+                            contentColor = Color(0xFF1A1309)
+                        ),
+                        contentPadding = PaddingValues(horizontal = 15.dp, vertical = 7.dp)
+                    ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Explore movies", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(spotlightMovies.size) { index ->
+                val selected = pagerState.currentPage == index
+                Box(
+                    Modifier.padding(horizontal = 3.dp)
+                        .width(if (selected) 19.dp else 6.dp)
+                        .height(6.dp)
+                        .clip(CircleShape)
+                        .background(if (selected) Color(0xFFE9B96E) else Color(0xFF485364))
+                )
             }
         }
     }
