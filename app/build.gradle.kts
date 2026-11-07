@@ -2,16 +2,20 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
 android {
     namespace = "com.movdash.app"
     compileSdk = 36
+
     defaultConfig {
         applicationId = "com.movdash.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 3
         versionName = "1.0.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
     signingConfigs {
         create("release") {
             storeFile = file("orbit-release.jks")
@@ -36,7 +40,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    kotlinOptions {
+        freeCompilerArgs = freeCompilerArgs + listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.material.ExperimentalMaterialApi",
+            "-opt-in=androidx.media3.common.util.UnstableApi"
+        )
+    }
 }
+
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2026.04.01"))
     implementation("androidx.activity:activity-compose:1.13.0")

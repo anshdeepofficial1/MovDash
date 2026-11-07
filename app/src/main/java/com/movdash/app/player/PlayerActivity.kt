@@ -1,4 +1,4 @@
-@file:OptIn(
+@file:kotlin.OptIn(
     androidx.media3.common.util.UnstableApi::class,
     androidx.compose.material3.ExperimentalMaterial3Api::class
 )
@@ -28,7 +28,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
-import androidx.annotation.OptIn
+import kotlin.OptIn
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -196,7 +196,7 @@ class PlayerActivity : ComponentActivity() {
     }
 }
 
-@OptIn(UnstableApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
+@kotlin.OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class, androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun AdvancedProPlayerScreen(
     initialUrl: String,
