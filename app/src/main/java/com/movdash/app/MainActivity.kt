@@ -11,6 +11,18 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.PlayCircleFilled
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -57,6 +69,19 @@ import com.movdash.app.ui.onboarding.OnboardingScreen
 import com.movdash.app.ui.theme.MovDashTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+data class SectionInfo(
+    val title: String,
+    val subtitle: String,
+    val items: List<Movie>,
+    val isRanked: Boolean = false
+)
+
+fun getMovieQualityBadge(movie: Movie): String {
+    val yr = movie.releaseDate?.take(4)?.toIntOrNull() ?: 2020
+    val vote = movie.voteAverage ?: 0.0
+    return if (vote >= 7.6 || yr >= 2023) "4K UHD" else "1080p HD"
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,6 +143,7 @@ private fun MovDashApp() {
     var watchlist by remember { mutableStateOf(LibraryManager.getWatchlist(context)) }
     var history by remember { mutableStateOf(LibraryManager.getHistory(context)) }
     var favorites by remember { mutableStateOf(LibraryManager.getFavorites(context)) }
+    var activeSection by remember { mutableStateOf<SectionInfo?>(null) }
 
     fun refreshLibrary() {
         watchlist = LibraryManager.getWatchlist(context)
@@ -126,13 +152,17 @@ private fun MovDashApp() {
         downloads = LibraryManager.getDownloads(context)
     }
 
-    // Hardware Back Button Interception
+    // Hardware Back Button Interception (AniDash hierarchy)
     BackHandler(enabled = selectedMovie != null) {
         refreshLibrary()
         selectedMovie = null
     }
 
-    BackHandler(enabled = selectedMovie == null && tab != AppTab.HOME) {
+    BackHandler(enabled = selectedMovie == null && activeSection != null) {
+        activeSection = null
+    }
+
+    BackHandler(enabled = selectedMovie == null && activeSection == null && tab != AppTab.HOME) {
         tab = AppTab.HOME
     }
 
@@ -197,67 +227,16 @@ private fun MovDashApp() {
             }
         },
         bottomBar = {
-            if (selectedMovie == null) {
-                NavigationBar(containerColor = Color(0xFF101620), contentColor = Color.White) {
-                    NavigationBarItem(
-                        selected = tab == AppTab.HOME,
-                        onClick = { tab = AppTab.HOME },
-                        icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                        label = { Text("Home") },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFFE9B96E),
-                            selectedTextColor = Color(0xFFE9B96E),
-                            indicatorColor = Color(0xFF1F2B3D),
-                            unselectedIconColor = Color(0xFF8E9BAE),
-                            unselectedTextColor = Color(0xFF8E9BAE)
-                        )
-                    )
-                    NavigationBarItem(
-                        selected = tab == AppTab.DISCOVER,
-                        onClick = { tab = AppTab.DISCOVER },
-                        icon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        label = { Text("Discover") },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFFE9B96E),
-                            selectedTextColor = Color(0xFFE9B96E),
-                            indicatorColor = Color(0xFF1F2B3D),
-                            unselectedIconColor = Color(0xFF8E9BAE),
-                            unselectedTextColor = Color(0xFF8E9BAE)
-                        )
-                    )
-                    NavigationBarItem(
-                        selected = tab == AppTab.LIBRARY,
-                        onClick = {
+            if (selectedMovie == null && activeSection == null) {
+                FloatingPillBottomNav(
+                    currentTab = tab,
+                    onTabSelected = { newTab ->
+                        if (newTab == AppTab.LIBRARY || newTab == AppTab.PROFILE) {
                             refreshLibrary()
-                            tab = AppTab.LIBRARY
-                        },
-                        icon = { Icon(Icons.Default.BookmarkBorder, contentDescription = null) },
-                        label = { Text("Library") },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFFE9B96E),
-                            selectedTextColor = Color(0xFFE9B96E),
-                            indicatorColor = Color(0xFF1F2B3D),
-                            unselectedIconColor = Color(0xFF8E9BAE),
-                            unselectedTextColor = Color(0xFF8E9BAE)
-                        )
-                    )
-                    NavigationBarItem(
-                        selected = tab == AppTab.PROFILE,
-                        onClick = {
-                            refreshLibrary()
-                            tab = AppTab.PROFILE
-                        },
-                        icon = { Icon(Icons.Default.PersonOutline, contentDescription = null) },
-                        label = { Text("Profile") },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFFE9B96E),
-                            selectedTextColor = Color(0xFFE9B96E),
-                            indicatorColor = Color(0xFF1F2B3D),
-                            unselectedIconColor = Color(0xFF8E9BAE),
-                            unselectedTextColor = Color(0xFF8E9BAE)
-                        )
-                    )
-                }
+                        }
+                        tab = newTab
+                    }
+                )
             }
         }
     ) { padding ->
@@ -279,6 +258,12 @@ private fun MovDashApp() {
                     selectedMovie = movie
                 }
             )
+        } else if (activeSection != null) {
+            SectionScreen(
+                section = activeSection!!,
+                onBack = { activeSection = null },
+                onMovieClick = { selectedMovie = it }
+            )
         } else {
             Box(Modifier.fillMaxSize().padding(padding).background(Color(0xFF090B10))) {
                 when (tab) {
@@ -289,11 +274,15 @@ private fun MovDashApp() {
                         popularMovies = popularMovies,
                         popularSeries = popularSeries,
                         upcomingMovies = upcomingList,
+                        history = history,
                         onMovieClick = { selectedMovie = it },
                         onDiscover = { tab = AppTab.DISCOVER },
                         onGenreClick = { genre ->
                             searchGenre = genre
                             tab = AppTab.DISCOVER
+                        },
+                        onOpenSection = { section ->
+                            activeSection = section
                         }
                     )
                     AppTab.DISCOVER -> DiscoverScreen(
@@ -332,7 +321,9 @@ private fun MovDashApp() {
                         },
                         onMovieClick = { selectedMovie = it },
                         activeUniverse = activeUniverseByDiscover,
-                        onUniverseSelected = { activeUniverseByDiscover = it }
+                        onUniverseSelected = { activeUniverseByDiscover = it },
+                        searchGenre = searchGenre,
+                        onGenreSelected = { searchGenre = it }
                     )
                     AppTab.LIBRARY -> LibraryScreen(
                         watchlist = watchlist,
@@ -396,6 +387,251 @@ private fun MovDashApp() {
 }
 
 @Composable
+private fun FloatingPillBottomNav(
+    currentTab: AppTab,
+    onTabSelected: (AppTab) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .height(64.dp),
+        shape = RoundedCornerShape(100.dp),
+        color = Color(0xEE0E1522),
+        border = BorderStroke(1.dp, Color(0x33FFFFFF)),
+        shadowElevation = 16.dp
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val tabs = listOf(
+                Triple(AppTab.HOME, "Home", Icons.Default.Home),
+                Triple(AppTab.DISCOVER, "Discover", Icons.Default.Search),
+                Triple(AppTab.LIBRARY, "Vault", Icons.Default.BookmarkBorder),
+                Triple(AppTab.PROFILE, "Profile", Icons.Default.PersonOutline)
+            )
+
+            tabs.forEach { (tab, label, icon) ->
+                val selected = currentTab == tab
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(100.dp))
+                        .background(if (selected) Color(0x33E9B96E) else Color.Transparent)
+                        .clickable { onTabSelected(tab) }
+                        .padding(horizontal = if (selected) 16.dp else 12.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = label,
+                            tint = if (selected) Color(0xFFE9B96E) else Color(0xFF8E9BAE),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        if (selected) {
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = label,
+                                color = Color(0xFFE9B96E),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SectionScreen(
+    section: SectionInfo,
+    onBack: () -> Unit,
+    onMovieClick: (Movie) -> Unit
+) {
+    Scaffold(
+        containerColor = Color(0xFF090B10),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            section.title,
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "${section.items.size} Titles • ${section.subtitle}",
+                            color = Color(0xFFE9B96E),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF090B10))
+            )
+        }
+    ) { padding ->
+        if (section.isRanked) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(vertical = 12.dp)
+            ) {
+                itemsIndexed(section.items, key = { index, movie -> "ranked-${movie.id}-$index" }) { index, movie ->
+                    val rank = index + 1
+                    val (badgeColor, bgColor, borderColor) = when (rank) {
+                        1 -> Triple(Color(0xFFFFD700), Color(0x22FFD700), Color(0x88FFD700))
+                        2 -> Triple(Color(0xFFD6D6D6), Color(0x1CD6D6D6), Color(0x66D6D6D6))
+                        3 -> Triple(Color(0xFFCD7F32), Color(0x22CD7F32), Color(0x77CD7F32))
+                        else -> Triple(Color(0xFF94A3B8), Color(0xFF131A26), Color(0xFF263347))
+                    }
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onMovieClick(movie) },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = bgColor),
+                        border = BorderStroke(1.dp, borderColor)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(badgeColor.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "#$rank",
+                                    color = badgeColor,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 14.sp
+                                )
+                            }
+
+                            Spacer(Modifier.width(12.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 65.dp, height = 90.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFF1E2837))
+                            ) {
+                                val imageUrl = movie.posterPath?.let { "https://image.tmdb.org/t/p/w200$it" }
+                                if (imageUrl != null) {
+                                    AsyncImage(
+                                        model = imageUrl,
+                                        contentDescription = movie.title,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.width(12.dp))
+
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    movie.title,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        "★ " + String.format("%.1f", movie.voteAverage ?: 0.0),
+                                        color = Color(0xFFE9B96E),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        movie.releaseDate?.take(4) ?: "",
+                                        color = Color(0xFF8E9BAE),
+                                        fontSize = 12.sp
+                                    )
+                                    val badge = getMovieQualityBadge(movie)
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = if (badge == "4K UHD") Color(0xFFE9B96E) else Color(0xFF2563EB)
+                                    ) {
+                                        Text(
+                                            badge,
+                                            color = if (badge == "4K UHD") Color(0xFF101620) else Color.White,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    movie.overview,
+                                    color = Color(0xFF9AA5B5),
+                                    fontSize = 11.sp,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = badgeColor,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 120.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                contentPadding = PaddingValues(vertical = 12.dp)
+            ) {
+                items(section.items, key = { "section-${it.id}" }) { item ->
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun HomeScreen(
     spotlightMovies: List<Movie>,
     movies: List<Movie>,
@@ -403,15 +639,102 @@ private fun HomeScreen(
     popularMovies: List<Movie>,
     popularSeries: List<Movie>,
     upcomingMovies: List<Movie>,
+    history: List<Movie>,
     onMovieClick: (Movie) -> Unit,
     onDiscover: () -> Unit,
-    onGenreClick: (String) -> Unit
+    onGenreClick: (String) -> Unit,
+    onOpenSection: (SectionInfo) -> Unit
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         HeroSpotlightCarousel(
             movies = spotlightMovies,
             onWatch = onMovieClick
         )
+
+        // Continue Watching Shelf (AniDash style)
+        if (history.isNotEmpty()) {
+            Spacer(Modifier.height(14.dp))
+            SectionTitle(
+                title = "Continue Watching",
+                action = "History",
+                onClick = {
+                    onOpenSection(
+                        SectionInfo(
+                            title = "Continue Watching",
+                            subtitle = "Recently streamed titles",
+                            items = history
+                        )
+                    )
+                }
+            )
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(history.take(10), key = { "continue-${it.id}" }) { movie ->
+                    Column(
+                        Modifier
+                            .width(150.dp)
+                            .clickable { onMovieClick(movie) }
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(95.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF151D29))
+                        ) {
+                            val bg = movie.backdropPath ?: movie.posterPath
+                            if (bg != null) {
+                                AsyncImage(
+                                    model = "https://image.tmdb.org/t/p/w300$bg",
+                                    contentDescription = movie.title,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0x44000000)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.PlayCircleFilled,
+                                    contentDescription = "Resume",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
+                            // Progress bar
+                            Box(
+                                Modifier
+                                    .align(Alignment.BottomStart)
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .background(Color(0x55FFFFFF))
+                            ) {
+                                Box(
+                                    Modifier
+                                        .fillMaxWidth(0.65f)
+                                        .fillMaxHeight()
+                                        .background(Color(0xFFE50914))
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            movie.title,
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
 
         Spacer(Modifier.height(14.dp))
 
@@ -433,21 +756,18 @@ private fun HomeScreen(
             }
         }
 
-        Spacer(Modifier.height(10.dp))
-
-        // Upcoming / Releasing Soon Shelf
-        if (upcomingMovies.isNotEmpty()) {
-            SectionTitle("Releasing Soon • In Theaters / OTT", "Discover", onDiscover)
-            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(upcomingMovies, key = { "upcoming-home-${it.id}" }) { item ->
-                    MoviePosterCard(item) { onMovieClick(item) }
-                }
-            }
-        }
-
+        // 1. Trending Movies
         if (movies.isNotEmpty()) {
-            Spacer(Modifier.height(18.dp))
-            SectionTitle("Trending Movies", "See all", onDiscover)
+            Spacer(Modifier.height(14.dp))
+            SectionTitle("Trending Movies", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "Trending Movies",
+                        subtitle = "Global box-office blockbusters",
+                        items = movies
+                    )
+                )
+            }
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(movies, key = { "trend-movie-${it.id}" }) { movie ->
                     MoviePosterCard(movie) { onMovieClick(movie) }
@@ -455,19 +775,18 @@ private fun HomeScreen(
             }
         }
 
-        if (series.isNotEmpty()) {
-            Spacer(Modifier.height(18.dp))
-            SectionTitle("Trending TV Series", "See all", onDiscover)
-            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(series, key = { "trend-tv-${it.id}" }) { item ->
-                    MoviePosterCard(item) { onMovieClick(item) }
-                }
-            }
-        }
-
+        // 2. Popular Blockbusters
         if (popularMovies.isNotEmpty()) {
             Spacer(Modifier.height(18.dp))
-            SectionTitle("Popular Blockbusters", "Discover", onDiscover)
+            SectionTitle("Popular Blockbusters", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "Popular Blockbusters",
+                        subtitle = "All-time viewer favorites",
+                        items = popularMovies
+                    )
+                )
+            }
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(popularMovies, key = { "pop-movie-${it.id}" }) { item ->
                     MoviePosterCard(item) { onMovieClick(item) }
@@ -475,11 +794,95 @@ private fun HomeScreen(
             }
         }
 
-        if (popularSeries.isNotEmpty()) {
+        // 3. Trending TV Series
+        if (series.isNotEmpty()) {
             Spacer(Modifier.height(18.dp))
-            SectionTitle("Top Rated Shows", "Discover", onDiscover)
+            SectionTitle("Trending TV Series", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "Trending TV Series",
+                        subtitle = "Binge-worthy shows & serials",
+                        items = series
+                    )
+                )
+            }
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(popularSeries, key = { "pop-tv-${it.id}" }) { item ->
+                items(series, key = { "trend-tv-${it.id}" }) { item ->
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+
+        // 4. Top Rated Masterpieces (AniDash Ranked Section!)
+        Spacer(Modifier.height(18.dp))
+        SectionTitle("Top Rated Masterpieces", "Ranked #1-10") {
+            onOpenSection(
+                SectionInfo(
+                    title = "Top Rated Masterpieces",
+                    subtitle = "Ranked #1 to #10 all-time cinema",
+                    items = PreloadedCatalog.topRatedMasterpieces,
+                    isRanked = true
+                )
+            )
+        }
+        LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(PreloadedCatalog.topRatedMasterpieces, key = { "top-rated-${it.id}" }) { item ->
+                MoviePosterCard(item) { onMovieClick(item) }
+            }
+        }
+
+        // 5. Bollywood & Hindi Hits
+        if (PreloadedCatalog.bollywoodHits.isNotEmpty()) {
+            Spacer(Modifier.height(18.dp))
+            SectionTitle("Bollywood & Hindi Hits", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "Bollywood & Hindi Hits",
+                        subtitle = "Massive blockbuster Hindi cinema",
+                        items = PreloadedCatalog.bollywoodHits
+                    )
+                )
+            }
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(PreloadedCatalog.bollywoodHits, key = { "bolly-${it.id}" }) { item ->
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+
+        // 6. South Indian Epic Cinema
+        if (PreloadedCatalog.southIndianCinema.isNotEmpty()) {
+            Spacer(Modifier.height(18.dp))
+            SectionTitle("South Indian Epic Cinema", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "South Indian Epic Cinema",
+                        subtitle = "Pan-Indian action and drama spectacles",
+                        items = PreloadedCatalog.southIndianCinema
+                    )
+                )
+            }
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(PreloadedCatalog.southIndianCinema, key = { "south-${it.id}" }) { item ->
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+
+        // 7. Upcoming / Releasing Soon Shelf
+        if (upcomingMovies.isNotEmpty()) {
+            Spacer(Modifier.height(18.dp))
+            SectionTitle("Releasing Soon • In Theaters / OTT", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "Releasing Soon",
+                        subtitle = "Upcoming highly anticipated releases",
+                        items = upcomingMovies
+                    )
+                )
+            }
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(upcomingMovies, key = { "upcoming-home-${it.id}" }) { item ->
                     MoviePosterCard(item) { onMovieClick(item) }
                 }
             }
@@ -489,7 +892,6 @@ private fun HomeScreen(
     }
 }
 
-@Composable
 private fun HeroSpotlightCarousel(
     movies: List<Movie>,
     onWatch: (Movie) -> Unit
@@ -641,18 +1043,21 @@ private fun HeroSpotlightCarousel(
 }
 
 @Composable
-private fun SectionTitle(title: String, action: String, onClick: () -> Unit) {
+private fun SectionTitle(title: String, action: String = "See All", onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 8.dp),
+            .padding(horizontal = 18.dp, vertical = 8.dp)
+            .clickable(onClick = onClick),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        TextButton(onClick = onClick) {
-            Text(action, color = Color(0xFFE9B96E), style = MaterialTheme.typography.labelMedium)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(title, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.width(4.dp))
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(18.dp))
         }
+        Text(action, color = Color(0xFFE9B96E), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -675,6 +1080,22 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
                     modifier = Modifier.fillMaxSize()
                 )
             }
+            // Quality Badge (4K UHD in luxurious gold / 1080p HD in electric blue)
+            val qualityBadge = getMovieQualityBadge(movie)
+            Surface(
+                shape = RoundedCornerShape(bottomStart = 8.dp, topEnd = 14.dp),
+                color = if (qualityBadge == "4K UHD") Color(0xFFE9B96E) else Color(0xFF2563EB),
+                modifier = Modifier.align(Alignment.TopEnd)
+            ) {
+                Text(
+                    qualityBadge,
+                    color = if (qualityBadge == "4K UHD") Color(0xFF101620) else Color.White,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                )
+            }
+
             Box(
                 Modifier
                     .align(Alignment.BottomStart)
@@ -728,7 +1149,6 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
     }
 }
 
-@Composable
 private fun DiscoverScreen(
     query: String,
     onQueryChange: (String) -> Unit,
@@ -740,10 +1160,14 @@ private fun DiscoverScreen(
     onSearch: () -> Unit,
     onMovieClick: (Movie) -> Unit,
     activeUniverse: Universe?,
-    onUniverseSelected: (Universe?) -> Unit
+    onUniverseSelected: (Universe?) -> Unit,
+    searchGenre: String? = null,
+    onGenreSelected: (String?) -> Unit = {}
 ) {
     val context = LocalContext.current
     var timelineWatchVersion by remember { mutableIntStateOf(0) }
+    var selectedGenre by remember(searchGenre) { mutableStateOf(searchGenre) }
+    var searchHistory by remember { mutableStateOf(LibraryManager.getSearchHistory(context)) }
 
     // If a universe is open, display the Chronological Watch Order Timeline
     if (activeUniverse != null) {
@@ -755,9 +1179,10 @@ private fun DiscoverScreen(
         return
     }
 
-    val displayList = remember(results, query, mediaType) {
+    val displayList = remember(results, query, mediaType, selectedGenre) {
         when {
             results.isNotEmpty() -> results
+            selectedGenre != null -> PreloadedCatalog.getMoviesForGenre(selectedGenre!!)
             query.isBlank() -> {
                 var list = PreloadedCatalog.allDiscover
                 if (mediaType != "multi") {
@@ -786,7 +1211,7 @@ private fun DiscoverScreen(
             .verticalScroll(rememberScrollState())
     ) {
         Text("Discover & Universes", color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Search all movies, series, or explore franchise watch orders.", color = Color(0xFF9AA5B5), style = MaterialTheme.typography.bodySmall)
+        Text("Search all movies, series, explore genres or franchise watch orders.", color = Color(0xFF9AA5B5), style = MaterialTheme.typography.bodySmall)
 
         Spacer(Modifier.height(10.dp))
 
@@ -811,7 +1236,7 @@ private fun DiscoverScreen(
 
         Spacer(Modifier.height(10.dp))
 
-        // Search Input
+        // Search Input Bar (AniDash style)
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = query,
@@ -837,7 +1262,13 @@ private fun DiscoverScreen(
             )
             Spacer(Modifier.width(8.dp))
             Button(
-                onClick = onSearch,
+                onClick = {
+                    if (query.isNotBlank()) {
+                        LibraryManager.addSearchQuery(context, query.trim())
+                        searchHistory = LibraryManager.getSearchHistory(context)
+                    }
+                    onSearch()
+                },
                 enabled = query.isNotBlank() && !loading,
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE9B96E), contentColor = Color(0xFF1A1309))
@@ -846,7 +1277,7 @@ private fun DiscoverScreen(
             }
         }
 
-        // Live Auto-complete Suggestions
+        // Live Auto-complete Suggestions Dropdown
         if (query.isNotBlank() && searchSuggestions.isNotEmpty()) {
             Spacer(Modifier.height(4.dp))
             Surface(
@@ -862,6 +1293,8 @@ private fun DiscoverScreen(
                                 .fillMaxWidth()
                                 .clickable {
                                     onQueryChange(suggestion.title)
+                                    LibraryManager.addSearchQuery(context, suggestion.title)
+                                    searchHistory = LibraryManager.getSearchHistory(context)
                                     onMovieClick(suggestion)
                                 }
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
@@ -892,9 +1325,101 @@ private fun DiscoverScreen(
             }
         }
 
+        // Recent Searches (AniDash Style)
+        if (query.isBlank() && searchHistory.isNotEmpty()) {
+            Spacer(Modifier.height(10.dp))
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.History, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Recent Searches", color = Color(0xFFCBD5E1), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                TextButton(
+                    onClick = {
+                        LibraryManager.clearSearchHistory(context)
+                        searchHistory = emptyList()
+                    },
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text("Clear All", color = Color(0xFF8E9BAE), fontSize = 11.sp)
+                }
+            }
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 4.dp)
+            ) {
+                items(searchHistory) { item ->
+                    SuggestionChip(
+                        onClick = {
+                            onQueryChange(item)
+                            onSearch()
+                        },
+                        label = { Text(item, color = Color(0xFFDCE2EC), fontSize = 12.sp) },
+                        icon = {
+                            Icon(Icons.Default.History, contentDescription = null, tint = Color(0xFF8E9BAE), modifier = Modifier.size(14.dp))
+                        },
+                        colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color(0xFF141C28)),
+                        border = SuggestionChipDefaults.suggestionChipBorder(
+                            enabled = true,
+                            borderColor = Color(0xFF263347)
+                        )
+                    )
+                }
+            }
+        }
+
+        // Restored Genre Filter Chips Row (Action, Adventure, Sci-Fi, etc.)
+        Spacer(Modifier.height(12.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Browse by Genre", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            if (selectedGenre != null) {
+                Spacer(Modifier.width(8.dp))
+                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFE9B96E)) {
+                    Text(
+                        selectedGenre!!,
+                        color = Color(0xFF101620),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 2.dp)
+        ) {
+            item {
+                FilterChip(
+                    selected = selectedGenre == null,
+                    onClick = {
+                        selectedGenre = null
+                        onGenreSelected(null)
+                    },
+                    label = { Text("All Genres") }
+                )
+            }
+            items(PreloadedCatalog.genres) { genre ->
+                FilterChip(
+                    selected = selectedGenre == genre,
+                    onClick = {
+                        val newG = if (selectedGenre == genre) null else genre
+                        selectedGenre = newG
+                        onGenreSelected(newG)
+                    },
+                    label = { Text(genre) }
+                )
+            }
+        }
+
         Spacer(Modifier.height(16.dp))
 
-        // CINEMATIC UNIVERSES SECTION (Replaces plain boring genres!)
+        // CINEMATIC UNIVERSES SECTION
         Text("Cinematic Universes & Sagas", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text("Select a universe to track its official chronological watch order", color = Color(0xFF8F9CAA), fontSize = 11.sp)
 
@@ -986,7 +1511,7 @@ private fun DiscoverScreen(
                                         fontSize = 10.sp
                                     )
                                     Text(
-                                        "${(percent * 100).roundToInt()}%",
+                                        "${(percent * 100).toInt()}%",
                                         color = Color(u.accentColor),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold
@@ -1020,8 +1545,54 @@ private fun DiscoverScreen(
             Text(error, color = Color(0xFFFFA69C), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 8.dp))
         }
 
+        // Search Empty State with Fuzzy Suggestions (AniDash style)
+        if (!loading && displayList.isEmpty() && query.isNotBlank()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    Icons.Default.SearchOff,
+                    contentDescription = null,
+                    tint = Color(0xFFE9B96E),
+                    modifier = Modifier.size(54.dp)
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "No matches found for \"$query\"",
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Try searching for popular blockbusters or explore genres above.",
+                    color = Color(0xFF8E9BAE),
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(16.dp))
+                Text("Did you mean:", color = Color(0xFFE9B96E), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Avengers", "Interstellar", "K.G.F", "Stranger Things").forEach { sug ->
+                        SuggestionChip(
+                            onClick = {
+                                onQueryChange(sug)
+                                onSearch()
+                            },
+                            label = { Text(sug, color = Color.White, fontSize = 11.sp) },
+                            colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color(0xFF1F2B3D))
+                        )
+                    }
+                }
+            }
+        }
+
         Text(
-            if (query.isBlank()) "Trending Discoveries" else "Search Results (${displayList.size})",
+            if (query.isBlank()) (if (selectedGenre != null) "$selectedGenre Cinema" else "Trending Discoveries") else "Search Results (${displayList.size})",
             color = Color.White,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
@@ -1038,7 +1609,7 @@ private fun DiscoverScreen(
                 ) {
                     rowMovies.forEach { movie ->
                         Box(Modifier.weight(1f)) {
-                            DiscoverMovieCard(movie = movie, onClick = { onMovieClick(movie) })
+                            MoviePosterCard(movie = movie, onClick = { onMovieClick(movie) })
                         }
                     }
                     repeat(3 - rowMovies.size) {
@@ -1050,7 +1621,6 @@ private fun DiscoverScreen(
     }
 }
 
-@Composable
 private fun UniverseWatchOrderScreen(
     universe: Universe,
     onBack: () -> Unit,
@@ -1367,16 +1937,220 @@ private fun LibraryScreen(
                     EmptyVaultState(
                         icon = Icons.Default.DownloadDone,
                         title = "No Offline Downloads",
-                        message = "Download movies or episodes with your preferred Hindi/English audio and subtitles to watch anywhere offline without internet.",
+                        message = "Download movies or series episodes with your preferred Hindi/English audio and subtitles to watch offline without internet.",
                         actionText = "Explore Titles to Download",
                         onAction = onExplore
                     )
                 } else {
+                    val tvDownloads = downloads.filter { it.mediaType == "tv" }
+                    val movieDownloads = downloads.filter { it.mediaType != "tv" }
+                    val seriesFolders = tvDownloads.groupBy { it.id }
+                    var expandedSeriesIds by remember { mutableStateOf(setOf<Int>()) }
+
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(downloads, key = { "${it.id}-${it.episodeNumber}" }) { item ->
+                        item {
+                            // In-App Sandbox Notice Banner
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF0F1824),
+                                border = BorderStroke(1.dp, Color(0xFF1E2D42)),
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.Security,
+                                        contentDescription = null,
+                                        tint = Color(0xFF10B981),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            "Secure In-App Sandbox Storage",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            "All downloads stay strictly inside MovDash's private vault (hidden from phone gallery & external file managers).",
+                                            color = Color(0xFF8E9BAE),
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // SERIES FOLDERS
+                        seriesFolders.forEach { (seriesId, epList) ->
+                            val firstEp = epList.first()
+                            val isExpanded = expandedSeriesIds.contains(seriesId)
+                            val folderSizeMb = epList.sumOf { it.fileSizeMb }
+
+                            item(key = "series-folder-$seriesId") {
+                                Card(
+                                    shape = RoundedCornerShape(14.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF131A26)),
+                                    border = BorderStroke(1.dp, if (isExpanded) Color(0xFFE9B96E) else Color(0xFF1E2B3D)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(Modifier.padding(12.dp)) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    expandedSeriesIds = if (isExpanded) {
+                                                        expandedSeriesIds - seriesId
+                                                    } else {
+                                                        expandedSeriesIds + seriesId
+                                                    }
+                                                },
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Folder Icon Badge
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(46.dp)
+                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .background(Color(0xFF1A2637)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    if (isExpanded) Icons.Default.FolderOpen else Icons.Default.Folder,
+                                                    contentDescription = "Series Folder",
+                                                    tint = Color(0xFFE9B96E),
+                                                    modifier = Modifier.size(26.dp)
+                                                )
+                                            }
+
+                                            Spacer(Modifier.width(12.dp))
+
+                                            Column(Modifier.weight(1f)) {
+                                                Text(
+                                                    firstEp.title,
+                                                    color = Color.White,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 15.sp,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                Spacer(Modifier.height(2.dp))
+                                                Text(
+                                                    "Series Folder • ${epList.size} Episodes • $folderSizeMb MB",
+                                                    color = Color(0xFFE9B96E),
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                                Spacer(Modifier.height(4.dp))
+                                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF1E2D42)) {
+                                                        Text(
+                                                            "PRIVATE VAULT",
+                                                            color = Color(0xFF10B981),
+                                                            fontSize = 8.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+                                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF1E2D42)) {
+                                                        Text(
+                                                            firstEp.quality,
+                                                            color = Color(0xFFE9B96E),
+                                                            fontSize = 8.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+
+                                            IconButton(
+                                                onClick = {
+                                                    expandedSeriesIds = if (isExpanded) {
+                                                        expandedSeriesIds - seriesId
+                                                    } else {
+                                                        expandedSeriesIds + seriesId
+                                                    }
+                                                }
+                                            ) {
+                                                Icon(
+                                                    if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                                    contentDescription = "Expand",
+                                                    tint = Color(0xFFE9B96E)
+                                                )
+                                            }
+                                        }
+
+                                        // Expanded episodes list
+                                        if (isExpanded) {
+                                            Spacer(Modifier.height(10.dp))
+                                            HorizontalDivider(color = Color(0xFF1F2D40))
+                                            Spacer(Modifier.height(10.dp))
+
+                                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                epList.forEach { ep ->
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .clip(RoundedCornerShape(10.dp))
+                                                            .background(Color(0xFF0D141F))
+                                                            .padding(8.dp),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Column(Modifier.weight(1f)) {
+                                                            Text(
+                                                                ep.episodeTitle ?: "Season ${ep.seasonNumber ?: 1} Episode ${ep.episodeNumber ?: 1}",
+                                                                color = Color.White,
+                                                                fontSize = 12.sp,
+                                                                fontWeight = FontWeight.SemiBold,
+                                                                maxLines = 1,
+                                                                overflow = TextOverflow.Ellipsis
+                                                            )
+                                                            Spacer(Modifier.height(2.dp))
+                                                            Text(
+                                                                "S${ep.seasonNumber ?: 1} E${ep.episodeNumber ?: 1} • ${ep.audioTrack} • ${ep.fileSizeMb} MB",
+                                                                color = Color(0xFF8E9BAE),
+                                                                fontSize = 10.sp
+                                                            )
+                                                        }
+
+                                                        Button(
+                                                            onClick = { onPlayDownloaded(ep) },
+                                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE50914), contentColor = Color.White),
+                                                            shape = RoundedCornerShape(8.dp),
+                                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                                                            modifier = Modifier.height(28.dp)
+                                                        ) {
+                                                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(14.dp))
+                                                            Spacer(Modifier.width(4.dp))
+                                                            Text("Play", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                                        }
+
+                                                        Spacer(Modifier.width(6.dp))
+
+                                                        IconButton(
+                                                            onClick = { onDeleteDownload(ep) },
+                                                            modifier = Modifier.size(28.dp).clip(CircleShape).background(Color(0xFF241519))
+                                                        ) {
+                                                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFF87171), modifier = Modifier.size(14.dp))
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // MOVIE DOWNLOADS
+                        items(movieDownloads, key = { "movie-dl-${it.id}" }) { item ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -1419,9 +2193,8 @@ private fun LibraryScreen(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    if (item.episodeTitle != null) {
-                                        Text(item.episodeTitle, color = Color(0xFFE9B96E), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text("Movie Download • Private Sandbox", color = Color(0xFF8E9BAE), fontSize = 11.sp)
                                     Spacer(Modifier.height(4.dp))
                                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF1F2C3E)) {
@@ -1462,7 +2235,6 @@ private fun LibraryScreen(
                     }
                 }
             }
-
             // UNIVERSES PROGRESS TAB
             4 -> {
                 LazyColumn(

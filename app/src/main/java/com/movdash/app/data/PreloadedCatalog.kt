@@ -370,9 +370,75 @@ object PreloadedCatalog {
     )
 
     val genres = listOf(
-        "Action", "Sci-Fi", "Adventure", "Animation", "Comedy",
-        "Crime", "Drama", "Fantasy", "Horror", "Mystery", "Thriller"
+        "Action", "Adventure", "Science Fiction", "Animation", "Comedy",
+        "Crime", "Drama", "Fantasy", "Horror", "Mystery", "Romance", "Thriller", "War"
     )
+
+    val topRatedMasterpieces: List<Movie> by lazy {
+        listOf(
+            Movie(157336, "Interstellar", "Mankind was born on Earth. It was never meant to die here.", "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", "/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg", "2014-11-07", 8.7, "movie"),
+            Movie(1396, "Breaking Bad", "A high school chemistry teacher turned ruthless meth kingpin.", "/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg", "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg", "2008-01-20", 8.9, "tv"),
+            Movie(155, "The Dark Knight", "Batman raises the stakes in his war on crime against the Joker.", "/qJ2tW6WMUDux911r6m7haRef0WH.jpg", "/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg", "2008-07-18", 8.5, "movie"),
+            Movie(693134, "Dune: Part Two", "Paul Atreides unites with the Fremen on a mythic path of revenge.", "/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg", "/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg", "2024-03-01", 8.3, "movie"),
+            Movie(66732, "Stranger Things", "Secret government experiments, terrifying forces and one strange girl.", "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "/56v2KjBlU4XaOv9rVYEQypROD7P.jpg", "2016-07-15", 8.6, "tv"),
+            Movie(27205, "Inception", "A skilled thief steals corporate secrets through subconscious dream-sharing.", "/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg", "/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg", "2010-07-16", 8.4, "movie"),
+            Movie(126308, "Shōgun", "In feudal Japan, Lord Toranaga battles against enemies on the Council of Regents.", "/7O4iVfOMQmdCSxhOg1WNzG1AgYT.jpg", "/2rmK7mnchsl935x72PmyvpYdiip.jpg", "2024-02-27", 8.5, "tv"),
+            Movie(1399, "Game of Thrones", "Nine noble families fight for control over the mythical lands of Westeros.", "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg", "/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg", "2011-04-17", 8.4, "tv"),
+            Movie(299534, "Avengers: Endgame", "After Thanos wiped out half the universe, the remaining Avengers assemble.", "/or06FN3Dka5tukK1e9sl16pB3iy.jpg", "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg", "2019-04-26", 8.3, "movie"),
+            Movie(872585, "Oppenheimer", "The story of J. Robert Oppenheimer's role in the development of the atomic bomb.", "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg", "/fm6KqXpk3M2HVveHwCrBSSBaO0V.jpg", "2023-07-21", 8.1, "movie"),
+            Movie(569547, "K.G.F: Chapter 1", "Rocky arrives in Bombay to fulfill his mother's promise in the gold mines.", "/b16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg", "2018-12-21", 8.2, "movie")
+        )
+    }
+
+    val bollywoodHits: List<Movie> by lazy {
+        allDiscover.filter { movie ->
+            listOf(864692, 872906, 784651, 585268, 1087822, 587391, 546554, 119051, 71883, 287948, 458305).contains(movie.id) ||
+            movie.title.contains("Pathaan", ignoreCase = true) ||
+            movie.title.contains("Jawan", ignoreCase = true) ||
+            movie.title.contains("Tiger", ignoreCase = true) ||
+            movie.title.contains("Singham", ignoreCase = true) ||
+            movie.title.contains("War", ignoreCase = true) ||
+            movie.title.contains("Sooryavanshi", ignoreCase = true) ||
+            movie.title.contains("Simmba", ignoreCase = true)
+        }.distinctBy { "${it.mediaType}-${it.id}" }
+    }
+
+    val southIndianCinema: List<Movie> by lazy {
+        allDiscover.filter { movie ->
+            listOf(569547, 655431, 926393, 1022789, 1075794, 833860, 630566, 579974, 256040, 799583).contains(movie.id) ||
+            movie.title.contains("K.G.F", ignoreCase = true) ||
+            movie.title.contains("Salaar", ignoreCase = true) ||
+            movie.title.contains("Kalki", ignoreCase = true) ||
+            movie.title.contains("Leo", ignoreCase = true) ||
+            movie.title.contains("Vikram", ignoreCase = true) ||
+            movie.title.contains("Kaithi", ignoreCase = true) ||
+            movie.title.contains("RRR", ignoreCase = true) ||
+            movie.title.contains("Baahubali", ignoreCase = true) ||
+            movie.title.contains("Pushpa", ignoreCase = true)
+        }.distinctBy { "${it.mediaType}-${it.id}" }
+    }
+
+    fun getMoviesForGenre(genre: String): List<Movie> {
+        val g = genre.trim().lowercase()
+        return allDiscover.filter { m ->
+            val text = "${m.title} ${m.overview}".lowercase()
+            when {
+                g == "action" -> text.contains("action") || text.contains("fight") || text.contains("battle") || text.contains("war") || text.contains("avenger") || text.contains("agent") || text.contains("superhero")
+                g == "science fiction" || g == "sci-fi" -> text.contains("space") || text.contains("alien") || text.contains("future") || text.contains("multiverse") || text.contains("universe") || text.contains("sci-fi") || text.contains("robot") || text.contains("experiment")
+                g == "adventure" -> text.contains("journey") || text.contains("quest") || text.contains("explore") || text.contains("adventure") || text.contains("voyage")
+                g == "crime" -> text.contains("crime") || text.contains("police") || text.contains("cop") || text.contains("drug") || text.contains("mafia") || text.contains("gang") || text.contains("thief")
+                g == "drama" -> (m.voteAverage ?: 0.0) >= 7.8 || text.contains("family") || text.contains("life") || text.contains("story")
+                g == "thriller" -> text.contains("threat") || text.contains("mystery") || text.contains("conspiracy") || text.contains("deadly") || text.contains("secret")
+                g == "fantasy" -> text.contains("magic") || text.contains("god") || text.contains("myth") || text.contains("dragon") || text.contains("realm")
+                g == "comedy" -> text.contains("comedy") || text.contains("humor") || text.contains("wade") || text.contains("deadpool") || text.contains("simmba")
+                g == "animation" -> text.contains("animated") || text.contains("spider-verse") || text.contains("anime")
+                g == "horror" -> text.contains("horror") || text.contains("monster") || text.contains("creature") || text.contains("terrifying")
+                g == "romance" -> text.contains("love") || text.contains("romance") || text.contains("reena") || text.contains("zoya")
+                g == "war" -> text.contains("war") || text.contains("army") || text.contains("soldier") || text.contains("battle")
+                else -> text.contains(g)
+            }
+        }.ifEmpty { allDiscover.take(12) }
+    }
 
     val allDiscover: List<Movie>
         get() = (spotlightItems + trendingMovies + trendingSeries + popularMovies + popularSeries + upcomingTitles + UniverseData.allUniverses.flatMap { u -> u.items.map { it.movie } })

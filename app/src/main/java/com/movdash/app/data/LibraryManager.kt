@@ -11,6 +11,7 @@ object LibraryManager {
     private const val KEY_FAVORITES = "favorites"
     private const val KEY_DOWNLOADS = "downloads"
     private const val KEY_WATCHED_IDS = "watched_timeline_ids"
+    private const val KEY_SEARCH_HISTORY = "search_history"
     private val gson = Gson()
 
     // WATCHLIST
@@ -168,6 +169,45 @@ object LibraryManager {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val watchedSet = prefs.getStringSet(KEY_WATCHED_IDS, emptySet()) ?: emptySet()
         return universe.items.count { watchedSet.contains(it.movie.id.toString()) }
+    }
+
+    // SEARCH HISTORY (AniDash Style)
+    fun getSearchHistory(context: Context): List<String> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val json = prefs.getString(KEY_SEARCH_HISTORY, null) ?: return listOf(
+            "Avengers", "Deadpool", "Stranger Things", "Interstellar", "K.G.F", "Salaar"
+        )
+        return try {
+            val type = object : TypeToken<List<String>>() {}.type
+            gson.fromJson(json, type) ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun addSearchQuery(context: Context, query: String) {
+        val clean = query.trim()
+        if (clean.isBlank()) return
+        val list = getSearchHistory(context).toMutableList()
+        list.removeAll { it.equals(clean, ignoreCase = true) }
+        list.add(0, clean)
+        if (list.size > 20) {
+            list.subList(20, list.size).clear()
+        }
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_SEARCH_HISTORY, gson.toJson(list)).apply()
+    }
+
+    fun removeSearchQuery(context: Context, query: String) {
+        val list = getSearchHistory(context).toMutableList()
+        list.removeAll { it.equals(query, ignoreCase = true) }
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_SEARCH_HISTORY, gson.toJson(list)).apply()
+    }
+
+    fun clearSearchHistory(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().remove(KEY_SEARCH_HISTORY).apply()
     }
 
     private fun saveList(context: Context, key: String, list: List<Movie>) {

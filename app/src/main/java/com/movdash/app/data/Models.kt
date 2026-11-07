@@ -111,6 +111,14 @@ fun isUnreleasedTitle(releaseDate: String?, status: String? = null, title: Strin
     return releaseDate.trim() > currentDate
 }
 
+fun isCamOrLowQuality(text: String?): Boolean {
+    if (text == null) return false
+    val lower = text.lowercase()
+    return lower.contains("cam") || lower.contains("hdcam") || lower.contains("camrip") ||
+           lower.contains("telesync") || lower.contains("hdts") || lower.contains("tsrip") ||
+           lower.contains("theater")
+}
+
 object StreamServerFactory {
     fun getDefaultStreamUrl(
         tmdbId: Int,
@@ -174,7 +182,7 @@ object StreamServerFactory {
                     streamType = "embed",
                     streamUrl = "https://multiembed.mov/?video_id=$tmdbId&tmdb=1&s=$s&e=$e"
                 )
-            )
+            ).filter { !isCamOrLowQuality(it.quality) && !isCamOrLowQuality(it.name) && !isCamOrLowQuality(it.badge) }
         } else {
             listOf(
                 StreamServer(
@@ -213,7 +221,7 @@ object StreamServerFactory {
                     streamType = "embed",
                     streamUrl = "https://multiembed.mov/?video_id=$tmdbId&tmdb=1"
                 )
-            )
+            ).filter { !isCamOrLowQuality(it.quality) && !isCamOrLowQuality(it.name) && !isCamOrLowQuality(it.badge) }
         }
     }
 }
