@@ -2,6 +2,7 @@ package com.movdash.app.ui.onboarding
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +19,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import com.movdash.app.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -48,7 +51,7 @@ fun OnboardingScreen(
             OnboardingSlide(
                 icon = Icons.Default.AllInclusive,
                 badge = "ORBIT MULTIVERSE",
-                badgeColor = Color(0xFFE9B96E),
+                badgeColor = Color(0xFFF1F5F9),
                 title = "Welcome to Orbit",
                 subtitle = "Infinite Cinematic Universe",
                 description = "Enter Orbit — the next-generation entertainment universe. Stream thousands of Hollywood blockbusters, Bollywood hits, South Indian spectacles, and binge-worthy web series in pristine 4K UHD.",
@@ -118,7 +121,7 @@ fun OnboardingScreen(
             OnboardingSlide(
                 icon = Icons.Default.RocketLaunch,
                 badge = "ENTER ORBIT",
-                badgeColor = Color(0xFFE9B96E),
+                badgeColor = Color(0xFFF1F5F9),
                 title = "Launch Into Orbit",
                 subtitle = "100% Free Forever • No Sign-up",
                 description = "No subscriptions, no fees, and no account hurdles. Your personal portal to the infinite universe of movies and series is ready for departure.",
@@ -152,7 +155,7 @@ fun OnboardingScreen(
             ) {
                 Text(
                     text = "Orbit • ${pagerState.currentPage + 1} of ${slides.size}",
-                    color = Color(0xFFE9B96E),
+                    color = Color(0xFFF1F5F9),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
@@ -227,12 +230,20 @@ fun OnboardingScreen(
                             .border(1.5.dp, slide.badgeColor, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = slide.icon,
-                            contentDescription = null,
-                            tint = slide.badgeColor,
-                            modifier = Modifier.size(40.dp)
-                        )
+                        if (page == 0) {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_logo_transparent),
+                                contentDescription = "Orbit Logo",
+                                modifier = Modifier.size(52.dp)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = slide.icon,
+                                contentDescription = null,
+                                tint = slide.badgeColor,
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
                     }
                 }
 
@@ -269,7 +280,7 @@ fun OnboardingScreen(
 
                 Text(
                     text = slide.subtitle,
-                    color = Color(0xFFE9B96E),
+                    color = Color(0xFFF1F5F9),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center
@@ -351,7 +362,7 @@ fun OnboardingScreen(
                             .width(width)
                             .clip(CircleShape)
                             .background(
-                                if (isSelected) Color(0xFFE9B96E) else Color(0xFF2C3748)
+                                if (isSelected) Color(0xFFF1F5F9) else Color(0xFF2C3748)
                             )
                     )
                 }
@@ -395,7 +406,7 @@ fun OnboardingScreen(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE9B96E),
+                            containerColor = Color(0xFFF1F5F9),
                             contentColor = Color(0xFF101620)
                         ),
                         shape = RoundedCornerShape(12.dp),
@@ -413,7 +424,7 @@ fun OnboardingScreen(
                     Button(
                         onClick = onFinished,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE9B96E),
+                            containerColor = Color(0xFFF1F5F9),
                             contentColor = Color(0xFF101620)
                         ),
                         shape = RoundedCornerShape(14.dp),

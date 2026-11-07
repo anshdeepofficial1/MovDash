@@ -1,5 +1,7 @@
 package com.movdash.app.player
 
+@file:OptIn(androidx.media3.common.util.UnstableApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -38,6 +40,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import com.movdash.app.ui.components.OrbitLoader
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -189,7 +192,7 @@ class PlayerActivity : ComponentActivity() {
     }
 }
 
-@OptIn(UnstableApi::class)
+@OptIn(UnstableApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun AdvancedProPlayerScreen(
     initialUrl: String,
@@ -544,14 +547,11 @@ private fun AdvancedProPlayerScreen(
             )
         }
 
-        // CENTER BUFFERING SPINNER
+        // CENTER BUFFERING SPINNER (Orbit Animated Logo)
         if (useExoPlayer && isBuffering) {
-            CircularProgressIndicator(
-                color = Color(0xFFE9B96E),
-                strokeWidth = 3.dp,
-                modifier = Modifier
-                    .size(54.dp)
-                    .align(Alignment.Center)
+            OrbitLoader(
+                size = 58.dp,
+                modifier = Modifier.align(Alignment.Center)
             )
         }
 
@@ -574,7 +574,7 @@ private fun AdvancedProPlayerScreen(
                     Icon(
                         if (seekFeedbackIsForward) Icons.Default.Forward10 else Icons.Default.Replay10,
                         contentDescription = null,
-                        tint = Color(0xFFE9B96E),
+                        tint = Color(0xFFF1F5F9),
                         modifier = Modifier.size(36.dp)
                     )
                     Text(
@@ -606,7 +606,7 @@ private fun AdvancedProPlayerScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(Icons.Default.BrightnessMedium, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(22.dp))
+                    Icon(Icons.Default.BrightnessMedium, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(22.dp))
                     Text(
                         "${((brightnessOverlayValue ?: 0.5f) * 100).roundToInt()}%",
                         color = Color.White,
@@ -639,7 +639,7 @@ private fun AdvancedProPlayerScreen(
                     Icon(
                         if ((volumeOverlayValue ?: 0) == 0) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
                         contentDescription = null,
-                        tint = Color(0xFFE9B96E),
+                        tint = Color(0xFFF1F5F9),
                         modifier = Modifier.size(22.dp)
                     )
                     Text(
@@ -670,8 +670,8 @@ private fun AdvancedProPlayerScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Icon(Icons.Default.FastForward, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(18.dp))
-                    Text("2X SPEED >>", color = Color(0xFFE9B96E), fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
+                    Icon(Icons.Default.FastForward, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(18.dp))
+                    Text("2X SPEED >>", color = Color(0xFFF1F5F9), fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
                 }
             }
         }
@@ -697,7 +697,7 @@ private fun AdvancedProPlayerScreen(
                         .clip(CircleShape)
                         .background(Color(0xDD151D29))
                 ) {
-                    Icon(Icons.Default.LockOpen, contentDescription = "Unlock", tint = Color(0xFFE9B96E))
+                    Icon(Icons.Default.LockOpen, contentDescription = "Unlock", tint = Color(0xFFF1F5F9))
                 }
             }
         }
@@ -724,7 +724,7 @@ private fun AdvancedProPlayerScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("UP NEXT", color = Color(0xFFE9B96E), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("UP NEXT", color = Color(0xFFF1F5F9), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         Text(
                             "E${currentEpisode + 1}: ${nextEp?.name ?: "Next Episode"}",
                             color = Color.White,
@@ -793,14 +793,14 @@ private fun AdvancedProPlayerScreen(
                                 Text(episodeSubtitle, color = Color(0xFFC4CFDC), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text("•", color = Color(0xFF8A99AB), fontSize = 10.sp)
                             }
-                            Text(currentServerName, color = Color(0xFFE9B96E), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text(currentServerName, color = Color(0xFFF1F5F9), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
                     // In-Player Episodes Drawer Trigger (for TV series)
                     if (mediaType == "tv" && episodesList.isNotEmpty()) {
                         IconButton(onClick = { showEpisodesSheet = true }) {
-                            Icon(Icons.Default.VideoLibrary, contentDescription = "Episodes", tint = Color(0xFFE9B96E))
+                            Icon(Icons.Default.VideoLibrary, contentDescription = "Episodes", tint = Color(0xFFF1F5F9))
                         }
                     }
 
@@ -854,7 +854,7 @@ private fun AdvancedProPlayerScreen(
                             Icon(Icons.Default.Language, contentDescription = "Audio Language", tint = Color.White)
                         }
                         IconButton(onClick = { showSubtitleDialog = true }) {
-                            Icon(Icons.Default.Subtitles, contentDescription = "Subtitles", tint = if (selectedSubtitle == "Off") Color(0xFF9EABB8) else Color(0xFFE9B96E))
+                            Icon(Icons.Default.Subtitles, contentDescription = "Subtitles", tint = if (selectedSubtitle == "Off") Color(0xFF9EABB8) else Color(0xFFF1F5F9))
                         }
                     }
                     IconButton(onClick = { showSpeedDialog = true }) {
@@ -862,7 +862,7 @@ private fun AdvancedProPlayerScreen(
                     }
                     if (availableServers.isNotEmpty()) {
                         IconButton(onClick = { showServerDialog = true }) {
-                            Icon(Icons.Default.SwapHoriz, contentDescription = "Change Server", tint = Color(0xFFE9B96E))
+                            Icon(Icons.Default.SwapHoriz, contentDescription = "Change Server", tint = Color(0xFFF1F5F9))
                         }
                     }
                 }
@@ -906,7 +906,7 @@ private fun AdvancedProPlayerScreen(
                             modifier = Modifier
                                 .size(72.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFE9B96E))
+                                .background(Color(0xFFF1F5F9))
                         ) {
                             Icon(
                                 if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -953,7 +953,7 @@ private fun AdvancedProPlayerScreen(
                             onClick = { seekRelative(85000L) }, // Skips standard anime/movie intro 85 seconds
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xDD1E293B),
-                                contentColor = Color(0xFFE9B96E)
+                                contentColor = Color(0xFFF1F5F9)
                             ),
                             shape = RoundedCornerShape(12.dp),
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
@@ -989,8 +989,8 @@ private fun AdvancedProPlayerScreen(
                                 player.seekTo(currentPosition)
                             },
                             colors = SliderDefaults.colors(
-                                thumbColor = Color(0xFFE9B96E),
-                                activeTrackColor = Color(0xFFE9B96E),
+                                thumbColor = Color(0xFFF1F5F9),
+                                activeTrackColor = Color(0xFFF1F5F9),
                                 inactiveTrackColor = Color(0x55556677)
                             ),
                             modifier = Modifier.fillMaxWidth().height(24.dp)
@@ -1036,7 +1036,7 @@ private fun AdvancedProPlayerScreen(
                                 val timeText = if (showMinusRemainingTime) "-${formatTime(remaining)}" else formatTime(duration)
                                 Text(
                                     timeText,
-                                    color = if (showMinusRemainingTime) Color(0xFFE9B96E) else Color.White,
+                                    color = if (showMinusRemainingTime) Color(0xFFF1F5F9) else Color.White,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -1057,7 +1057,7 @@ private fun AdvancedProPlayerScreen(
                             if (availableServers.isNotEmpty()) {
                                 Button(
                                     onClick = { showServerDialog = true },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2B3E), contentColor = Color(0xFFE9B96E)),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2B3E), contentColor = Color(0xFFF1F5F9)),
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                                 ) {
                                     Icon(Icons.Default.SwapHoriz, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -1092,7 +1092,7 @@ private fun AdvancedProPlayerScreen(
                 ) {
                     Column {
                         Text("Episodes", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Text("Season $currentSeason • ${episodesList.size} Episodes", color = Color(0xFFE9B96E), fontSize = 12.sp)
+                        Text("Season $currentSeason • ${episodesList.size} Episodes", color = Color(0xFFF1F5F9), fontSize = 12.sp)
                     }
                     IconButton(onClick = { showEpisodesSheet = false }) {
                         Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF8F9CAA))
@@ -1140,7 +1140,7 @@ private fun AdvancedProPlayerScreen(
                                     Icon(
                                         if (isCurrent) Icons.Default.GraphicEq else Icons.Default.PlayArrow,
                                         contentDescription = null,
-                                        tint = if (isCurrent) Color(0xFFE9B96E) else Color.White,
+                                        tint = if (isCurrent) Color(0xFFF1F5F9) else Color.White,
                                         modifier = Modifier.size(22.dp)
                                     )
                                 }
@@ -1149,7 +1149,7 @@ private fun AdvancedProPlayerScreen(
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     "E${ep.episodeNumber}: ${ep.name}",
-                                    color = if (isCurrent) Color(0xFFE9B96E) else Color.White,
+                                    color = if (isCurrent) Color(0xFFF1F5F9) else Color.White,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,
                                     maxLines = 1,
@@ -1182,7 +1182,7 @@ private fun AdvancedProPlayerScreen(
             containerColor = Color(0xFF151D29),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.HighQuality, contentDescription = null, tint = Color(0xFFE9B96E))
+                    Icon(Icons.Default.HighQuality, contentDescription = null, tint = Color(0xFFF1F5F9))
                     Spacer(Modifier.width(8.dp))
                     Text("Video Quality", color = Color.White, fontWeight = FontWeight.Bold)
                 }
@@ -1219,7 +1219,7 @@ private fun AdvancedProPlayerScreen(
                             RadioButton(
                                 selected = selectedQuality == label,
                                 onClick = null,
-                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE9B96E))
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFF1F5F9))
                             )
                             Spacer(Modifier.width(10.dp))
                             Text(label, color = Color.White, fontSize = 13.sp)
@@ -1248,7 +1248,7 @@ private fun AdvancedProPlayerScreen(
             containerColor = Color(0xFF151D29),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Language, contentDescription = null, tint = Color(0xFFE9B96E))
+                    Icon(Icons.Default.Language, contentDescription = null, tint = Color(0xFFF1F5F9))
                     Spacer(Modifier.width(8.dp))
                     Text("Audio Language / Dub", color = Color.White, fontWeight = FontWeight.Bold)
                 }
@@ -1284,7 +1284,7 @@ private fun AdvancedProPlayerScreen(
                             RadioButton(
                                 selected = selectedAudio == track,
                                 onClick = null,
-                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE9B96E))
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFF1F5F9))
                             )
                             Spacer(Modifier.width(10.dp))
                             Text(track, color = Color.White, fontSize = 13.sp)
@@ -1307,7 +1307,7 @@ private fun AdvancedProPlayerScreen(
             containerColor = Color(0xFF151D29),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Subtitles, contentDescription = null, tint = Color(0xFFE9B96E))
+                    Icon(Icons.Default.Subtitles, contentDescription = null, tint = Color(0xFFF1F5F9))
                     Spacer(Modifier.width(8.dp))
                     Text("Subtitles (CC)", color = Color.White, fontWeight = FontWeight.Bold)
                 }
@@ -1345,7 +1345,7 @@ private fun AdvancedProPlayerScreen(
                             RadioButton(
                                 selected = selectedSubtitle == sub,
                                 onClick = null,
-                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE9B96E))
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFF1F5F9))
                             )
                             Spacer(Modifier.width(10.dp))
                             Text(sub, color = Color.White, fontSize = 13.sp)
@@ -1368,7 +1368,7 @@ private fun AdvancedProPlayerScreen(
             containerColor = Color(0xFF151D29),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Speed, contentDescription = null, tint = Color(0xFFE9B96E))
+                    Icon(Icons.Default.Speed, contentDescription = null, tint = Color(0xFFF1F5F9))
                     Spacer(Modifier.width(8.dp))
                     Text("Playback Speed", color = Color.White, fontWeight = FontWeight.Bold)
                 }
@@ -1392,7 +1392,7 @@ private fun AdvancedProPlayerScreen(
                             RadioButton(
                                 selected = selectedSpeed == sp,
                                 onClick = null,
-                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE9B96E))
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFF1F5F9))
                             )
                             Spacer(Modifier.width(10.dp))
                             Text(if (sp == 1.0f) "1.0x (Normal)" else "${sp}x", color = Color.White, fontSize = 13.sp)
@@ -1414,7 +1414,7 @@ private fun AdvancedProPlayerScreen(
             containerColor = Color(0xFF151D29),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = Color(0xFFE9B96E))
+                    Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = Color(0xFFF1F5F9))
                     Spacer(Modifier.width(8.dp))
                     Text("Switch Streaming Route", color = Color.White, fontWeight = FontWeight.Bold)
                 }
@@ -1451,7 +1451,7 @@ private fun AdvancedProPlayerScreen(
                             ) {
                                 Text(
                                     server.badge,
-                                    color = Color(0xFFE9B96E),
+                                    color = Color(0xFFF1F5F9),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)

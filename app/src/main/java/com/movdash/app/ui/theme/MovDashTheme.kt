@@ -6,16 +6,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val MovDashColors = darkColorScheme(
-    primary = Color(0xFFE9B96E),
-    onPrimary = Color(0xFF21170A),
-    secondary = Color(0xFFB8C3D6),
-    background = Color(0xFF090B10),
-    onBackground = Color(0xFFF4F5F7),
-    surface = Color(0xFF111722),
-    onSurface = Color(0xFFF4F5F7),
-    surfaceVariant = Color(0xFF1B2431),
-    onSurfaceVariant = Color(0xFFB2BBC9),
-    outline = Color(0xFF354152)
+    primary = Color(0xFFF8FAFC),
+    onPrimary = Color(0xFF06080E),
+    secondary = Color(0xFFCBD5E1),
+    background = Color(0xFF06080E),
+    onBackground = Color(0xFFF8FAFC),
+    surface = Color(0xFF0E131E),
+    onSurface = Color(0xFFF8FAFC),
+    surfaceVariant = Color(0xFF17202E),
+    onSurfaceVariant = Color(0xFF94A3B8),
+    outline = Color(0xFF2A3649)
 )
 
 @Composable

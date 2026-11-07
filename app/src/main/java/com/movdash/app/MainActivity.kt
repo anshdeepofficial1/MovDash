@@ -1,5 +1,8 @@
 package com.movdash.app
 
+import kotlin.math.roundToInt
+import com.movdash.app.ui.components.*
+
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -157,11 +160,11 @@ private fun OpeningSplashScreen(
                     )
                     .clip(RoundedCornerShape(28.dp))
                     .background(Color(0xFF101724))
-                    .border(BorderStroke(2.dp, Color(0xFFE9B96E)), RoundedCornerShape(28.dp)),
+                    .border(BorderStroke(2.dp, Color(0xFFF1F5F9)), RoundedCornerShape(28.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_logo),
+                    painter = painterResource(id = R.drawable.ic_logo_transparent),
                     contentDescription = "Orbit Logo",
                     modifier = Modifier
                         .size(96.dp)
@@ -185,7 +188,7 @@ private fun OpeningSplashScreen(
 
             Text(
                 "MOVIES & SERIES UNIVERSE",
-                color = Color(0xFFE9B96E),
+                color = Color(0xFFF1F5F9),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.5.sp,
@@ -209,7 +212,7 @@ private fun OpeningSplashScreen(
                         .fillMaxHeight()
                         .background(
                             Brush.horizontalGradient(
-                                listOf(Color(0xFFE9B96E), Color(0xFFFFD700))
+                                listOf(Color(0xFFF1F5F9), Color(0xFFFFD700))
                             )
                         )
                 )
@@ -335,7 +338,7 @@ private fun MovDashApp() {
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Image(
-                                painter = painterResource(id = R.drawable.ic_logo),
+                                painter = painterResource(id = R.drawable.ic_logo_transparent),
                                 contentDescription = "Orbit Logo",
                                 modifier = Modifier
                                     .size(36.dp)
@@ -353,7 +356,7 @@ private fun MovDashApp() {
                                 Text(
                                     "Movies & Series Universe",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFFE9B96E),
+                                    color = Color(0xFFF1F5F9),
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -576,14 +579,14 @@ private fun FloatingPillBottomNav(
                         Icon(
                             imageVector = icon,
                             contentDescription = label,
-                            tint = if (selected) Color(0xFFE9B96E) else Color(0xFF8E9BAE),
+                            tint = if (selected) Color(0xFFF1F5F9) else Color(0xFF8E9BAE),
                             modifier = Modifier.size(20.dp)
                         )
                         if (selected) {
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 text = label,
-                                color = Color(0xFFE9B96E),
+                                color = Color(0xFFF1F5F9),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -616,7 +619,7 @@ private fun SectionScreen(
                         )
                         Text(
                             "${section.items.size} Titles • ${section.subtitle}",
-                            color = Color(0xFFE9B96E),
+                            color = Color(0xFFF1F5F9),
                             style = MaterialTheme.typography.labelSmall
                         )
                     }
@@ -714,7 +717,7 @@ private fun SectionScreen(
                                 ) {
                                     Text(
                                         "★ " + String.format("%.1f", movie.voteAverage ?: 0.0),
-                                        color = Color(0xFFE9B96E),
+                                        color = Color(0xFFF1F5F9),
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -726,7 +729,7 @@ private fun SectionScreen(
                                     val badge = getMovieQualityBadge(movie)
                                     Surface(
                                         shape = RoundedCornerShape(4.dp),
-                                        color = if (badge == "4K UHD") Color(0xFFE9B96E) else Color(0xFF2563EB)
+                                        color = if (badge == "4K UHD") Color(0xFFF1F5F9) else Color(0xFF2563EB)
                                     ) {
                                         Text(
                                             badge,
@@ -904,7 +907,7 @@ private fun HomeScreen(
                         )
                     },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFFE9B96E),
+                        selectedContainerColor = Color(0xFFF1F5F9),
                         selectedLabelColor = Color(0xFF101620),
                         containerColor = Color(0xFF131A26),
                         labelColor = Color(0xFFCBD5E1)
@@ -912,7 +915,7 @@ private fun HomeScreen(
                     border = FilterChipDefaults.filterChipBorder(
                         enabled = true,
                         selected = isSelected,
-                        borderColor = if (isSelected) Color(0xFFE9B96E) else Color(0xFF263347)
+                        borderColor = if (isSelected) Color(0xFFF1F5F9) else Color(0xFF263347)
                     )
                 )
             }
@@ -1095,6 +1098,7 @@ private fun HomeScreen(
         Spacer(Modifier.height(30.dp))
     }
 }
+@Composable
 private fun HeroSpotlightCarousel(
     movies: List<Movie>,
     onWatch: (Movie) -> Unit
@@ -1158,7 +1162,7 @@ private fun HeroSpotlightCarousel(
                     ) {
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFE9B96E)
+                            color = Color(0xFFF1F5F9)
                         ) {
                             Text(
                                 movie.mediaType.uppercase(),
@@ -1171,7 +1175,7 @@ private fun HeroSpotlightCarousel(
                         movie.voteAverage?.let {
                             Text(
                                 "★ " + "%.1f".format(it),
-                                color = Color(0xFFE9B96E),
+                                color = Color(0xFFF1F5F9),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -1206,8 +1210,8 @@ private fun HeroSpotlightCarousel(
                         Button(
                             onClick = { onWatch(movie) },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isUnreleased) Color(0xFF233246) else Color(0xFFE9B96E),
-                                contentColor = if (isUnreleased) Color(0xFFE9B96E) else Color(0xFF1A1309)
+                                containerColor = if (isUnreleased) Color(0xFF233246) else Color(0xFFF1F5F9),
+                                contentColor = if (isUnreleased) Color(0xFFF1F5F9) else Color(0xFF1A1309)
                             ),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                             shape = RoundedCornerShape(12.dp)
@@ -1238,7 +1242,7 @@ private fun HeroSpotlightCarousel(
                         .width(if (selected) 20.dp else 6.dp)
                         .height(5.dp)
                         .clip(CircleShape)
-                        .background(if (selected) Color(0xFFE9B96E) else Color(0xFF455062))
+                        .background(if (selected) Color(0xFFF1F5F9) else Color(0xFF455062))
                 )
             }
         }
@@ -1258,9 +1262,9 @@ private fun SectionTitle(title: String, action: String = "See All", onClick: () 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(title, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(4.dp))
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(18.dp))
         }
-        Text(action, color = Color(0xFFE9B96E), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+        Text(action, color = Color(0xFFF1F5F9), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -1287,7 +1291,7 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
             val qualityBadge = getMovieQualityBadge(movie)
             Surface(
                 shape = RoundedCornerShape(bottomStart = 8.dp, topEnd = 14.dp),
-                color = if (qualityBadge == "4K UHD") Color(0xFFE9B96E) else Color(0xFF2563EB),
+                color = if (qualityBadge == "4K UHD") Color(0xFFF1F5F9) else Color(0xFF2563EB),
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
                 Text(
@@ -1317,7 +1321,7 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
                 val isUnreleased = isUnreleasedTitle(movie.releaseDate, null, movie.title)
                 Text(
                     if (isUnreleased) "SOON" else (movie.voteAverage?.let { "★ " + "%.1f".format(it) } ?: "HD"),
-                    color = Color(0xFFE9B96E),
+                    color = Color(0xFFF1F5F9),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -1352,6 +1356,7 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
     }
 }
 
+@Composable
 private fun DiscoverScreen(
     query: String,
     onQueryChange: (String) -> Unit,
@@ -1447,7 +1452,7 @@ private fun DiscoverScreen(
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 placeholder = { Text("Search movies, stars, universes...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFE9B96E)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFF1F5F9)) },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { onQueryChange("") }) {
@@ -1456,7 +1461,7 @@ private fun DiscoverScreen(
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFE9B96E),
+                    focusedBorderColor = Color(0xFFF1F5F9),
                     unfocusedBorderColor = Color(0xFF263347),
                     focusedContainerColor = Color(0xFF121A25),
                     unfocusedContainerColor = Color(0xFF121A25)
@@ -1474,7 +1479,7 @@ private fun DiscoverScreen(
                 },
                 enabled = query.isNotBlank() && !loading,
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE9B96E), contentColor = Color(0xFF1A1309))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5F9), contentColor = Color(0xFF1A1309))
             ) {
                 Icon(Icons.Default.Search, contentDescription = "Search")
             }
@@ -1506,7 +1511,7 @@ private fun DiscoverScreen(
                             Icon(
                                 if (suggestion.mediaType == "tv") Icons.Default.Tv else Icons.Default.Movie,
                                 contentDescription = null,
-                                tint = Color(0xFFE9B96E),
+                                tint = Color(0xFFF1F5F9),
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(Modifier.width(10.dp))
@@ -1537,7 +1542,7 @@ private fun DiscoverScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.History, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.History, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("Recent Searches", color = Color(0xFFCBD5E1), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
@@ -1581,7 +1586,7 @@ private fun DiscoverScreen(
             Text("Browse by Genre", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             if (selectedGenre != null) {
                 Spacer(Modifier.width(8.dp))
-                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFE9B96E)) {
+                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFF1F5F9)) {
                     Text(
                         selectedGenre!!,
                         color = Color(0xFF101620),
@@ -1698,7 +1703,7 @@ private fun DiscoverScreen(
                                 )
                                 Text(
                                     "Chronological Order",
-                                    color = Color(0xFFE9B96E),
+                                    color = Color(0xFFF1F5F9),
                                     fontSize = 10.sp
                                 )
                             }
@@ -1736,14 +1741,7 @@ private fun DiscoverScreen(
         Spacer(Modifier.height(16.dp))
 
         if (loading) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(vertical = 12.dp)
-            ) {
-                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color(0xFFE9B96E), strokeWidth = 2.dp)
-                Text("Searching titles across catalog...", color = Color(0xFFE9B96E))
-            }
+            SearchResultsSkeleton()
         } else if (error != null) {
             Text(error, color = Color(0xFFFFA69C), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 8.dp))
         }
@@ -1759,7 +1757,7 @@ private fun DiscoverScreen(
                 Icon(
                     Icons.Default.SearchOff,
                     contentDescription = null,
-                    tint = Color(0xFFE9B96E),
+                    tint = Color(0xFFF1F5F9),
                     modifier = Modifier.size(54.dp)
                 )
                 Spacer(Modifier.height(12.dp))
@@ -1777,7 +1775,7 @@ private fun DiscoverScreen(
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(16.dp))
-                Text("Did you mean:", color = Color(0xFFE9B96E), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text("Did you mean:", color = Color(0xFFF1F5F9), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("Avengers", "Interstellar", "K.G.F", "Stranger Things").forEach { sug ->
@@ -1824,6 +1822,7 @@ private fun DiscoverScreen(
     }
 }
 
+@Composable
 private fun UniverseWatchOrderScreen(
     universe: Universe,
     onBack: () -> Unit,
@@ -1851,9 +1850,9 @@ private fun UniverseWatchOrderScreen(
                 onClick = onBack,
                 contentPadding = PaddingValues(horizontal = 0.dp)
             ) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFFE9B96E))
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFFF1F5F9))
                 Spacer(Modifier.width(6.dp))
-                Text("Back to Discover", color = Color(0xFFE9B96E), fontWeight = FontWeight.Bold)
+                Text("Back to Discover", color = Color(0xFFF1F5F9), fontWeight = FontWeight.Bold)
             }
             Surface(
                 shape = RoundedCornerShape(8.dp),
@@ -1889,7 +1888,7 @@ private fun UniverseWatchOrderScreen(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(universe.name, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
-                    Text(universe.subtitle, color = Color(0xFFE9B96E), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text(universe.subtitle, color = Color(0xFFF1F5F9), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     Text(universe.description, color = Color(0xFF94A3B8), fontSize = 12.sp, lineHeight = 18.sp)
 
                     Spacer(Modifier.height(4.dp))
@@ -1965,7 +1964,7 @@ private fun UniverseWatchOrderScreen(
                         } else {
                             Text(
                                 "#${item.timelineOrder}",
-                                color = Color(0xFFE9B96E),
+                                color = Color(0xFFF1F5F9),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -1999,7 +1998,7 @@ private fun UniverseWatchOrderScreen(
                         ) {
                             Text(
                                 item.phaseOrEra,
-                                color = Color(0xFFE9B96E),
+                                color = Color(0xFFF1F5F9),
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -2097,7 +2096,7 @@ private fun LibraryScreen(
             ) {
                 Text(
                     "$totalStorageMb MB Offline",
-                    color = Color(0xFFE9B96E),
+                    color = Color(0xFFF1F5F9),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -2111,7 +2110,7 @@ private fun LibraryScreen(
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
             containerColor = Color(0xFF101620),
-            contentColor = Color(0xFFE9B96E),
+            contentColor = Color(0xFFF1F5F9),
             edgePadding = 0.dp,
             divider = {}
         ) {
@@ -2123,7 +2122,7 @@ private fun LibraryScreen(
                         Text(
                             title,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
-                            color = if (selectedTab == index) Color(0xFFE9B96E) else Color(0xFF8E9BAE),
+                            color = if (selectedTab == index) Color(0xFFF1F5F9) else Color(0xFF8E9BAE),
                             fontSize = 12.sp
                         )
                     }
@@ -2200,7 +2199,7 @@ private fun LibraryScreen(
                                 Card(
                                     shape = RoundedCornerShape(14.dp),
                                     colors = CardDefaults.cardColors(containerColor = Color(0xFF131A26)),
-                                    border = BorderStroke(1.dp, if (isExpanded) Color(0xFFE9B96E) else Color(0xFF1E2B3D)),
+                                    border = BorderStroke(1.dp, if (isExpanded) Color(0xFFF1F5F9) else Color(0xFF1E2B3D)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(Modifier.padding(12.dp)) {
@@ -2227,7 +2226,7 @@ private fun LibraryScreen(
                                                 Icon(
                                                     if (isExpanded) Icons.Default.FolderOpen else Icons.Default.Folder,
                                                     contentDescription = "Series Folder",
-                                                    tint = Color(0xFFE9B96E),
+                                                    tint = Color(0xFFF1F5F9),
                                                     modifier = Modifier.size(26.dp)
                                                 )
                                             }
@@ -2246,7 +2245,7 @@ private fun LibraryScreen(
                                                 Spacer(Modifier.height(2.dp))
                                                 Text(
                                                     "Series Folder • ${epList.size} Episodes • $folderSizeMb MB",
-                                                    color = Color(0xFFE9B96E),
+                                                    color = Color(0xFFF1F5F9),
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Medium
                                                 )
@@ -2264,7 +2263,7 @@ private fun LibraryScreen(
                                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF1E2D42)) {
                                                         Text(
                                                             firstEp.quality,
-                                                            color = Color(0xFFE9B96E),
+                                                            color = Color(0xFFF1F5F9),
                                                             fontSize = 8.sp,
                                                             fontWeight = FontWeight.Bold,
                                                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
@@ -2285,7 +2284,7 @@ private fun LibraryScreen(
                                                 Icon(
                                                     if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                                     contentDescription = "Expand",
-                                                    tint = Color(0xFFE9B96E)
+                                                    tint = Color(0xFFF1F5F9)
                                                 )
                                             }
                                         }
@@ -2404,7 +2403,7 @@ private fun LibraryScreen(
                                             Text(item.audioTrack.substringBefore(" "), color = Color(0xFFCBD5E1), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                         }
                                         Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF1F2C3E)) {
-                                            Text(item.quality, color = Color(0xFFE9B96E), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                            Text(item.quality, color = Color(0xFFF1F5F9), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                         }
                                         Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF1F2C3E)) {
                                             Text("${item.fileSizeMb} MB", color = Color(0xFF94A3B8), fontSize = 9.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
@@ -2484,9 +2483,9 @@ private fun LibraryScreen(
                                 ) {
                                     Text("$watched of $total Movies Watched", color = Color(0xFFCBD5E1), fontSize = 11.sp)
                                     TextButton(onClick = { onSelectUniverse(u) }) {
-                                        Text("Continue Watch Order", color = Color(0xFFE9B96E), fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                        Text("Continue Watch Order", color = Color(0xFFF1F5F9), fontWeight = FontWeight.Bold, fontSize = 11.sp)
                                         Spacer(Modifier.width(4.dp))
-                                        Icon(Icons.Default.ArrowForward, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(14.dp))
+                                        Icon(Icons.Default.ArrowForward, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(14.dp))
                                     }
                                 }
                             }
@@ -2599,7 +2598,7 @@ private fun EmptyVaultState(
             modifier = Modifier.size(80.dp).clip(CircleShape).background(Color(0xFF17202D)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(42.dp))
+            Icon(icon, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(42.dp))
         }
         Spacer(Modifier.height(14.dp))
         Text(title, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -2608,7 +2607,7 @@ private fun EmptyVaultState(
         Spacer(Modifier.height(16.dp))
         Button(
             onClick = onAction,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE9B96E), contentColor = Color(0xFF1A1309)),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5F9), contentColor = Color(0xFF1A1309)),
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(actionText, fontWeight = FontWeight.Bold)
@@ -2646,7 +2645,7 @@ private fun ProfileScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_logo),
+                painter = painterResource(id = R.drawable.ic_logo_transparent),
                 contentDescription = "Orbit Logo",
                 modifier = Modifier
                     .size(60.dp)
@@ -2657,7 +2656,7 @@ private fun ProfileScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(userName, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     IconButton(onClick = { nameDraft = userName; showEditName = true }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFFE9B96E), modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFFF1F5F9), modifier = Modifier.size(16.dp))
                     }
                 }
                 Surface(
@@ -2667,7 +2666,7 @@ private fun ProfileScreen(
                 ) {
                     Text(
                         "PREMIUM VIP ACTIVE",
-                        color = Color(0xFFE9B96E),
+                        color = Color(0xFFF1F5F9),
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 10.sp,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
@@ -2708,7 +2707,7 @@ private fun ProfileScreen(
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1F2B3D), contentColor = Color.White)
         ) {
-            Icon(Icons.Default.Tune, contentDescription = null, tint = Color(0xFFE9B96E))
+            Icon(Icons.Default.Tune, contentDescription = null, tint = Color(0xFFF1F5F9))
             Spacer(Modifier.width(8.dp))
             Text("Customize Playback & Audio Preferences")
         }
@@ -2717,9 +2716,9 @@ private fun ProfileScreen(
             onClick = onOpenOnboarding,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF161F2E), contentColor = Color(0xFFE9B96E))
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF161F2E), contentColor = Color(0xFFF1F5F9))
         ) {
-            Icon(Icons.Default.HelpOutline, contentDescription = null, tint = Color(0xFFE9B96E))
+            Icon(Icons.Default.HelpOutline, contentDescription = null, tint = Color(0xFFF1F5F9))
             Spacer(Modifier.width(8.dp))
             Text("Revisit Welcome Tour & Features")
         }
@@ -2743,7 +2742,7 @@ private fun ProfileScreen(
                     TextButton(onClick = {
                         Toast.makeText(context, "Cache cleared successfully!", Toast.LENGTH_SHORT).show()
                     }) {
-                        Text("Clear", color = Color(0xFFE9B96E))
+                        Text("Clear", color = Color(0xFFF1F5F9))
                     }
                 }
                 Divider(color = Color(0xFF1E2A3A))
@@ -2795,7 +2794,7 @@ private fun StatCard(title: String, value: String, modifier: Modifier = Modifier
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(value, color = Color(0xFFE9B96E), fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+            Text(value, color = Color(0xFFF1F5F9), fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
             Text(title, color = Color(0xFF8E9BAE), fontSize = 11.sp)
         }
     }
@@ -2809,7 +2808,7 @@ private fun PreferenceRow(label: String, value: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, color = Color(0xFFC0CCD9), fontSize = 13.sp)
-        Text(value, color = Color(0xFFE9B96E), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Text(value, color = Color(0xFFF1F5F9), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -2828,7 +2827,7 @@ private fun AppSettingsDialog(
         containerColor = Color(0xFF151D29),
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFFE9B96E))
+                Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFFF1F5F9))
                 Spacer(Modifier.width(8.dp))
                 Text("App Preferences", color = Color.White, fontWeight = FontWeight.Bold)
             }
@@ -2838,7 +2837,7 @@ private fun AppSettingsDialog(
                 Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text("AUDIO & LANGUAGE PREFERENCE", color = Color(0xFFE9B96E), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text("AUDIO & LANGUAGE PREFERENCE", color = Color(0xFFF1F5F9), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
 
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf(
@@ -2853,7 +2852,7 @@ private fun AppSettingsDialog(
                             RadioButton(
                                 selected = preferredAudio == audioOption,
                                 onClick = { preferredAudio = audioOption },
-                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE9B96E))
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFF1F5F9))
                             )
                             Text(audioOption, color = Color(0xFFCBD5E1), fontSize = 12.sp)
                         }
@@ -2862,7 +2861,7 @@ private fun AppSettingsDialog(
 
                 Divider(color = Color(0xFF263347))
 
-                Text("STREAMING QUALITY", color = Color(0xFFE9B96E), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text("STREAMING QUALITY", color = Color(0xFFF1F5F9), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
 
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf(
@@ -2877,7 +2876,7 @@ private fun AppSettingsDialog(
                             RadioButton(
                                 selected = preferredQuality == quality,
                                 onClick = { preferredQuality = quality },
-                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE9B96E))
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFF1F5F9))
                             )
                             Text(quality, color = Color(0xFFCBD5E1), fontSize = 12.sp)
                         }
@@ -2898,7 +2897,7 @@ private fun AppSettingsDialog(
                     Switch(
                         checked = autoPlayNext,
                         onCheckedChange = { autoPlayNext = it },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFE9B96E), checkedTrackColor = Color(0xFF38465B))
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFF1F5F9), checkedTrackColor = Color(0xFF38465B))
                     )
                 }
 
@@ -2914,7 +2913,7 @@ private fun AppSettingsDialog(
                     Switch(
                         checked = hardwareAccel,
                         onCheckedChange = { hardwareAccel = it },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFE9B96E), checkedTrackColor = Color(0xFF38465B))
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFF1F5F9), checkedTrackColor = Color(0xFF38465B))
                     )
                 }
 
@@ -2925,7 +2924,7 @@ private fun AppSettingsDialog(
                         Toast.makeText(context, "Storage and image cache cleared!", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF243042), contentColor = Color(0xFFE9B96E))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF243042), contentColor = Color(0xFFF1F5F9))
                 ) {
                     Text("Clear Temporary Cache", fontWeight = FontWeight.Bold)
                 }
@@ -2937,7 +2936,7 @@ private fun AppSettingsDialog(
                     Toast.makeText(context, "Preferences saved", Toast.LENGTH_SHORT).show()
                     onDismiss()
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE9B96E), contentColor = Color(0xFF17120B))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5F9), contentColor = Color(0xFF17120B))
             ) {
                 Text("Done", fontWeight = FontWeight.Bold)
             }
@@ -2962,7 +2961,7 @@ private fun MovieDetailsScreen(
     var isFavorite by remember(movie.id) { mutableStateOf(LibraryManager.isFavorite(context, movie.id, movie.mediaType)) }
     var isDownloaded by remember(movie.id) { mutableStateOf(LibraryManager.isDownloaded(context, movie.id, null)) }
     var showDownloadDialog by remember { mutableStateOf(false) }
-    var downloadingEpisode by remember { mutableStateOf<Episode?>(null) }
+    var downloadingEpisode by remember { mutableStateOf<EpisodeSummary?>(null) }
     var selectedActor by remember { mutableStateOf<CastMember?>(null) }
 
     var selectedSeasonNumber by remember { mutableStateOf(1) }
@@ -3044,6 +3043,11 @@ private fun MovieDetailsScreen(
     val defaultJustWatchSearch = "https://www.justwatch.com/in/search?q=" + Uri.encode(details?.title ?: movie.title)
     val availabilityUrl = region?.link?.takeIf { it.startsWith("https://") } ?: defaultJustWatchSearch
 
+    if (loading && details == null) {
+        MediaDetailsSkeleton()
+        return
+    }
+
     val backdrop = details?.backdropPath?.let { "https://image.tmdb.org/t/p/w1280$it" }
         ?: movie.backdropPath?.let { "https://image.tmdb.org/t/p/w1280$it" }
         ?: details?.posterPath?.let { "https://image.tmdb.org/t/p/w780$it" }
@@ -3101,7 +3105,7 @@ private fun MovieDetailsScreen(
             ) {
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFFE9B96E)
+                    color = Color(0xFFF1F5F9)
                 ) {
                     Text(
                         if (isUnreleased) "RELEASING SOON" else (if (movie.mediaType == "tv") "SERIES" else "MOVIE"),
@@ -3131,7 +3135,7 @@ private fun MovieDetailsScreen(
                     (details?.voteAverage ?: movie.voteAverage)?.let {
                         Text(
                             "★ " + "%.1f".format(it),
-                            color = Color(0xFFE9B96E),
+                            color = Color(0xFFF1F5F9),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -3156,10 +3160,10 @@ private fun MovieDetailsScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Default.HourglassTop, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(22.dp))
+                        Icon(Icons.Default.HourglassTop, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(22.dp))
                         Text(
                             "AWAITING THEATRICAL / DIGITAL RELEASE",
-                            color = Color(0xFFE9B96E),
+                            color = Color(0xFFF1F5F9),
                             fontWeight = FontWeight.Black,
                             fontSize = 12.sp,
                             letterSpacing = 1.sp
@@ -3190,8 +3194,8 @@ private fun MovieDetailsScreen(
                         modifier = Modifier.fillMaxWidth().height(46.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (inWatchlist) Color(0xFF26354B) else Color(0xFFE9B96E),
-                            contentColor = if (inWatchlist) Color(0xFFE9B96E) else Color(0xFF17120B)
+                            containerColor = if (inWatchlist) Color(0xFF26354B) else Color(0xFFF1F5F9),
+                            contentColor = if (inWatchlist) Color(0xFFF1F5F9) else Color(0xFF17120B)
                         )
                     ) {
                         Icon(if (inWatchlist) Icons.Default.Check else Icons.Default.NotificationsActive, contentDescription = null)
@@ -3214,7 +3218,7 @@ private fun MovieDetailsScreen(
                     modifier = Modifier.weight(1f).height(48.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE9B96E),
+                        containerColor = Color(0xFFF1F5F9),
                         contentColor = Color(0xFF17120B)
                     )
                 ) {
@@ -3240,7 +3244,7 @@ private fun MovieDetailsScreen(
                     Icon(
                         if (isDownloaded) Icons.Default.CheckCircle else Icons.Default.Download,
                         contentDescription = "Download Offline",
-                        tint = if (isDownloaded) Color(0xFF4CAF50) else Color(0xFFE9B96E)
+                        tint = if (isDownloaded) Color(0xFF4CAF50) else Color(0xFFF1F5F9)
                     )
                 }
 
@@ -3261,7 +3265,7 @@ private fun MovieDetailsScreen(
                     Icon(
                         if (inWatchlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                         contentDescription = "Watchlist",
-                        tint = if (inWatchlist) Color(0xFFE9B96E) else Color.White
+                        tint = if (inWatchlist) Color(0xFFF1F5F9) else Color.White
                     )
                 }
 
@@ -3295,7 +3299,7 @@ private fun MovieDetailsScreen(
                 .padding(horizontal = 20.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color(0xFFE9B96E))
+            if (loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color(0xFFF1F5F9))
 
             details?.tagline?.takeIf { it.isNotBlank() }?.let {
                 Text(it, color = Color(0xFFCBD5E1), style = MaterialTheme.typography.titleSmall)
@@ -3303,7 +3307,7 @@ private fun MovieDetailsScreen(
 
             val genreText = details?.genres.orEmpty().joinToString("  ·  ") { it.name }
             if (genreText.isNotBlank()) {
-                Text(genreText, color = Color(0xFFE9B96E), style = MaterialTheme.typography.labelMedium)
+                Text(genreText, color = Color(0xFFF1F5F9), style = MaterialTheme.typography.labelMedium)
             }
 
             Text("Synopsis", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -3320,7 +3324,7 @@ private fun MovieDetailsScreen(
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF121A25))
             ) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("AUDIO & MEDIA SPECIFICATIONS", color = Color(0xFFE9B96E), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Text("AUDIO & MEDIA SPECIFICATIONS", color = Color(0xFFF1F5F9), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                     Row(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -3367,7 +3371,7 @@ private fun MovieDetailsScreen(
                     )
                     Text(
                         "${castList.size} Stars",
-                        color = Color(0xFFE9B96E),
+                        color = Color(0xFFF1F5F9),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -3392,7 +3396,7 @@ private fun MovieDetailsScreen(
                                 modifier = Modifier
                                     .size(68.dp)
                                     .clip(CircleShape)
-                                    .border(2.dp, Color(0xFFE9B96E), CircleShape)
+                                    .border(2.dp, Color(0xFFF1F5F9), CircleShape)
                                     .background(Color(0xFF1E2837)),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -3406,7 +3410,7 @@ private fun MovieDetailsScreen(
                                 } else {
                                     Text(
                                         actor.name.take(1),
-                                        color = Color(0xFFE9B96E),
+                                        color = Color(0xFFF1F5F9),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 24.sp
                                     )
@@ -3455,27 +3459,8 @@ private fun MovieDetailsScreen(
 
                 // Episode List with Thumbnails & Real Episode Names
                 if (seasonDetailsLoading && seasonDetailsData?.episodes.isNullOrEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = Color(0xFFE50914),
-                                strokeWidth = 2.dp
-                            )
-                            Text(
-                                "Loading episode titles & descriptions...",
-                                color = Color(0xFF8E9BAE),
-                                fontSize = 12.sp
-                            )
-                        }
+                    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        repeat(4) { EpisodeItemSkeleton() }
                     }
                 } else {
                     val episodesList = seasonDetailsData?.episodes.orEmpty()
@@ -3532,7 +3517,7 @@ private fun MovieDetailsScreen(
                                         ) {
                                             Text(
                                                 "EP ${episode.episodeNumber}",
-                                                color = Color(0xFFE9B96E),
+                                                color = Color(0xFFF1F5F9),
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
@@ -3562,7 +3547,7 @@ private fun MovieDetailsScreen(
                                         ) {
                                             Text(
                                                 episode.runtime?.let { "$it min" } ?: "Full HD",
-                                                color = Color(0xFFE9B96E),
+                                                color = Color(0xFFF1F5F9),
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.SemiBold
                                             )
@@ -3600,7 +3585,7 @@ private fun MovieDetailsScreen(
                                         Icon(
                                             if (epDownloaded) Icons.Default.CheckCircle else Icons.Default.Download,
                                             contentDescription = "Download Episode",
-                                            tint = if (epDownloaded) Color(0xFF4CAF50) else Color(0xFFE9B96E),
+                                            tint = if (epDownloaded) Color(0xFF4CAF50) else Color(0xFFF1F5F9),
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -3621,7 +3606,7 @@ private fun MovieDetailsScreen(
                                 Icon(
                                     Icons.Default.Info,
                                     contentDescription = "Upcoming",
-                                    tint = Color(0xFFE9B96E),
+                                    tint = Color(0xFFF1F5F9),
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Column {
@@ -3663,7 +3648,7 @@ private fun MovieDetailsScreen(
             if (hasProviders) {
                 providerGroups.forEach { (category, providers) ->
                     if (providers.isNotEmpty()) {
-                        Text(category, color = Color(0xFFE9B96E), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(category, color = Color(0xFFF1F5F9), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         providers.forEach { provider ->
                             Row(
                                 Modifier
@@ -3690,7 +3675,7 @@ private fun MovieDetailsScreen(
                                         Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF243248)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(provider.providerName.take(1), color = Color(0xFFE9B96E), fontWeight = FontWeight.Bold)
+                                        Text(provider.providerName.take(1), color = Color(0xFFF1F5F9), fontWeight = FontWeight.Bold)
                                     }
                                 }
                                 Spacer(Modifier.width(12.dp))
@@ -3698,7 +3683,7 @@ private fun MovieDetailsScreen(
                                     Text(provider.providerName, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                                     Text(category, color = Color(0xFF8996A8), fontSize = 11.sp)
                                 }
-                                Text("OPEN", color = Color(0xFFE9B96E), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("OPEN", color = Color(0xFFF1F5F9), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -3713,7 +3698,7 @@ private fun MovieDetailsScreen(
                 },
                 modifier = Modifier.fillMaxWidth().height(44.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2837), contentColor = Color(0xFFE9B96E))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2837), contentColor = Color(0xFFF1F5F9))
             ) {
                 Icon(Icons.Default.Movie, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(8.dp))
@@ -3740,10 +3725,9 @@ private fun MovieDetailsScreen(
                         mediaType = movie.mediaType,
                         posterPath = movie.posterPath,
                         backdropPath = movie.backdropPath,
-                        releaseDate = movie.releaseDate,
                         audioTrack = audio,
                         quality = quality,
-                        subtitles = subs,
+                        subtitleTrack = subs,
                         fileSizeMb = sizeMb,
                         seasonNumber = null,
                         episodeNumber = null,
@@ -3758,12 +3742,12 @@ private fun MovieDetailsScreen(
     }
 
     // DOWNLOAD DIALOG FOR EPISODE
-    if (downloadingEpisode != null) {
-        val ep = downloadingEpisode!!
+    val currentDownloadingEp = downloadingEpisode
+    if (currentDownloadingEp != null) {
         DownloadDialog(
-            title = "${movie.title} • S$selectedSeasonNumber E${ep.episodeNumber}",
+            title = "${movie.title} • S$selectedSeasonNumber E${currentDownloadingEp.episodeNumber}",
             mediaType = "tv",
-            posterPath = ep.stillPath ?: movie.posterPath,
+            posterPath = currentDownloadingEp.stillPath ?: movie.posterPath,
             onDismiss = { downloadingEpisode = null },
             onStartDownload = { audio, quality, subs, sizeMb ->
                 LibraryManager.addDownload(
@@ -3772,16 +3756,15 @@ private fun MovieDetailsScreen(
                         id = movie.id,
                         title = movie.title,
                         mediaType = "tv",
-                        posterPath = ep.stillPath ?: movie.posterPath,
+                        posterPath = currentDownloadingEp.stillPath ?: movie.posterPath,
                         backdropPath = movie.backdropPath,
-                        releaseDate = ep.airDate ?: movie.releaseDate,
                         audioTrack = audio,
                         quality = quality,
-                        subtitles = subs,
-                        fileSizeMb = sizeMb / 3,
+                        subtitleTrack = subs,
+                        fileSizeMb = (sizeMb / 3).coerceAtLeast(180),
                         seasonNumber = selectedSeasonNumber,
-                        episodeNumber = ep.episodeNumber,
-                        episodeTitle = "S$selectedSeasonNumber E${ep.episodeNumber}: ${ep.name}"
+                        episodeNumber = currentDownloadingEp.episodeNumber,
+                        episodeTitle = "S$selectedSeasonNumber E${currentDownloadingEp.episodeNumber}: ${currentDownloadingEp.name}"
                     )
                 )
                 downloadingEpisode = null
@@ -3834,14 +3817,14 @@ private fun DownloadDialog(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFE9B96E)),
+                        .background(Color(0xFFF1F5F9)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, tint = Color(0xFF17120B))
                 }
                 Column {
                     Text("Download Offline", fontWeight = FontWeight.ExtraBold, fontSize = 17.sp, color = Color.White)
-                    Text(title, fontSize = 12.sp, color = Color(0xFFE9B96E), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(title, fontSize = 12.sp, color = Color(0xFFF1F5F9), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         },
@@ -3866,9 +3849,9 @@ private fun DownloadDialog(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(audio, color = if (selectedAudio == audio) Color(0xFFE9B96E) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                Text(audio, color = if (selectedAudio == audio) Color(0xFFF1F5F9) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                 if (selectedAudio == audio) {
-                                    Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(16.dp))
                                 }
                             }
                         }
@@ -3892,11 +3875,11 @@ private fun DownloadDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Column {
-                                    Text(label, color = if (selectedQuality.second == q) Color(0xFFE9B96E) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text(label, color = if (selectedQuality.second == q) Color(0xFFF1F5F9) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     Text("Est. ~${size} MB • Offline Playback", color = Color(0xFF8E9BAE), fontSize = 10.sp)
                                 }
                                 if (selectedQuality.second == q) {
-                                    Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFFE9B96E), modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(16.dp))
                                 }
                             }
                         }
@@ -3924,7 +3907,7 @@ private fun DownloadDialog(
                 onClick = {
                     onStartDownload(selectedAudio, selectedQuality.first, selectedSubs, selectedQuality.third)
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE9B96E), contentColor = Color(0xFF17120B)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5F9), contentColor = Color(0xFF17120B)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -3968,7 +3951,7 @@ private fun ActorFilmographyDialog(
                         modifier = Modifier
                             .size(72.dp)
                             .clip(CircleShape)
-                            .border(2.dp, Color(0xFFE9B96E), CircleShape)
+                            .border(2.dp, Color(0xFFF1F5F9), CircleShape)
                             .background(Color(0xFF1E2837)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -3980,7 +3963,7 @@ private fun ActorFilmographyDialog(
                                 modifier = Modifier.fillMaxSize()
                             )
                         } else {
-                            Text(actor.name.take(1), color = Color(0xFFE9B96E), fontWeight = FontWeight.Bold, fontSize = 28.sp)
+                            Text(actor.name.take(1), color = Color(0xFFF1F5F9), fontWeight = FontWeight.Bold, fontSize = 28.sp)
                         }
                     }
                     Column(Modifier.weight(1f)) {
@@ -3992,7 +3975,7 @@ private fun ActorFilmographyDialog(
                         )
                         Text(
                             "Starring as ${actor.character}",
-                            color = Color(0xFFE9B96E),
+                            color = Color(0xFFF1F5F9),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 12.sp,
                             maxLines = 1,
@@ -4015,7 +3998,7 @@ private fun ActorFilmographyDialog(
 
                 Text(
                     "FILMOGRAPHY IN ORBIT",
-                    color = Color(0xFFE9B96E),
+                    color = Color(0xFFF1F5F9),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
@@ -4079,13 +4062,13 @@ private fun ActorFilmographyDialog(
                                     Text("•", color = Color(0xFF4A5568), fontSize = 10.sp)
                                     Text(
                                         titleMovie.mediaType.uppercase(),
-                                        color = Color(0xFFE9B96E),
+                                        color = Color(0xFFF1F5F9),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     titleMovie.voteAverage?.let {
                                         Text("•", color = Color(0xFF4A5568), fontSize = 10.sp)
-                                        Text("★ %.1f".format(it), color = Color(0xFFE9B96E), fontSize = 11.sp)
+                                        Text("★ %.1f".format(it), color = Color(0xFFF1F5F9), fontSize = 11.sp)
                                     }
                                 }
                                 Spacer(Modifier.height(4.dp))
@@ -4106,7 +4089,7 @@ private fun ActorFilmographyDialog(
                             ) {
                                 Text(
                                     "EXPLORE",
-                                    color = Color(0xFFE9B96E),
+                                    color = Color(0xFFF1F5F9),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
