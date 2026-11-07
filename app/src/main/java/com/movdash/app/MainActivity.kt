@@ -162,7 +162,7 @@ private fun OpeningSplashScreen(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_logo),
-                    contentDescription = "MovDash Logo",
+                    contentDescription = "Orbit Logo",
                     modifier = Modifier
                         .size(96.dp)
                         .clip(RoundedCornerShape(22.dp))
@@ -173,7 +173,7 @@ private fun OpeningSplashScreen(
 
             // Animated App Name
             Text(
-                "MOVDASH",
+                "ORBIT",
                 color = Color.White,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -336,7 +336,7 @@ private fun MovDashApp() {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Image(
                                 painter = painterResource(id = R.drawable.ic_logo),
-                                contentDescription = "MovDash Logo",
+                                contentDescription = "Orbit Logo",
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(RoundedCornerShape(8.dp))
@@ -344,7 +344,7 @@ private fun MovDashApp() {
                             Spacer(Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    "MOVDASH",
+                                    "ORBIT",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Color.White,
@@ -2181,7 +2181,7 @@ private fun LibraryScreen(
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            "All downloads stay strictly inside MovDash's private vault (hidden from phone gallery & external file managers).",
+                                            "All downloads stay strictly inside Orbit's private vault (hidden from phone gallery & external file managers).",
                                             color = Color(0xFF8E9BAE),
                                             fontSize = 11.sp
                                         )
@@ -2647,7 +2647,7 @@ private fun ProfileScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_logo),
-                contentDescription = "MovDash Logo",
+                contentDescription = "Orbit Logo",
                 modifier = Modifier
                     .size(60.dp)
                     .clip(RoundedCornerShape(14.dp))
@@ -3999,7 +3999,7 @@ private fun ActorFilmographyDialog(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            "${actorTitles.size} Titles Available in MovDash",
+                            "${actorTitles.size} Titles Available in Orbit",
                             color = Color(0xFF8E9BAE),
                             fontSize = 11.sp
                         )
@@ -4014,7 +4014,7 @@ private fun ActorFilmographyDialog(
                 Spacer(Modifier.height(10.dp))
 
                 Text(
-                    "FILMOGRAPHY IN MOVDASH",
+                    "FILMOGRAPHY IN ORBIT",
                     color = Color(0xFFE9B96E),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,

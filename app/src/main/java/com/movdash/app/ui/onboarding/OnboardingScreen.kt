@@ -3,6 +3,7 @@ package com.movdash.app.ui.onboarding
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -45,84 +46,84 @@ fun OnboardingScreen(
     val slides = remember {
         listOf(
             OnboardingSlide(
-                icon = Icons.Default.MovieFilter,
-                badge = "NEXT-GEN STREAMING",
-                badgeColor = Color(0xFFE50914),
-                title = "Welcome to MovDash",
-                subtitle = "Your Ultimate Cinematic Hub",
-                description = "Stream thousands of blockbuster movies, trending web series, and anime in pristine 4K UHD and 1080p without any paywalls or logins.",
-                highlights = listOf("100% Free", "4K Ultra HD", "Zero Sign-up"),
-                gradientColors = listOf(Color(0xFF2B0A10), Color(0xFF0F141C))
+                icon = Icons.Default.AllInclusive,
+                badge = "ORBIT MULTIVERSE",
+                badgeColor = Color(0xFFE9B96E),
+                title = "Welcome to Orbit",
+                subtitle = "Infinite Cinematic Universe",
+                description = "Enter Orbit — the next-generation entertainment universe. Stream thousands of Hollywood blockbusters, Bollywood hits, South Indian spectacles, and binge-worthy web series in pristine 4K UHD.",
+                highlights = listOf("Infinite Universe", "Pristine 4K UHD", "Zero Paywalls"),
+                gradientColors = listOf(Color(0xFF2B1E0A), Color(0xFF090D14))
             ),
             OnboardingSlide(
                 icon = Icons.Default.Translate,
-                badge = "AUDIO FREEDOM",
-                badgeColor = Color(0xFFE9B96E),
-                title = "Watch in Your Language",
-                subtitle = "Hindi Dubbed & Multi-Audio",
-                description = "Never let language be a barrier. Enjoy instant access to Hindi Dubbed releases, Original Audio, Tamil, Telugu, and Dual-Audio streams.",
-                highlights = listOf("Hindi Dubbed", "Dual Audio 5.1", "Original Track"),
-                gradientColors = listOf(Color(0xFF261D0C), Color(0xFF0F141C))
+                badge = "ORBIT AUDIO",
+                badgeColor = Color(0xFF38BDF8),
+                title = "Universal Language Orbit",
+                subtitle = "Hindi Dubbed & Multi-Language",
+                description = "Stream in your preferred tongue with effortless multi-audio switching: Hindi, Tamil, Telugu, English, and dual-audio 5.1 soundtracks with synchronized multilingual subtitles.",
+                highlights = listOf("Hindi Dubbed", "Dual Audio 5.1", "Multi-Subtitles"),
+                gradientColors = listOf(Color(0xFF0C2438), Color(0xFF090D14))
             ),
             OnboardingSlide(
                 icon = Icons.Default.Bolt,
-                badge = "BUFFERLESS SPEED",
-                badgeColor = Color(0xFF38BDF8),
-                title = "Multi-Source Streaming Engine",
-                subtitle = "Smart Adaptive CDN Routes",
-                description = "Powered by high-speed resilient content delivery pipelines. If any stream slows down, backup sources switch in smoothly.",
-                highlights = listOf("Instant Playback", "Auto Failover", "1080p 60fps"),
-                gradientColors = listOf(Color(0xFF0C2233), Color(0xFF0F141C))
+                badge = "ORBIT WARP STREAM",
+                badgeColor = Color(0xFF818CF8),
+                title = "Warp-Speed Streaming Engine",
+                subtitle = "Smart Adaptive Multi-Server CDN",
+                description = "Powered by ultra-fast resilient edge server pipelines. Automatic silent failover ensures butter-smooth playback without ever interrupting your viewing experience.",
+                highlights = listOf("Zero Buffering", "Auto-Failover", "Adaptive 4K/HD"),
+                gradientColors = listOf(Color(0xFF19173B), Color(0xFF090D14))
             ),
             OnboardingSlide(
                 icon = Icons.Default.FitScreen,
-                badge = "CINEMA CONTROLS",
+                badge = "ORBIT CINEMA PLAYER",
                 badgeColor = Color(0xFFA855F7),
                 title = "Pro Auto-Landscape Player",
-                subtitle = "Intuitive Gesture & Touch Control",
-                description = "Automatically launches into wide landscape mode. Swipe for brightness & volume, double-tap 10s seek, long-press for 2X speed, and lock the screen.",
-                highlights = listOf("Auto-Landscape", "Swipe Gestures", "Screen Lock"),
-                gradientColors = listOf(Color(0xFF241038), Color(0xFF0F141C))
+                subtitle = "Intuitive Gestures & Touch Controls",
+                description = "Launches automatically into immersive wide landscape mode. Swipe for brightness & volume, double-tap 10s seek, long-press for 2X speed boost, and secure screen lock.",
+                highlights = listOf("Auto-Landscape", "Fluid Gestures", "Minus Countdown"),
+                gradientColors = listOf(Color(0xFF2A0F3D), Color(0xFF090D14))
             ),
             OnboardingSlide(
-                icon = Icons.Default.VideoLibrary,
-                badge = "BINGE-READY",
+                icon = Icons.Default.AutoAwesomeMotion,
+                badge = "ORBIT SAGAS",
+                badgeColor = Color(0xFFF43F5E),
+                title = "Franchise Chronological Timelines",
+                subtitle = "Official Chronological Watch Orders",
+                description = "Track entire cinematic universes in their official storyline order — Marvel MCU, Fast & Furious, Transformers, YRF Spy Universe, Lokesh Cinematic Universe, and Neel Universe.",
+                highlights = listOf("Chronological Order", "Phase Timelines", "Watched Tracker"),
+                gradientColors = listOf(Color(0xFF3B0E1B), Color(0xFF090D14))
+            ),
+            OnboardingSlide(
+                icon = Icons.Default.FolderSpecial,
+                badge = "ORBIT PRIVATE VAULT",
                 badgeColor = Color(0xFF10B981),
-                title = "Detailed Episode Guides",
-                subtitle = "Thumbnails, Synopses & Run Times",
-                description = "Browse TV shows with visual episode thumbnails, official titles, release dates, and seamless in-player episode switching.",
-                highlights = listOf("Episode Stills", "Full Synopses", "In-Player Drawer"),
-                gradientColors = listOf(Color(0xFF09291D), Color(0xFF0F141C))
-            ),
-            OnboardingSlide(
-                icon = Icons.Default.BookmarkAdded,
-                badge = "LOCAL & PRIVATE",
-                badgeColor = Color(0xFFF59E0B),
-                title = "Personal Library & History",
-                subtitle = "Saved Securely on Your Phone",
-                description = "Keep track of your favorite titles, save movies to your watchlist, and resume playback right where you left off. 100% private and offline.",
-                highlights = listOf("Watchlist", "Watch History", "No Cloud Tracking"),
-                gradientColors = listOf(Color(0xFF2A1C08), Color(0xFF0F141C))
+                title = "Offline Series Folder Vault",
+                subtitle = "Private In-App Sandbox Storage",
+                description = "Download TV series grouped neatly into dedicated series folders and movie downloads securely isolated in Orbit's private sandbox (hidden from external gallery and files).",
+                highlights = listOf("Series Folders", "Private Sandbox", "Offline Cinema"),
+                gradientColors = listOf(Color(0xFF0A2B1D), Color(0xFF090D14))
             ),
             OnboardingSlide(
                 icon = Icons.Default.HourglassTop,
-                badge = "RELEASE RADAR",
-                badgeColor = Color(0xFFEC4899),
-                title = "Track Upcoming Blockbusters",
-                subtitle = "Premiere Dates & Reminders",
-                description = "Stay ahead of major releases like Avengers: Doomsday, Vision Quest, and The Batman Part II with countdowns and release alerts.",
-                highlights = listOf("Release Radar", "Remind Me", "JustWatch Links"),
-                gradientColors = listOf(Color(0xFF2E0D1F), Color(0xFF0F141C))
+                badge = "ORBIT RELEASE RADAR",
+                badgeColor = Color(0xFFFB923C),
+                title = "Theatrical Release Radar",
+                subtitle = "Countdowns, Dates & Release Alerts",
+                description = "Stay up to date with unreleased blockbusters like Avengers: Doomsday, The Batman Part II, and Vision Quest with official theatrical release dates and reminder alerts.",
+                highlights = listOf("Theatrical Radar", "Release Alerts", "Zero CAM Rips"),
+                gradientColors = listOf(Color(0xFF381B09), Color(0xFF090D14))
             ),
             OnboardingSlide(
                 icon = Icons.Default.RocketLaunch,
-                badge = "READY TO STREAM",
-                badgeColor = Color(0xFFE50914),
-                title = "100% Free Forever",
-                subtitle = "Pure Entertainment, No Strings",
-                description = "No subscriptions, no fees, and no account hurdles. Your portal to unlimited movies and series is ready.",
-                highlights = listOf("Zero Fees", "No Account", "Instant Cinema"),
-                gradientColors = listOf(Color(0xFF33090F), Color(0xFF0F141C))
+                badge = "ENTER ORBIT",
+                badgeColor = Color(0xFFE9B96E),
+                title = "Launch Into Orbit",
+                subtitle = "100% Free Forever • No Sign-up",
+                description = "No subscriptions, no fees, and no account hurdles. Your personal portal to the infinite universe of movies and series is ready for departure.",
+                highlights = listOf("Zero Sign-up", "Forever Free", "Instant Cinema"),
+                gradientColors = listOf(Color(0xFF332009), Color(0xFF090D14))
             )
         )
     }
@@ -133,9 +134,9 @@ fun OnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF090C10))
+            .background(Color(0xFF07090E))
     ) {
-        // TOP SKIP BUTTON
+        // TOP BAR WITH ORBIT BADGE AND SKIP
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -145,15 +146,16 @@ fun OnboardingScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = Color(0xFF141A24)
+                shape = RoundedCornerShape(10.dp),
+                color = Color(0xFF131A26),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222F42))
             ) {
                 Text(
-                    text = "${pagerState.currentPage + 1} of ${slides.size}",
-                    color = Color(0xFF8E9BAE),
+                    text = "Orbit • ${pagerState.currentPage + 1} of ${slides.size}",
+                    color = Color(0xFFE9B96E),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                 )
             }
 
@@ -186,52 +188,69 @@ fun OnboardingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Card with glowing gradient
+                // Orbital Planet & Rings Visual
                 Box(
-                    modifier = Modifier
-                        .size(130.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(slide.badgeColor.copy(alpha = 0.35f), Color.Transparent)
-                            )
-                        ),
+                    modifier = Modifier.size(150.dp),
                     contentAlignment = Alignment.Center
                 ) {
+                    // Outer Orbit Celestial Ring
                     Box(
                         modifier = Modifier
-                            .size(90.dp)
+                            .size(148.dp)
+                            .clip(CircleShape)
+                            .border(1.dp, slide.badgeColor.copy(alpha = 0.22f), CircleShape)
+                    )
+
+                    // Middle Glowing Nebula Aura
+                    Box(
+                        modifier = Modifier
+                            .size(116.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(slide.badgeColor.copy(alpha = 0.30f), Color.Transparent)
+                                )
+                            )
+                            .border(1.dp, slide.badgeColor.copy(alpha = 0.40f), CircleShape)
+                    )
+
+                    // Planet Core with Icon
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
                             .clip(CircleShape)
                             .background(
                                 Brush.linearGradient(
-                                    colors = listOf(Color(0xFF1A2332), Color(0xFF101622))
+                                    colors = listOf(Color(0xFF182232), Color(0xFF0C121D))
                                 )
-                            ),
+                            )
+                            .border(1.5.dp, slide.badgeColor, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = slide.icon,
                             contentDescription = null,
                             tint = slide.badgeColor,
-                            modifier = Modifier.size(46.dp)
+                            modifier = Modifier.size(40.dp)
                         )
                     }
                 }
 
                 Spacer(Modifier.height(24.dp))
 
-                // Badge
+                // Orbit Pill Badge
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = slide.badgeColor.copy(alpha = 0.15f)
+                    color = slide.badgeColor.copy(alpha = 0.15f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, slide.badgeColor.copy(alpha = 0.35f))
                 ) {
                     Text(
                         text = slide.badge,
                         color = slide.badgeColor,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.2.sp,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                        letterSpacing = 1.3.sp,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)
                     )
                 }
 
@@ -277,12 +296,13 @@ fun OnboardingScreen(
                     slide.highlights.forEach { tag ->
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF161E2C)
+                            color = Color(0xFF131A26),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E2A3A))
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 Icon(
                                     Icons.Default.CheckCircle,
@@ -331,7 +351,7 @@ fun OnboardingScreen(
                             .width(width)
                             .clip(CircleShape)
                             .background(
-                                if (isSelected) Color(0xFFE50914) else Color(0xFF2C3748)
+                                if (isSelected) Color(0xFFE9B96E) else Color(0xFF2C3748)
                             )
                     )
                 }
@@ -366,7 +386,7 @@ fun OnboardingScreen(
                     Spacer(Modifier.size(46.dp))
                 }
 
-                // Next or Get Started Button
+                // Next or Get Started Button (Orbit Galactic Gold)
                 if (pagerState.currentPage < slides.size - 1) {
                     Button(
                         onClick = {
@@ -375,8 +395,8 @@ fun OnboardingScreen(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE50914),
-                            contentColor = Color.White
+                            containerColor = Color(0xFFE9B96E),
+                            contentColor = Color(0xFF101620)
                         ),
                         shape = RoundedCornerShape(12.dp),
                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
@@ -393,20 +413,20 @@ fun OnboardingScreen(
                     Button(
                         onClick = onFinished,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE50914),
-                            contentColor = Color.White
+                            containerColor = Color(0xFFE9B96E),
+                            contentColor = Color(0xFF101620)
                         ),
                         shape = RoundedCornerShape(14.dp),
                         contentPadding = PaddingValues(horizontal = 28.dp, vertical = 14.dp)
                     ) {
                         Icon(
-                            Icons.Default.PlayArrow,
+                            Icons.Default.RocketLaunch,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            "Get Started • Start Streaming",
+                            "Launch Orbit • Start Streaming",
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 14.sp
                         )

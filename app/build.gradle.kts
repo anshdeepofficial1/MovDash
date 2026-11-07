@@ -9,8 +9,27 @@ android {
         applicationId = "com.movdash.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.1"
+        versionCode = 3
+        versionName = "1.0.0"
+    }
+    signingConfigs {
+        create("release") {
+            storeFile = file("orbit-release.jks")
+            storePassword = "orbit@2026"
+            keyAlias = "orbit"
+            keyPassword = "orbit@2026"
+            enableV1Signing = true
+            enableV2Signing = true
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("release")
+        }
     }
     buildFeatures { compose = true }
     compileOptions {
