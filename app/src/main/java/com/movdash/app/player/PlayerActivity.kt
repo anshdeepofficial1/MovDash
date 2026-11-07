@@ -1078,98 +1078,16 @@ private fun AdvancedProPlayerScreen(
 
     // IN-PLAYER EPISODES BOTTOM SHEET (AniDash Feature)
     if (showEpisodesSheet && episodesList.isNotEmpty()) {
-        ModalBottomSheet(
-            onDismissRequest = { showEpisodesSheet = false },
-            containerColor = Color(0xFF101722),
-            contentColor = Color.White,
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("Episodes", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Text("Season $currentSeason • ${episodesList.size} Episodes", color = Color(0xFFF1F5F9), fontSize = 12.sp)
-                    }
-                    IconButton(onClick = { showEpisodesSheet = false }) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF8F9CAA))
-                    }
-                }
-                Spacer(Modifier.height(12.dp))
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 350.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(episodesList, key = { it.id }) { ep ->
-                        val isCurrent = ep.episodeNumber == currentEpisode
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isCurrent) Color(0xFF243247) else Color(0xFF151D29))
-                                .clickable {
-                                    showEpisodesSheet = false
-                                    switchEpisode(ep.episodeNumber)
-                                }
-                                .padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(width = 90.dp, height = 55.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0xFF1E2837))
-                            ) {
-                                if (ep.stillPath != null) {
-                                    AsyncImage(
-                                        model = "https://image.tmdb.org/t/p/w300${ep.stillPath}",
-                                        contentDescription = ep.name,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                }
-                                Box(
-                                    Modifier
-                                        .fillMaxSize()
-                                        .background(Color(0x44000000)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        if (isCurrent) Icons.Default.GraphicEq else Icons.Default.PlayArrow,
-                                        contentDescription = null,
-                                        tint = if (isCurrent) Color(0xFFF1F5F9) else Color.White,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    "E${ep.episodeNumber}: ${ep.name}",
-                                    color = if (isCurrent) Color(0xFFF1F5F9) else Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    ep.runtime?.let { "$it min" } ?: "Full HD",
-                                    color = Color(0xFF8E9BAE),
-                                    fontSize = 11.sp
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        PlayerEpisodesBottomSheet(
+            episodesList = episodesList,
+            currentSeason = currentSeason,
+            currentEpisode = currentEpisode,
+            onEpisodeSelect = { epNum ->
+                showEpisodesSheet = false
+                switchEpisode(epNum)
+            },
+            onDismiss = { showEpisodesSheet = false }
+        )
     }
 
     // VIDEO QUALITY DIALOG
@@ -1482,5 +1400,105 @@ private fun formatTime(millis: Long): String {
         "%02d:%02d:%02d".format(hours, minutes, seconds)
     } else {
         "%02d:%02d".format(minutes, seconds)
+    }
+}
+
+@kotlin.OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun PlayerEpisodesBottomSheet(
+    episodesList: List<com.movdash.app.data.EpisodeSummary>,
+    currentSeason: Int,
+    currentEpisode: Int,
+    onEpisodeSelect: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF101722),
+        contentColor = Color.White,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text("Episodes", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Season $currentSeason • ${episodesList.size} Episodes", color = Color(0xFFF1F5F9), fontSize = 12.sp)
+                }
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF8F9CAA))
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 350.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(episodesList, key = { it.id }) { ep ->
+                    val isCurrent = ep.episodeNumber == currentEpisode
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isCurrent) Color(0xFF243247) else Color(0xFF151D29))
+                            .clickable { onEpisodeSelect(ep.episodeNumber) }
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(width = 90.dp, height = 55.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF1E2837))
+                        ) {
+                            if (ep.stillPath != null) {
+                                coil3.compose.AsyncImage(
+                                    model = "https://image.tmdb.org/t/p/w300${ep.stillPath}",
+                                    contentDescription = ep.name,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0x44000000)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    if (isCurrent) Icons.Default.GraphicEq else Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    tint = if (isCurrent) Color(0xFFF1F5F9) else Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "E${ep.episodeNumber}: ${ep.name}",
+                                color = if (isCurrent) Color(0xFFF1F5F9) else Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                            Text(
+                                ep.runtime?.let { "$it min" } ?: "Full HD",
+                                color = Color(0xFF8E9BAE),
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
