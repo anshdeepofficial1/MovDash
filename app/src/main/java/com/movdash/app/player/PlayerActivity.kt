@@ -1,6 +1,10 @@
+@file:OptIn(
+    androidx.media3.common.util.UnstableApi::class,
+    androidx.compose.material3.ExperimentalMaterial3Api::class
+)
+
 package com.movdash.app.player
 
-@file:OptIn(androidx.media3.common.util.UnstableApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 
 import android.annotation.SuppressLint
 import android.app.Activity
