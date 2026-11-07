@@ -330,40 +330,60 @@ object PreloadedCatalog {
         Movie(
             id = 1003596,
             title = "Avengers: Doomsday",
-            overview = "The Avengers assemble once more to face the universe's ultimate threat, Doctor Victor von Doom.",
-            posterPath = "/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
-            backdropPath = "/yDHYTjA3R0ne82ismFR4ggIFKz8.jpg",
+            overview = "The Avengers assemble once more to face the universe's ultimate threat, Doctor Victor von Doom, portrayed by Robert Downey Jr.",
+            posterPath = "/s4v0UX1anfXm0UvloLsTTJ4v222.jpg",
+            backdropPath = "/dvBCSrm9Qn3Sg5m9p4h9Rz8l7e.jpg",
             releaseDate = "2026-12-18",
             voteAverage = null,
             mediaType = "movie"
         ),
         Movie(
-            id = 254823,
-            title = "Vision Quest",
-            overview = "White Vision embarks on a journey of self-discovery and reclaiming his humanity across the multiverse.",
-            posterPath = "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-            backdropPath = "/56v2KjBlU4XaOv9rVYEQypROD7P.jpg",
-            releaseDate = "2026-12-01",
-            voteAverage = null,
-            mediaType = "tv"
-        ),
-        Movie(
-            id = 974950,
+            id = 806704,
             title = "The Batman Part II",
-            overview = "Bruce Wayne plunges deeper into the criminal underworld of Gotham City facing dark psychological tests.",
-            posterPath = "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+            overview = "Bruce Wayne plunges deeper into the criminal underworld of Gotham City facing dark psychological tests in Matt Reeves' epic crime saga.",
+            posterPath = "/2m174If22w2nF4aAeVyM5H3a48e.jpg",
             backdropPath = "/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg",
             releaseDate = "2026-10-02",
             voteAverage = null,
             mediaType = "movie"
         ),
         Movie(
+            id = 213375,
+            title = "Vision Quest",
+            overview = "White Vision embarks on a journey of self-discovery and reclaiming his humanity across the multiverse in this Marvel Television original series.",
+            posterPath = "/ghpdxuURdKwaM2toZT6pTvodczV.jpg",
+            backdropPath = "/c0WlrewGTbPE69DVLBWzLXwDXH3.jpg",
+            releaseDate = "2026-12-01",
+            voteAverage = null,
+            mediaType = "tv"
+        ),
+        Movie(
             id = 1003598,
             title = "Avengers: Secret Wars",
-            overview = "The multiverse collapses, bringing forth Battleworld where champions clash for reality itself.",
-            posterPath = "/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
-            backdropPath = "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg",
+            overview = "The multiverse collapses, bringing forth Battleworld where champions clash for reality itself in the culmination of the Multiverse Saga.",
+            posterPath = "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg",
+            backdropPath = "/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
             releaseDate = "2027-05-07",
+            voteAverage = null,
+            mediaType = "movie"
+        ),
+        Movie(
+            id = 83533,
+            title = "Avatar: Fire and Ash",
+            overview = "Jake Sully and Neytiri encounter a hostile, fire-based Na'vi volcanic tribe known as the Ash People on Pandora.",
+            posterPath = "/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
+            backdropPath = "/vL5W4iPJJvh9vAQ7WVRSm2OKygk.jpg",
+            releaseDate = "2025-12-19",
+            voteAverage = null,
+            mediaType = "movie"
+        ),
+        Movie(
+            id = 569094,
+            title = "Spider-Man: Beyond the Spider-Verse",
+            overview = "Miles Morales journeys across the shattered multiverse alongside Gwen Stacy and an army of Spider-People to confront Spot.",
+            posterPath = "/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
+            backdropPath = "/4XM8DUTQb3lhLemJC51Jx4a2EuA.jpg",
+            releaseDate = "2026-06-25",
             voteAverage = null,
             mediaType = "movie"
         )
@@ -401,6 +421,40 @@ object PreloadedCatalog {
             movie.title.contains("Sooryavanshi", ignoreCase = true) ||
             movie.title.contains("Simmba", ignoreCase = true)
         }.distinctBy { "${it.mediaType}-${it.id}" }
+    }
+
+        val hollywoodMovies: List<Movie> by lazy {
+        listOf(
+            Movie(157336, "Interstellar", "Mankind was born on Earth. It was never meant to die here.", "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", "/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg", "2014-11-07", 8.7, "movie"),
+            Movie(155, "The Dark Knight", "Batman raises the stakes in his war on crime against the Joker.", "/qJ2tW6WMUDux911r6m7haRef0WH.jpg", "/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg", "2008-07-18", 8.5, "movie"),
+            Movie(693134, "Dune: Part Two", "Paul Atreides unites with the Fremen on a mythic path of revenge.", "/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg", "/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg", "2024-03-01", 8.3, "movie"),
+            Movie(27205, "Inception", "A skilled thief steals corporate secrets through subconscious dream-sharing.", "/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg", "/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg", "2010-07-16", 8.4, "movie"),
+            Movie(299534, "Avengers: Endgame", "After Thanos wiped out half the universe, the remaining Avengers assemble.", "/or06FN3Dka5tukK1e9sl16pB3iy.jpg", "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg", "2019-04-26", 8.3, "movie"),
+            Movie(872585, "Oppenheimer", "The story of J. Robert Oppenheimer's role in the development of the atomic bomb.", "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg", "/fm6KqXpk3M2HVveHwCrBSSBaO0V.jpg", "2023-07-21", 8.1, "movie"),
+            Movie(533535, "Deadpool & Wolverine", "A listless Wade Wilson teams with a reluctant Wolverine to save his universe.", "/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg", "/yDHYTjA3R0ne82ismFR4ggIFKz8.jpg", "2024-07-26", 7.7, "movie"),
+            Movie(414906, "The Batman", "In his second year of fighting crime, Batman uncovers corruption in Gotham City.", "/74xTEgt7R36Fpooo50r9T25onhq.jpg", "/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg", "2022-03-04", 7.7, "movie"),
+            Movie(558449, "Gladiator II", "Years after witnessing the death of Maximus, Lucius must enter the Colosseum.", "/2cxhvwyEwRlysPoRhAVOTYr9v15.jpg", "/euYIwmwkmz95mnXvufEmbL69ovr.jpg", "2024-11-22", 7.5, "movie")
+        )
+    }
+
+    val hollywoodSeries: List<Movie> by lazy {
+        listOf(
+            Movie(1396, "Breaking Bad", "A high school chemistry teacher turned ruthless meth kingpin.", "/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg", "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg", "2008-01-20", 8.9, "tv"),
+            Movie(66732, "Stranger Things", "Secret government experiments, terrifying forces and one strange girl.", "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "/56v2KjBlU4XaOv9rVYEQypROD7P.jpg", "2016-07-15", 8.6, "tv"),
+            Movie(126308, "Shōgun", "In feudal Japan, Lord Toranaga battles against enemies on the Council of Regents.", "/7O4iVfOMQmdCSxhOg1WNzG1AgYT.jpg", "/2rmK7mnchsl935x72PmyvpYdiip.jpg", "2024-02-27", 8.5, "tv"),
+            Movie(1399, "Game of Thrones", "Nine noble families fight for control over the mythical lands of Westeros.", "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg", "/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg", "2011-04-17", 8.4, "tv"),
+            Movie(60059, "Better Call Saul", "The trials and tribulations of criminal lawyer Jimmy McGill.", "/fC2HDm5t0kHl7mTm7jxMR31b7by.jpg", "/9XX8FfO1n3fN93a9C4i71b3eF9a.jpg", "2015-02-08", 8.7, "tv"),
+            Movie(76479, "The Boys", "A group of vigilantes set out to take down corrupt superheroes.", "/2zm25B8x3sHnQ4W46f5rX789mZ.jpg", "/n6bUvigpLqlaKLmjjTmkuZ5Yx3.jpg", "2019-07-26", 8.5, "tv")
+        )
+    }
+
+    val bollywoodSeries: List<Movie> by lazy {
+        listOf(
+            Movie(82856, "Mirzapur", "A shocking incident at a wedding procession ignites a war between Akhandanand Tripathi and two brothers.", "/1YhY012B5jR39hG4K6789mL4N5.jpg", "/3Z8X1V4N6J789mL5K2345nB1.jpg", "2018-11-16", 8.5, "tv"),
+            Movie(79240, "Sacred Games", "A link in their pasts leads an honest cop to a fugitive gang boss whose cryptic warning spurs the officer to save Mumbai.", "/7YhY012B5jR39hG4K6789mL4N5.jpg", "/4Z8X1V4N6J789mL5K2345nB1.jpg", "2018-07-06", 8.4, "tv"),
+            Movie(95558, "The Family Man", "A working man from the National Investigation Agency must protect the nation while keeping his family safe.", "/8YhY012B5jR39hG4K6789mL4N5.jpg", "/5Z8X1V4N6J789mL5K2345nB1.jpg", "2019-09-20", 8.6, "tv"),
+            Movie(209867, "Farzi", "A brilliant small-time artist is catapulted into the high-stakes world of counterfeiting.", "/9YhY012B5jR39hG4K6789mL4N5.jpg", "/6Z8X1V4N6J789mL5K2345nB1.jpg", "2023-02-10", 8.4, "tv")
+        )
     }
 
     val southIndianCinema: List<Movie> by lazy {
@@ -441,7 +495,7 @@ object PreloadedCatalog {
     }
 
     val allDiscover: List<Movie>
-        get() = (spotlightItems + trendingMovies + trendingSeries + popularMovies + popularSeries + upcomingTitles + UniverseData.allUniverses.flatMap { u -> u.items.map { it.movie } })
+        get() = (spotlightItems + trendingMovies + trendingSeries + popularMovies + popularSeries + upcomingTitles + hollywoodMovies + hollywoodSeries + bollywoodSeries + UniverseData.allUniverses.flatMap { u -> u.items.map { it.movie } })
         .distinctBy { "${it.mediaType}-${it.id}" }
 
     val preloadedSeasons: Map<Pair<Int, Int>, SeasonDetails> = mapOf(

@@ -12,6 +12,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
+
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
@@ -83,6 +91,133 @@ fun getMovieQualityBadge(movie: Movie): String {
     return if (vote >= 7.6 || yr >= 2023) "4K UHD" else "1080p HD"
 }
 
+@Composable
+private fun OpeningSplashScreen(
+    onAnimationFinished: () -> Unit
+) {
+    val scale = remember { Animatable(0.5f) }
+    val alpha = remember { Animatable(0f) }
+    val textAlpha = remember { Animatable(0f) }
+    val progress = remember { Animatable(0f) }
+
+    LaunchedEffect(Unit) {
+        launch {
+            alpha.animateTo(1f, animationSpec = tween(500, easing = LinearEasing))
+        }
+        launch {
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            )
+        }
+        delay(350)
+        launch {
+            textAlpha.animateTo(1f, animationSpec = tween(450))
+        }
+        launch {
+            progress.animateTo(1f, animationSpec = tween(1200, easing = FastOutSlowInEasing))
+        }
+        delay(1600)
+        onAnimationFinished()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF07090E)),
+        contentAlignment = Alignment.Center
+    ) {
+        // Subtle Luxury Golden Radial Halo
+        Box(
+            modifier = Modifier
+                .size(340.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(Color(0x33E9B96E), Color(0x0DE9B96E), Color.Transparent),
+                        radius = 450f
+                    )
+                )
+        )
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // App Logo with Animated Scale, Border and Elevation
+            Box(
+                modifier = Modifier
+                    .size(115.dp)
+                    .graphicsLayer(
+                        scaleX = scale.value,
+                        scaleY = scale.value,
+                        alpha = alpha.value
+                    )
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(Color(0xFF101724))
+                    .border(BorderStroke(2.dp, Color(0xFFE9B96E)), RoundedCornerShape(28.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_logo),
+                    contentDescription = "MovDash Logo",
+                    modifier = Modifier
+                        .size(96.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                )
+            }
+
+            Spacer(Modifier.height(22.dp))
+
+            // Animated App Name
+            Text(
+                "MOVDASH",
+                color = Color.White,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 4.sp,
+                modifier = Modifier.graphicsLayer(alpha = textAlpha.value)
+            )
+
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                "MOVIES & SERIES UNIVERSE",
+                color = Color(0xFFE9B96E),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.5.sp,
+                modifier = Modifier.graphicsLayer(alpha = textAlpha.value)
+            )
+
+            Spacer(Modifier.height(36.dp))
+
+            // Cinematic Loading Progress Bar
+            Box(
+                modifier = Modifier
+                    .width(140.dp)
+                    .height(3.5.dp)
+                    .clip(RoundedCornerShape(100.dp))
+                    .background(Color(0xFF1B2433))
+                    .graphicsLayer(alpha = textAlpha.value)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(progress.value)
+                        .fillMaxHeight()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFFE9B96E), Color(0xFFFFD700))
+                            )
+                        )
+                )
+            }
+        }
+    }
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,8 +232,18 @@ private enum class AppTab { HOME, DISCOVER, LIBRARY, PROFILE }
 private fun MovDashApp() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("movdash", Context.MODE_PRIVATE) }
+    var showSplash by remember { mutableStateOf(true) }
     var showOnboarding by remember {
         mutableStateOf(!prefs.getBoolean("has_completed_onboarding", false))
+    }
+
+    if (showSplash) {
+        OpeningSplashScreen(
+            onAnimationFinished = {
+                showSplash = false
+            }
+        )
+        return
     }
 
     if (showOnboarding) {
@@ -645,6 +790,9 @@ private fun HomeScreen(
     onGenreClick: (String) -> Unit,
     onOpenSection: (SectionInfo) -> Unit
 ) {
+    var selectedNxshaCategory by remember { mutableStateOf("All") }
+    val nxshaCategories = listOf("All", "Hollywood", "Bollywood", "South Cinema", "TV Series", "Movies")
+
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         HeroSpotlightCarousel(
             movies = spotlightMovies,
@@ -738,106 +886,85 @@ private fun HomeScreen(
 
         Spacer(Modifier.height(14.dp))
 
-        // Quick Category/Genre Chips
+        // NXSHA-STYLE CATEGORY TABS (Hollywood, Bollywood, South Cinema, TV Series, Movies)
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(PreloadedCatalog.genres) { genre ->
-                SuggestionChip(
-                    onClick = { onGenreClick(genre) },
-                    label = { Text(genre, color = Color(0xFFDCE2EC), fontSize = 12.sp) },
-                    colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color(0xFF141C28)),
-                    border = SuggestionChipDefaults.suggestionChipBorder(
+            items(nxshaCategories) { category ->
+                val isSelected = selectedNxshaCategory == category
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { selectedNxshaCategory = category },
+                    label = {
+                        Text(
+                            category,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 12.sp
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFFE9B96E),
+                        selectedLabelColor = Color(0xFF101620),
+                        containerColor = Color(0xFF131A26),
+                        labelColor = Color(0xFFCBD5E1)
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
                         enabled = true,
-                        borderColor = Color(0xFF263347)
+                        selected = isSelected,
+                        borderColor = if (isSelected) Color(0xFFE9B96E) else Color(0xFF263347)
                     )
                 )
             }
         }
 
-        // 1. Trending Movies
-        if (movies.isNotEmpty()) {
-            Spacer(Modifier.height(14.dp))
-            SectionTitle("Trending Movies", "See All") {
+        Spacer(Modifier.height(8.dp))
+
+        // 1. RELEASING SOON • IN THEATERS / OTT (Verified Official Upcoming Titles)
+        if (selectedNxshaCategory in listOf("All", "Hollywood", "Movies")) {
+            Spacer(Modifier.height(10.dp))
+            SectionTitle("Releasing Soon • In Theaters / OTT", "See All") {
                 onOpenSection(
                     SectionInfo(
-                        title = "Trending Movies",
-                        subtitle = "Global box-office blockbusters",
-                        items = movies
+                        title = "Releasing Soon • In Theaters / OTT",
+                        subtitle = "Official upcoming theatrical releases",
+                        items = upcomingMovies
                     )
                 )
             }
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(movies, key = { "trend-movie-${it.id}" }) { movie ->
+                items(upcomingMovies, key = { "upcoming-home-${it.id}" }) { item ->
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+
+        // 2. HOLLYWOOD BLOCKBUSTERS (Nxsha Section)
+        if (selectedNxshaCategory in listOf("All", "Hollywood", "Movies")) {
+            Spacer(Modifier.height(18.dp))
+            SectionTitle("Hollywood Blockbusters", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "Hollywood Blockbusters",
+                        subtitle = "Global box-office Hollywood hits",
+                        items = PreloadedCatalog.hollywoodMovies
+                    )
+                )
+            }
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(PreloadedCatalog.hollywoodMovies, key = { "hollywood-movie-${it.id}" }) { movie ->
                     MoviePosterCard(movie) { onMovieClick(movie) }
                 }
             }
         }
 
-        // 2. Popular Blockbusters
-        if (popularMovies.isNotEmpty()) {
+        // 3. BOLLYWOOD & HINDI HITS (Nxsha Section)
+        if (selectedNxshaCategory in listOf("All", "Bollywood", "Movies")) {
             Spacer(Modifier.height(18.dp))
-            SectionTitle("Popular Blockbusters", "See All") {
+            SectionTitle("Bollywood Hits & Hindi Cinema", "See All") {
                 onOpenSection(
                     SectionInfo(
-                        title = "Popular Blockbusters",
-                        subtitle = "All-time viewer favorites",
-                        items = popularMovies
-                    )
-                )
-            }
-            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(popularMovies, key = { "pop-movie-${it.id}" }) { item ->
-                    MoviePosterCard(item) { onMovieClick(item) }
-                }
-            }
-        }
-
-        // 3. Trending TV Series
-        if (series.isNotEmpty()) {
-            Spacer(Modifier.height(18.dp))
-            SectionTitle("Trending TV Series", "See All") {
-                onOpenSection(
-                    SectionInfo(
-                        title = "Trending TV Series",
-                        subtitle = "Binge-worthy shows & serials",
-                        items = series
-                    )
-                )
-            }
-            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(series, key = { "trend-tv-${it.id}" }) { item ->
-                    MoviePosterCard(item) { onMovieClick(item) }
-                }
-            }
-        }
-
-        // 4. Top Rated Masterpieces (AniDash Ranked Section!)
-        Spacer(Modifier.height(18.dp))
-        SectionTitle("Top Rated Masterpieces", "Ranked #1-10") {
-            onOpenSection(
-                SectionInfo(
-                    title = "Top Rated Masterpieces",
-                    subtitle = "Ranked #1 to #10 all-time cinema",
-                    items = PreloadedCatalog.topRatedMasterpieces,
-                    isRanked = true
-                )
-            )
-        }
-        LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(PreloadedCatalog.topRatedMasterpieces, key = { "top-rated-${it.id}" }) { item ->
-                MoviePosterCard(item) { onMovieClick(item) }
-            }
-        }
-
-        // 5. Bollywood & Hindi Hits
-        if (PreloadedCatalog.bollywoodHits.isNotEmpty()) {
-            Spacer(Modifier.height(18.dp))
-            SectionTitle("Bollywood & Hindi Hits", "See All") {
-                onOpenSection(
-                    SectionInfo(
-                        title = "Bollywood & Hindi Hits",
+                        title = "Bollywood Hits & Hindi Cinema",
                         subtitle = "Massive blockbuster Hindi cinema",
                         items = PreloadedCatalog.bollywoodHits
                     )
@@ -850,8 +977,46 @@ private fun HomeScreen(
             }
         }
 
-        // 6. South Indian Epic Cinema
-        if (PreloadedCatalog.southIndianCinema.isNotEmpty()) {
+        // 4. TRENDING TV & WEB SERIES (Nxsha Section)
+        if (selectedNxshaCategory in listOf("All", "TV Series")) {
+            Spacer(Modifier.height(18.dp))
+            SectionTitle("Trending TV & Web Series", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "Trending TV & Web Series",
+                        subtitle = "Binge-worthy shows & serials",
+                        items = series
+                    )
+                )
+            }
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(series, key = { "trend-tv-${it.id}" }) { item ->
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+
+        // HOLLYWOOD TV SERIES (Nxsha Section)
+        if (selectedNxshaCategory in listOf("All", "Hollywood", "TV Series")) {
+            Spacer(Modifier.height(18.dp))
+            SectionTitle("Hollywood TV Series", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "Hollywood TV Series",
+                        subtitle = "Top-rated global television masterworks",
+                        items = PreloadedCatalog.hollywoodSeries
+                    )
+                )
+            }
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(PreloadedCatalog.hollywoodSeries, key = { "hollywood-series-${it.id}" }) { item ->
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+
+        // 5. SOUTH INDIAN EPIC SPECTACLES (Nxsha Section)
+        if (selectedNxshaCategory in listOf("All", "South Cinema", "Movies")) {
             Spacer(Modifier.height(18.dp))
             SectionTitle("South Indian Epic Cinema", "See All") {
                 onOpenSection(
@@ -869,20 +1034,59 @@ private fun HomeScreen(
             }
         }
 
-        // 7. Upcoming / Releasing Soon Shelf
-        if (upcomingMovies.isNotEmpty()) {
+        // 6. TOP RATED MASTERPIECES (IMDb 8.5+ Ranked Leaderboard!)
+        if (selectedNxshaCategory in listOf("All", "Hollywood", "Movies")) {
             Spacer(Modifier.height(18.dp))
-            SectionTitle("Releasing Soon • In Theaters / OTT", "See All") {
+            SectionTitle("Top Rated Masterpieces", "Ranked #1-10") {
                 onOpenSection(
                     SectionInfo(
-                        title = "Releasing Soon",
-                        subtitle = "Upcoming highly anticipated releases",
-                        items = upcomingMovies
+                        title = "Top Rated Masterpieces",
+                        subtitle = "Ranked #1 to #10 all-time cinema",
+                        items = PreloadedCatalog.topRatedMasterpieces,
+                        isRanked = true
                     )
                 )
             }
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(upcomingMovies, key = { "upcoming-home-${it.id}" }) { item ->
+                items(PreloadedCatalog.topRatedMasterpieces, key = { "top-rated-${it.id}" }) { item ->
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+
+        // 7. BOLLYWOOD WEB SERIES (Nxsha Section)
+        if (selectedNxshaCategory in listOf("All", "Bollywood", "TV Series")) {
+            Spacer(Modifier.height(18.dp))
+            SectionTitle("Bollywood & Hindi Web Series", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "Bollywood & Hindi Web Series",
+                        subtitle = "Acclaimed Indian crime and thriller sagas",
+                        items = PreloadedCatalog.bollywoodSeries
+                    )
+                )
+            }
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(PreloadedCatalog.bollywoodSeries, key = { "bolly-series-${it.id}" }) { item ->
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+
+        // 8. POPULAR BLOCKBUSTERS
+        if (selectedNxshaCategory in listOf("All", "Movies")) {
+            Spacer(Modifier.height(18.dp))
+            SectionTitle("Popular Blockbusters", "See All") {
+                onOpenSection(
+                    SectionInfo(
+                        title = "Popular Blockbusters",
+                        subtitle = "All-time viewer favorites",
+                        items = popularMovies
+                    )
+                )
+            }
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(popularMovies, key = { "pop-movie-${it.id}" }) { item ->
                     MoviePosterCard(item) { onMovieClick(item) }
                 }
             }
@@ -891,7 +1095,6 @@ private fun HomeScreen(
         Spacer(Modifier.height(30.dp))
     }
 }
-
 private fun HeroSpotlightCarousel(
     movies: List<Movie>,
     onWatch: (Movie) -> Unit
@@ -2780,7 +2983,10 @@ private fun MovieDetailsScreen(
     LaunchedEffect(movie.id, movie.mediaType) {
         loading = true
         try {
-            details = api.details(movie.mediaType, movie.id)
+            // If it is a known upcoming title, prevent wrong API id collision or overwrite
+            if (!isUnreleasedTitle(movie.releaseDate, null, movie.title)) {
+                details = api.details(movie.mediaType, movie.id)
+            }
         } catch (_: Exception) {
             // Keep preview info
         }

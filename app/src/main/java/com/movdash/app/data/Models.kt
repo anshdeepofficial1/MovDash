@@ -98,16 +98,22 @@ data class StreamServer(
 )
 
 fun isUnreleasedTitle(releaseDate: String?, status: String? = null, title: String? = null): Boolean {
-    val cleanStatus = status?.lowercase() ?: ""
-    if (cleanStatus in listOf("in production", "post production", "planned", "announced", "upcoming")) {
+    val cleanTitle = title?.lowercase() ?: ""
+    if (cleanTitle.contains("doomsday") || cleanTitle.contains("secret wars") || 
+        cleanTitle.contains("vision quest") || cleanTitle.contains("batman part ii") || 
+        cleanTitle.contains("batman: part ii") || cleanTitle.contains("batman part 2") ||
+        cleanTitle.contains("the batman part") || cleanTitle.contains("avatar: fire and ash") ||
+        cleanTitle.contains("fire and ash") || cleanTitle.contains("beyond the spider-verse") ||
+        cleanTitle.contains("blade") || cleanTitle.contains("fast xi") ||
+        cleanTitle.contains("pushpa 2") || cleanTitle.contains("toxic")) {
         return true
     }
-    val cleanTitle = title?.lowercase() ?: ""
-    if (cleanTitle.contains("doomsday") || cleanTitle.contains("secret wars") || cleanTitle.contains("vision quest")) {
+    val cleanStatus = status?.lowercase() ?: ""
+    if (cleanStatus in listOf("in production", "post production", "planned", "announced", "upcoming", "rumored")) {
         return true
     }
     if (releaseDate.isNullOrBlank()) return false
-    val currentDate = "2026-11-04"
+    val currentDate = "2024-12-31"
     return releaseDate.trim() > currentDate
 }
 

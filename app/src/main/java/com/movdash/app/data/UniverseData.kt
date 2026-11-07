@@ -109,7 +109,7 @@ object UniverseData {
                         timelineOrder = 17, releaseYear = 2024, phaseOrEra = "Multiverse Saga: 2024", note = "Mutants officially collide with the MCU"
                     ),
                     UniverseItem(
-                        movie = Movie(1003596, "Avengers: Doomsday", "The Avengers assemble once more to face the universe's ultimate threat, Doctor Victor von Doom.", "/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg", "/yDHYTjA3R0ne82ismFR4ggIFKz8.jpg", "2026-12-18", null, "movie"),
+                        movie = Movie(1003596, "Avengers: Doomsday", "The Avengers assemble once more to face the universe's ultimate threat, Doctor Victor von Doom.", "/s4v0UX1anfXm0UvloLsTTJ4v222.jpg", "/dvBCSrm9Qn3Sg5m9p4h9Rz8l7e.jpg", "2026-12-18", null, "movie"),
                         timelineOrder = 18, releaseYear = 2026, phaseOrEra = "Phase 6: 2026", note = "Coming Soon • The Return of Robert Downey Jr."
                     ),
                     UniverseItem(
