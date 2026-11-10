@@ -98,14 +98,14 @@ fun getMovieQualityBadge(movie: Movie): String {
 private fun OpeningSplashScreen(
     onAnimationFinished: () -> Unit
 ) {
-    val scale = remember { Animatable(0.5f) }
+    val scale = remember { Animatable(0.75f) }
     val alpha = remember { Animatable(0f) }
     val textAlpha = remember { Animatable(0f) }
     val progress = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
         launch {
-            alpha.animateTo(1f, animationSpec = tween(500, easing = LinearEasing))
+            alpha.animateTo(1f, animationSpec = tween(400, easing = LinearEasing))
         }
         launch {
             scale.animateTo(
@@ -116,105 +116,82 @@ private fun OpeningSplashScreen(
                 )
             )
         }
-        delay(350)
+        delay(250)
         launch {
-            textAlpha.animateTo(1f, animationSpec = tween(450))
+            textAlpha.animateTo(1f, animationSpec = tween(350))
         }
         launch {
-            progress.animateTo(1f, animationSpec = tween(1200, easing = FastOutSlowInEasing))
+            progress.animateTo(1f, animationSpec = tween(900, easing = FastOutSlowInEasing))
         }
-        delay(1600)
+        delay(1400)
         onAnimationFinished()
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF07090E)),
+            .background(Color(0xFF000000)),
         contentAlignment = Alignment.Center
     ) {
-        // Subtle Luxury Golden Radial Halo
-        Box(
-            modifier = Modifier
-                .size(340.dp)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(Color(0x33E9B96E), Color(0x0DE9B96E), Color.Transparent),
-                        radius = 450f
-                    )
-                )
-        )
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // App Logo with Animated Scale, Border and Elevation
             Box(
                 modifier = Modifier
-                    .size(115.dp)
+                    .size(110.dp)
                     .graphicsLayer(
                         scaleX = scale.value,
                         scaleY = scale.value,
                         alpha = alpha.value
-                    )
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(Color(0xFF101724))
-                    .border(BorderStroke(2.dp, Color(0xFFF1F5F9)), RoundedCornerShape(28.dp)),
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_logo_transparent),
                     contentDescription = "Orbit Logo",
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(RoundedCornerShape(22.dp))
+                    modifier = Modifier.size(100.dp)
                 )
             }
 
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(18.dp))
 
-            // Animated App Name
             Text(
                 "ORBIT",
                 color = Color.White,
-                fontSize = 30.sp,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 4.sp,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 3.sp,
                 modifier = Modifier.graphicsLayer(alpha = textAlpha.value)
             )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(4.dp))
 
             Text(
-                "MOVIES & SERIES UNIVERSE",
-                color = Color(0xFFF1F5F9),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.5.sp,
+                "Streaming Universe",
+                color = Color(0xFF94A3B8),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Normal,
+                letterSpacing = 1.sp,
                 modifier = Modifier.graphicsLayer(alpha = textAlpha.value)
             )
 
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(32.dp))
 
-            // Cinematic Loading Progress Bar
+            // Minimalist hairline loading bar
             Box(
                 modifier = Modifier
-                    .width(140.dp)
-                    .height(3.5.dp)
+                    .width(120.dp)
+                    .height(2.dp)
                     .clip(RoundedCornerShape(100.dp))
-                    .background(Color(0xFF1B2433))
+                    .background(Color(0x26FFFFFF))
                     .graphicsLayer(alpha = textAlpha.value)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(progress.value)
                         .fillMaxHeight()
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(Color(0xFFF1F5F9), Color(0xFFFFD700))
-                            )
-                        )
+                        .background(Color.White)
                 )
             }
         }
@@ -889,6 +866,43 @@ private fun HomeScreen(
 
         Spacer(Modifier.height(14.dp))
 
+        // TOP 10 IN INDIA TODAY (Iconic Netflix Signature Rail)
+        Spacer(Modifier.height(18.dp))
+        SectionTitle("Top 10 in India Today", "See All") {
+            onOpenSection(
+                SectionInfo(
+                    title = "Top 10 in India Today",
+                    subtitle = "Ranked #1 to #10 in India today",
+                    items = movies.take(10),
+                    isRanked = true
+                )
+            )
+        }
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            itemsIndexed(movies.take(10), key = { index, item -> "top10-home-${item.id}-$index" }) { index, item ->
+                val rank = index + 1
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier.clickable { onMovieClick(item) }
+                ) {
+                    Text(
+                        text = "$rank",
+                        fontSize = 84.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF232D3B),
+                        lineHeight = 84.sp,
+                        modifier = Modifier.offset(x = 10.dp, y = 4.dp)
+                    )
+                    MoviePosterCard(item) { onMovieClick(item) }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(18.dp))
+
         // NXSHA-STYLE CATEGORY TABS (Hollywood, Bollywood, South Cinema, TV Series, Movies)
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
@@ -1110,29 +1124,24 @@ private fun HeroSpotlightCarousel(
     LaunchedEffect(pagerState, items.size) {
         if (items.size > 1) {
             while (true) {
-                delay(5500)
+                delay(6000)
                 pagerState.animateScrollToPage((pagerState.currentPage + 1) % items.size)
             }
         }
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(440.dp)
+    ) {
         HorizontalPager(
             state = pagerState,
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            pageSpacing = 10.dp,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxSize()
         ) { page ->
             val movie = items[page]
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(260.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF273246), Color(0xFF111722))))
-                    .clickable { onWatch(movie) }
-            ) {
-                val backdrop = movie.backdropPath ?: movie.posterPath
+            val backdrop = movie.backdropPath ?: movie.posterPath
+            Box(modifier = Modifier.fillMaxSize()) {
                 if (backdrop != null) {
                     AsyncImage(
                         model = "https://image.tmdb.org/t/p/w1280$backdrop",
@@ -1141,108 +1150,173 @@ private fun HeroSpotlightCarousel(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
+                // Multi-stop gradient fade into pitch black
                 Box(
-                    Modifier.fillMaxSize().background(
-                        Brush.verticalGradient(
-                            listOf(Color(0x33080B11), Color(0x77080B11), Color(0xF8080B11))
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0x3306080E),
+                                    Color(0x5506080E),
+                                    Color(0xAA06080E),
+                                    Color(0xF206080E),
+                                    Color(0xFF06080E)
+                                )
+                            )
                         )
-                    )
                 )
 
+                // Billboard Content Overlay
                 Column(
-                    Modifier
-                        .align(Alignment.BottomStart)
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                        .padding(horizontal = 20.dp, vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    // Top 10 Rank Badge
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color(0x33FFFFFF),
+                        border = BorderStroke(1.dp, Color(0x26FFFFFF))
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFF1F5F9)
-                        ) {
-                            Text(
-                                movie.mediaType.uppercase(),
-                                color = Color(0xFF1B1309),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Black,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                        movie.voteAverage?.let {
-                            Text(
-                                "★ " + "%.1f".format(it),
-                                color = Color(0xFFF1F5F9),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        movie.releaseDate?.take(4)?.let {
-                            Text("· $it", color = Color(0xFFCBD5E1), style = MaterialTheme.typography.labelMedium)
-                        }
+                        Text(
+                            "#1 in India Today",
+                            color = Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
                     }
 
+                    // Billboard Title
                     Text(
                         movie.title,
                         color = Color.White,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Text(
-                        movie.overview,
-                        color = Color(0xFFB5C0CE),
-                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
 
+                    // Metadata row
                     Row(
-                        modifier = Modifier.padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        movie.voteAverage?.let {
+                            Text("★ " + "%.1f".format(it), color = Color(0xFFE2E8F0), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("•", color = Color(0xFF64748B), fontSize = 10.sp)
+                        }
+                        movie.releaseDate?.take(4)?.let {
+                            Text(it, color = Color(0xFF94A3B8), fontSize = 12.sp)
+                            Text("•", color = Color(0xFF64748B), fontSize = 10.sp)
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color(0x26FFFFFF)
+                        ) {
+                            Text(
+                                "4K UHD",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                            )
+                        }
+                        Text("•", color = Color(0xFF64748B), fontSize = 10.sp)
+                        Text(
+                            if (movie.mediaType == "tv") "TV Series" else "Movie",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    // CTA Buttons (Play + More Info)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         val isUnreleased = isUnreleasedTitle(movie.releaseDate, null, movie.title)
                         Button(
                             onClick = { onWatch(movie) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isUnreleased) Color(0xFF233246) else Color(0xFFF1F5F9),
-                                contentColor = if (isUnreleased) Color(0xFFF1F5F9) else Color(0xFF1A1309)
+                                containerColor = Color.White,
+                                contentColor = Color.Black
                             ),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(8.dp)
                         ) {
                             Icon(
                                 if (isUnreleased) Icons.Default.HourglassTop else Icons.Default.PlayArrow,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(20.dp),
+                                tint = Color.Black
                             )
                             Spacer(Modifier.width(6.dp))
-                            Text(if (isUnreleased) "Coming Soon" else "Watch Now", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(
+                                if (isUnreleased) "Coming Soon" else "Play",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        Spacer(Modifier.width(12.dp))
+
+                        OutlinedButton(
+                            onClick = { onWatch(movie) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color(0x33FFFFFF),
+                                contentColor = Color.White
+                            ),
+                            border = BorderStroke(1.dp, Color(0x33FFFFFF)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Color.White
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "More Info",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp
+                            )
                         }
                     }
                 }
             }
         }
 
+        // Quiet Carousel Dot Indicators
         Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             repeat(items.size) { index ->
-                val selected = pagerState.currentPage == index
+                val isSelected = pagerState.currentPage == index
                 Box(
-                    Modifier
-                        .padding(horizontal = 3.dp)
-                        .width(if (selected) 20.dp else 6.dp)
-                        .height(5.dp)
+                    modifier = Modifier
+                        .height(4.dp)
+                        .width(if (isSelected) 18.dp else 5.dp)
                         .clip(CircleShape)
-                        .background(if (selected) Color(0xFFF1F5F9) else Color(0xFF455062))
+                        .background(if (isSelected) Color.White else Color(0x66FFFFFF))
                 )
             }
         }
@@ -1270,13 +1344,18 @@ private fun SectionTitle(title: String, action: String = "See All", onClick: () 
 
 @Composable
 private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
-    Column(Modifier.width(132.dp).clickable(onClick = onClick)) {
+    Column(
+        Modifier
+            .width(118.dp)
+            .clickable(onClick = onClick)
+    ) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(190.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Brush.linearGradient(listOf(Color(0xFF2B374A), Color(0xFF141C28))))
+                .height(176.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF0E121A))
+                .border(BorderStroke(1.dp, Color(0x1AFFFFFF)), RoundedCornerShape(8.dp))
         ) {
             val imageUrl = movie.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
             if (imageUrl != null) {
@@ -1287,18 +1366,19 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            // Quality Badge (4K UHD in luxurious gold / 1080p HD in electric blue)
+            // Quality Badge (4K / HD)
             val qualityBadge = getMovieQualityBadge(movie)
             Surface(
-                shape = RoundedCornerShape(bottomStart = 8.dp, topEnd = 14.dp),
-                color = if (qualityBadge == "4K UHD") Color(0xFFF1F5F9) else Color(0xFF2563EB),
+                shape = RoundedCornerShape(bottomStart = 6.dp),
+                color = Color(0xCC0E121A),
+                border = BorderStroke(1.dp, Color(0x1AFFFFFF)),
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
                 Text(
-                    qualityBadge,
-                    color = if (qualityBadge == "4K UHD") Color(0xFF101620) else Color.White,
+                    if (qualityBadge == "4K UHD") "4K" else "HD",
+                    color = Color.White,
                     fontSize = 9.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
                 )
             }
@@ -1307,32 +1387,32 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
                 Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
-                    .height(60.dp)
-                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xEE080B10))))
+                    .height(48.dp)
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xEE06080E))))
             )
             Row(
                 Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(horizontal = 6.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val isUnreleased = isUnreleasedTitle(movie.releaseDate, null, movie.title)
                 Text(
-                    if (isUnreleased) "SOON" else (movie.voteAverage?.let { "★ " + "%.1f".format(it) } ?: "HD"),
+                    if (isUnreleased) "Soon" else (movie.voteAverage?.let { "★ " + "%.1f".format(it) } ?: "HD"),
                     color = Color(0xFFF1F5F9),
-                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = Color(0xBB121A24)
+                    shape = RoundedCornerShape(3.dp),
+                    color = Color(0x88000000)
                 ) {
                     Text(
-                        movie.mediaType.uppercase(),
-                        color = Color.White,
-                        fontSize = 9.sp,
+                        if (movie.mediaType == "tv") "TV" else "Film",
+                        color = Color(0xFFCBD5E1),
+                        fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
                     )
@@ -1343,15 +1423,15 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
         Text(
             movie.title,
             color = Color.White,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Text(
             movie.releaseDate?.take(4) ?: "Upcoming",
-            color = Color(0xFF8793A3),
-            style = MaterialTheme.typography.labelSmall
+            color = Color(0xFF64748B),
+            fontSize = 11.sp
         )
     }
 }

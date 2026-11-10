@@ -13,436 +13,320 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import com.movdash.app.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import com.movdash.app.R
 import kotlinx.coroutines.launch
 
-data class OnboardingSlide(
+data class OnboardingFeature(
     val icon: ImageVector,
-    val badge: String,
-    val badgeColor: Color,
     val title: String,
-    val subtitle: String,
     val description: String,
-    val highlights: List<String>,
-    val gradientColors: List<Color>
+    val tag: String
 )
 
 @Composable
 fun OnboardingScreen(
     onFinished: () -> Unit
 ) {
-    val slides = remember {
+    val features = remember {
         listOf(
-            OnboardingSlide(
-                icon = Icons.Default.AllInclusive,
-                badge = "ORBIT MULTIVERSE",
-                badgeColor = Color(0xFFF1F5F9),
-                title = "Welcome to Orbit",
-                subtitle = "Infinite Cinematic Universe",
-                description = "Enter Orbit — the next-generation entertainment universe. Stream thousands of Hollywood blockbusters, Bollywood hits, South Indian spectacles, and binge-worthy web series in pristine 4K UHD.",
-                highlights = listOf("Infinite Universe", "Pristine 4K UHD", "Zero Paywalls"),
-                gradientColors = listOf(Color(0xFF2B1E0A), Color(0xFF090D14))
+            OnboardingFeature(
+                icon = Icons.Default.HighQuality,
+                title = "4K Ultra HD & HDR",
+                description = "Stream Hollywood blockbusters, Bollywood hits, and South Indian spectacles in pristine 4K quality with zero paywalls.",
+                tag = "Cinema Grade"
             ),
-            OnboardingSlide(
-                icon = Icons.Default.Translate,
-                badge = "ORBIT AUDIO",
-                badgeColor = Color(0xFF38BDF8),
-                title = "Universal Language Orbit",
-                subtitle = "Hindi Dubbed & Multi-Language",
-                description = "Stream in your preferred tongue with effortless multi-audio switching: Hindi, Tamil, Telugu, English, and dual-audio 5.1 soundtracks with synchronized multilingual subtitles.",
-                highlights = listOf("Hindi Dubbed", "Dual Audio 5.1", "Multi-Subtitles"),
-                gradientColors = listOf(Color(0xFF0C2438), Color(0xFF090D14))
+            OnboardingFeature(
+                icon = Icons.Default.Language,
+                title = "Hindi, South & Multi-Audio",
+                description = "Enjoy multi-audio tracks including Hindi Dubbed, Tamil, Telugu, and English with synchronized multilingual subtitles.",
+                tag = "Multi-Audio"
             ),
-            OnboardingSlide(
-                icon = Icons.Default.Bolt,
-                badge = "ORBIT WARP STREAM",
-                badgeColor = Color(0xFF818CF8),
-                title = "Warp-Speed Streaming Engine",
-                subtitle = "Smart Adaptive Multi-Server CDN",
-                description = "Powered by ultra-fast resilient edge server pipelines. Automatic silent failover ensures butter-smooth playback without ever interrupting your viewing experience.",
-                highlights = listOf("Zero Buffering", "Auto-Failover", "Adaptive 4K/HD"),
-                gradientColors = listOf(Color(0xFF19173B), Color(0xFF090D14))
-            ),
-            OnboardingSlide(
-                icon = Icons.Default.FitScreen,
-                badge = "ORBIT CINEMA PLAYER",
-                badgeColor = Color(0xFFA855F7),
-                title = "Pro Auto-Landscape Player",
-                subtitle = "Intuitive Gestures & Touch Controls",
-                description = "Launches automatically into immersive wide landscape mode. Swipe for brightness & volume, double-tap 10s seek, long-press for 2X speed boost, and secure screen lock.",
-                highlights = listOf("Auto-Landscape", "Fluid Gestures", "Minus Countdown"),
-                gradientColors = listOf(Color(0xFF2A0F3D), Color(0xFF090D14))
-            ),
-            OnboardingSlide(
-                icon = Icons.Default.AutoAwesomeMotion,
-                badge = "ORBIT SAGAS",
-                badgeColor = Color(0xFFF43F5E),
-                title = "Franchise Chronological Timelines",
-                subtitle = "Official Chronological Watch Orders",
-                description = "Track entire cinematic universes in their official storyline order — Marvel MCU, Fast & Furious, Transformers, YRF Spy Universe, Lokesh Cinematic Universe, and Neel Universe.",
-                highlights = listOf("Chronological Order", "Phase Timelines", "Watched Tracker"),
-                gradientColors = listOf(Color(0xFF3B0E1B), Color(0xFF090D14))
-            ),
-            OnboardingSlide(
+            OnboardingFeature(
                 icon = Icons.Default.FolderSpecial,
-                badge = "ORBIT PRIVATE VAULT",
-                badgeColor = Color(0xFF10B981),
-                title = "Offline Series Folder Vault",
-                subtitle = "Private In-App Sandbox Storage",
-                description = "Download TV series grouped neatly into dedicated series folders and movie downloads securely isolated in Orbit's private sandbox (hidden from external gallery and files).",
-                highlights = listOf("Series Folders", "Private Sandbox", "Offline Cinema"),
-                gradientColors = listOf(Color(0xFF0A2B1D), Color(0xFF090D14))
-            ),
-            OnboardingSlide(
-                icon = Icons.Default.HourglassTop,
-                badge = "ORBIT RELEASE RADAR",
-                badgeColor = Color(0xFFFB923C),
-                title = "Theatrical Release Radar",
-                subtitle = "Countdowns, Dates & Release Alerts",
-                description = "Stay up to date with unreleased blockbusters like Avengers: Doomsday, The Batman Part II, and Vision Quest with official theatrical release dates and reminder alerts.",
-                highlights = listOf("Theatrical Radar", "Release Alerts", "Zero CAM Rips"),
-                gradientColors = listOf(Color(0xFF381B09), Color(0xFF090D14))
-            ),
-            OnboardingSlide(
-                icon = Icons.Default.RocketLaunch,
-                badge = "ENTER ORBIT",
-                badgeColor = Color(0xFFF1F5F9),
-                title = "Launch Into Orbit",
-                subtitle = "100% Free Forever • No Sign-up",
-                description = "No subscriptions, no fees, and no account hurdles. Your personal portal to the infinite universe of movies and series is ready for departure.",
-                highlights = listOf("Zero Sign-up", "Forever Free", "Instant Cinema"),
-                gradientColors = listOf(Color(0xFF332009), Color(0xFF090D14))
+                title = "Private Offline Vault",
+                description = "Download TV series neatly organized into dedicated folders, securely sandboxed inside Orbit away from your public gallery.",
+                tag = "Private Storage"
             )
         )
     }
 
-    val pagerState = rememberPagerState(pageCount = { slides.size })
+    val pagerState = rememberPagerState(pageCount = { features.size })
     val scope = rememberCoroutineScope()
+
+    // Poster collage backdrops for authentic streaming atmosphere
+    val backdrops = remember {
+        listOf(
+            "https://image.tmdb.org/t/p/w780/or06FN3Dka5tukK1e9sl16pB3iy.jpg", // Avengers
+            "https://image.tmdb.org/t/p/w780/gKkl37BQuKTanygYQG1pyYgLVgf.jpg", // Stranger Things
+            "https://image.tmdb.org/t/p/w780/r2J02Z2OpNTctfOSN2Ydgii51I3.jpg", // Interstellar
+            "https://image.tmdb.org/t/p/w780/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg"  // Batman
+        )
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF07090E))
+            .background(Color(0xFF06080E))
     ) {
-        // TOP BAR WITH ORBIT BADGE AND SKIP
-        Row(
+        // TOP CINEMATIC POSTER COLLAGE (Layered with deep obsidian gradient)
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxHeight(0.55f)
         ) {
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = Color(0xFF131A26),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222F42))
-            ) {
-                Text(
-                    text = "Orbit • ${pagerState.currentPage + 1} of ${slides.size}",
-                    color = Color(0xFFF1F5F9),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                )
-            }
-
-            if (pagerState.currentPage < slides.size - 1) {
-                TextButton(onClick = onFinished) {
-                    Text(
-                        "Skip Tour",
-                        color = Color(0xFF8E9BAE),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
+            Row(modifier = Modifier.fillMaxSize()) {
+                backdrops.forEach { url ->
+                    AsyncImage(
+                        model = url,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
                     )
                 }
-            } else {
-                Spacer(Modifier.width(1.dp))
             }
-        }
-
-        // PAGER
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 70.dp, bottom = 120.dp)
-        ) { page ->
-            val slide = slides[page]
-            Column(
+            // Multi-stop gradient fade into pitch black
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Orbital Planet & Rings Visual
-                Box(
-                    modifier = Modifier.size(150.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Outer Orbit Celestial Ring
-                    Box(
-                        modifier = Modifier
-                            .size(148.dp)
-                            .clip(CircleShape)
-                            .border(1.dp, slide.badgeColor.copy(alpha = 0.22f), CircleShape)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0x8806080E),
+                                Color(0xCC06080E),
+                                Color(0xF206080E),
+                                Color(0xFF06080E)
+                            )
+                        )
                     )
-
-                    // Middle Glowing Nebula Aura
-                    Box(
-                        modifier = Modifier
-                            .size(116.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(slide.badgeColor.copy(alpha = 0.30f), Color.Transparent)
-                                )
-                            )
-                            .border(1.dp, slide.badgeColor.copy(alpha = 0.40f), CircleShape)
-                    )
-
-                    // Planet Core with Icon
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.linearGradient(
-                                    colors = listOf(Color(0xFF182232), Color(0xFF0C121D))
-                                )
-                            )
-                            .border(1.5.dp, slide.badgeColor, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (page == 0) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_logo_transparent),
-                                contentDescription = "Orbit Logo",
-                                modifier = Modifier.size(52.dp)
-                            )
-                        } else {
-                            Icon(
-                                imageVector = slide.icon,
-                                contentDescription = null,
-                                tint = slide.badgeColor,
-                                modifier = Modifier.size(40.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(24.dp))
-
-                // Orbit Pill Badge
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = slide.badgeColor.copy(alpha = 0.15f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, slide.badgeColor.copy(alpha = 0.35f))
-                ) {
-                    Text(
-                        text = slide.badge,
-                        color = slide.badgeColor,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.3.sp,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)
-                    )
-                }
-
-                Spacer(Modifier.height(14.dp))
-
-                // Title & Subtitle
-                Text(
-                    text = slide.title,
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(Modifier.height(6.dp))
-
-                Text(
-                    text = slide.subtitle,
-                    color = Color(0xFFF1F5F9),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(Modifier.height(14.dp))
-
-                // Description
-                Text(
-                    text = slide.description,
-                    color = Color(0xFF94A3B8),
-                    fontSize = 13.sp,
-                    lineHeight = 20.sp,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                // Feature Highlights Pills
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    slide.highlights.forEach { tag ->
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF131A26),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E2A3A))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = slide.badgeColor,
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Text(
-                                    text = tag,
-                                    color = Color(0xFFCBD5E1),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            )
         }
 
-        // BOTTOM CONTROLS (Dots + Navigation Buttons)
+        // MAIN CONTENT SHELL
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
+                .fillMaxSize()
+                .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Page Indicator Dots
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(slides.size) { index ->
-                    val isSelected = pagerState.currentPage == index
-                    val width by animateDpAsState(
-                        targetValue = if (isSelected) 24.dp else 6.dp,
-                        animationSpec = tween(300),
-                        label = "dotWidth"
-                    )
-                    Box(
-                        modifier = Modifier
-                            .height(6.dp)
-                            .width(width)
-                            .clip(CircleShape)
-                            .background(
-                                if (isSelected) Color(0xFFF1F5F9) else Color(0xFF2C3748)
-                            )
-                    )
-                }
-            }
-
-            // Buttons Row
+            // TOP BAR: Orbit Mark + Skip Action
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Back Button
-                if (pagerState.currentPage > 0) {
-                    IconButton(
-                        onClick = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                            }
-                        },
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_logo_transparent),
+                        contentDescription = "Orbit",
                         modifier = Modifier
-                            .size(46.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF161E2C))
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Previous",
-                            tint = Color.White
-                        )
-                    }
-                } else {
-                    Spacer(Modifier.size(46.dp))
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        "ORBIT",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 2.sp
+                    )
                 }
 
-                // Next or Get Started Button (Orbit Galactic Gold)
-                if (pagerState.currentPage < slides.size - 1) {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFF1F5F9),
-                            contentColor = Color(0xFF101620)
-                        ),
+                TextButton(
+                    onClick = onFinished,
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF94A3B8))
+                ) {
+                    Text(
+                        "Skip",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // CENTER CAROUSEL: Headline + Feature Cards
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Calm Space Headline (Unslop principle: sentence case, high contrast)
+                Text(
+                    "Unlimited movies, TV series, and universes",
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 34.sp,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    "Stream anywhere in 4K UHD. 100% free forever.",
+                    color = Color(0xFF94A3B8),
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(Modifier.height(28.dp))
+
+                // Pager Feature Slider
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                ) { page ->
+                    val feature = features[page]
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
                         shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                        color = Color(0xFF0E121A),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFFFFF))
                     ) {
-                        Text("Next", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Spacer(Modifier.width(6.dp))
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFF141923)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        feature.icon,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        feature.title,
+                                        color = Color.White,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        feature.tag,
+                                        color = Color(0xFF64748B),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                feature.description,
+                                color = Color(0xFF94A3B8),
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp,
+                                maxLines = 2
+                            )
+                        }
                     }
-                } else {
-                    Button(
-                        onClick = onFinished,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFF1F5F9),
-                            contentColor = Color(0xFF101620)
-                        ),
-                        shape = RoundedCornerShape(14.dp),
-                        contentPadding = PaddingValues(horizontal = 28.dp, vertical = 14.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.RocketLaunch,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // Quiet Pill Indicators (4px grid)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    repeat(features.size) { index ->
+                        val isSelected = pagerState.currentPage == index
+                        val width by animateDpAsState(
+                            targetValue = if (isSelected) 24.dp else 6.dp,
+                            label = "indicatorWidth"
                         )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "Launch Orbit • Start Streaming",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 14.sp
+                        Box(
+                            modifier = Modifier
+                                .height(6.dp)
+                                .width(width)
+                                .clip(CircleShape)
+                                .background(if (isSelected) Color.White else Color(0xFF28303E))
+                                .clickable {
+                                    scope.launch {
+                                        pagerState.animateScrollToPage(index)
+                                    }
+                                }
                         )
                     }
                 }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            // BOTTOM PRIMARY ACTION (High-contrast pure white button per unslop dark theme token)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Button(
+                    onClick = onFinished,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = Color.Black
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        "Get Started",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Text(
+                    "No credit card required • Cancel never",
+                    color = Color(0xFF64748B),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Normal
+                )
             }
         }
     }

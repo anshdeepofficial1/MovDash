@@ -23,6 +23,10 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.JavascriptInterface
+import android.webkit.WebResourceResponse
+import java.io.ByteArrayInputStream
+
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -196,6 +200,34 @@ class PlayerActivity : ComponentActivity() {
     }
 }
 
+
+class OrbitWebBridge(
+    private val onTime: (Long, Long) -> Unit,
+    private val onState: (Boolean) -> Unit,
+    private val onBuffer: (Boolean) -> Unit,
+    private val onStream: (String) -> Unit
+) {
+    @JavascriptInterface
+    fun onTimeUpdate(currentTimeSec: Float, durationSec: Float) {
+        onTime((currentTimeSec * 1000).toLong(), (durationSec * 1000).toLong())
+    }
+
+    @JavascriptInterface
+    fun onPlayState(playing: Boolean) {
+        onState(playing)
+    }
+
+    @JavascriptInterface
+    fun onBuffering(buffering: Boolean) {
+        onBuffer(buffering)
+    }
+
+    @JavascriptInterface
+    fun onStreamFound(url: String) {
+        if (url.isNotBlank()) onStream(url)
+    }
+}
+
 @kotlin.OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class, androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun AdvancedProPlayerScreen(
@@ -224,6 +256,15 @@ private fun AdvancedProPlayerScreen(
     var currentUrl by remember { mutableStateOf(initialUrl) }
     var currentServerName by remember { mutableStateOf(initialServer) }
     var useExoPlayer by remember { mutableStateOf(isDirectMedia) }
+    var webCapturedHeaders by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var attachedWebView by remember { mutableStateOf<WebView?>(null) }
+
+    fun onStreamCaptured(url: String, headers: Map<String, String> = emptyMap()) {
+        if (useExoPlayer && currentUrl == url) return
+        currentUrl = url
+        webCapturedHeaders = headers
+        useExoPlayer = true
+    }
 
     // Dynamic Season & Episode State for TV Series
     var currentSeason by remember { mutableIntStateOf(initialSeason) }
@@ -322,6 +363,7 @@ private fun AdvancedProPlayerScreen(
     val player = remember(currentUrl, useExoPlayer) {
         if (useExoPlayer) {
             val headers = buildMap {
+                putAll(webCapturedHeaders)
                 authHeader?.takeIf { it.isNotBlank() }?.let { put("X-Emby-Token", it) }
             }
             val httpFactory = DefaultHttpDataSource.Factory()
@@ -337,6 +379,9 @@ private fun AdvancedProPlayerScreen(
                     prepare()
                     playWhenReady = true
                     playbackParameters = PlaybackParameters(selectedSpeed)
+                    if (currentPosition > 0) {
+                        seekTo(currentPosition)
+                    }
                     addListener(object : Player.Listener {
                         override fun onIsPlayingChanged(playing: Boolean) {
                             isPlaying = playing
@@ -387,15 +432,49 @@ private fun AdvancedProPlayerScreen(
         Toast.makeText(context, "Playing Episode $newEpNumber", Toast.LENGTH_SHORT).show()
     }
 
-    // Seek Helpers
-    fun seekRelative(deltaMillis: Long) {
-        player?.let { p ->
-            val target = (p.currentPosition + deltaMillis).coerceIn(0L, duration.coerceAtLeast(1L))
-            p.seekTo(target)
-            currentPosition = target
-            seekFeedbackIsForward = deltaMillis > 0
-            seekFeedbackText = if (deltaMillis > 0) "+${deltaMillis / 1000}s" else "${deltaMillis / 1000}s"
-            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+    // Universal Playback Control Helpers (Unified ExoPlayer + Native Web-Bridge)
+    fun performPlayPause() {
+        if (useExoPlayer && player != null) {
+            if (isPlaying) player.pause() else player.play()
+        } else {
+            attachedWebView?.evaluateJavascript(
+                "var v=document.querySelector('video'); if(v) { if(v.paused) v.play(); else v.pause(); }",
+                null
+            )
+            isPlaying = !isPlaying
+        }
+    }
+
+    fun performSeek(targetMillis: Long) {
+        currentPosition = targetMillis
+        if (useExoPlayer && player != null) {
+            player.seekTo(targetMillis)
+        } else {
+            val sec = targetMillis / 1000f
+            attachedWebView?.evaluateJavascript(
+                "var v=document.querySelector('video'); if(v) v.currentTime = " + sec + ";",
+                null
+            )
+        }
+    }
+
+    fun performRelativeSeek(deltaMillis: Long) {
+        val target = (currentPosition + deltaMillis).coerceIn(0L, duration.coerceAtLeast(1L))
+        performSeek(target)
+        seekFeedbackIsForward = deltaMillis > 0
+        seekFeedbackText = if (deltaMillis > 0) "+${deltaMillis / 1000}s" else "${deltaMillis / 1000}s"
+        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+    }
+
+    fun performSetSpeed(speed: Float) {
+        selectedSpeed = speed
+        if (useExoPlayer && player != null) {
+            player.playbackParameters = PlaybackParameters(speed)
+        } else {
+            attachedWebView?.evaluateJavascript(
+                "var v=document.querySelector('video'); if(v) v.playbackRate = " + speed + ";",
+                null
+            )
         }
     }
 
@@ -428,9 +507,9 @@ private fun AdvancedProPlayerScreen(
                         onDoubleTap = { offset ->
                             val isRightSide = offset.x > (size.width / 2)
                             if (isRightSide) {
-                                seekRelative(10000L) // +10s
+                                performRelativeSeek(10000L) // +10s
                             } else {
-                                seekRelative(-10000L) // -10s
+                                performRelativeSeek(-10000L) // -10s
                             }
                         },
                         onPress = {
@@ -438,7 +517,7 @@ private fun AdvancedProPlayerScreen(
                             val isHeld = tryAwaitRelease()
                             if (isLongPressFastForward) {
                                 isLongPressFastForward = false
-                                player?.playbackParameters = PlaybackParameters(selectedSpeed)
+                                performSetSpeed(selectedSpeed)
                             }
                         }
                     )
@@ -509,7 +588,7 @@ private fun AdvancedProPlayerScreen(
                 modifier = Modifier.fillMaxSize()
             )
         } else {
-            // Web / Embed Multi-Server Fallback
+            // Web Extraction & Native Fallback Surface with Ad Blocker & Stream Sniffer
             AndroidView(
                 factory = { ctx ->
                     val root = FrameLayout(ctx).apply { setBackgroundColor(AndroidColor.BLACK) }
@@ -525,12 +604,110 @@ private fun AdvancedProPlayerScreen(
                             allowFileAccess = true
                             allowContentAccess = true
                             cacheMode = WebSettings.LOAD_DEFAULT
-                            userAgentString = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36 MovDash/0.2.1"
+                            userAgentString = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36 Orbit/1.0.0"
                         }
+                        addJavascriptInterface(
+                            OrbitWebBridge(
+                                onTime = { pos, dur ->
+                                    currentPosition = pos
+                                    if (dur > 0) duration = dur
+                                },
+                                onState = { playing ->
+                                    isPlaying = playing
+                                },
+                                onBuffer = { buffering ->
+                                    isBuffering = buffering
+                                },
+                                onStream = { streamUrl ->
+                                    post { onStreamCaptured(streamUrl) }
+                                }
+                            ),
+                            "OrbitBridge"
+                        )
                         webViewClient = object : WebViewClient() {
                             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                 val url = request?.url?.toString() ?: return false
                                 return url.startsWith("intent://") || url.startsWith("market://")
+                            }
+
+                            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                                val reqUrl = request?.url?.toString() ?: return super.shouldInterceptRequest(view, request)
+                                val lower = reqUrl.lowercase()
+                                val isStream = (lower.endsWith(".m3u8") ||
+                                    lower.contains(".m3u8?") ||
+                                    lower.contains("/hls/") ||
+                                    lower.contains("playlist.m3u8") ||
+                                    lower.contains("master.m3u8") ||
+                                    lower.endsWith(".mp4") ||
+                                    lower.contains(".mp4?") ||
+                                    lower.contains("/stream/")) &&
+                                    !lower.contains("google") &&
+                                    !lower.contains("analytics")
+                                if (isStream) {
+                                    val reqHeaders = request.requestHeaders ?: emptyMap()
+                                    view?.post {
+                                        onStreamCaptured(reqUrl, reqHeaders)
+                                    }
+                                }
+                                val isAd = lower.contains("doubleclick") ||
+                                    lower.contains("adservice") ||
+                                    lower.contains("adsterra") ||
+                                    lower.contains("popads") ||
+                                    lower.contains("popcash") ||
+                                    lower.contains("exoclick") ||
+                                    lower.contains("propellerads") ||
+                                    lower.contains("monetag") ||
+                                    lower.contains("bet365") ||
+                                    lower.contains("1xbet") ||
+                                    lower.contains("histats") ||
+                                    lower.contains("onclick")
+                                if (isAd) {
+                                    return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream(ByteArray(0)))
+                                }
+                                return super.shouldInterceptRequest(view, request)
+                            }
+
+                            override fun onPageFinished(view: WebView?, url: String?) {
+                                super.onPageFinished(view, url)
+                                val css = "* { -webkit-user-select: none !important; } header, footer, nav, aside, .header, .footer, .ad, .ads, .banner, .watermark, .jw-controls, .vjs-control-bar, .player-controls, .plyr__controls, .art-video-player .art-bottom, .art-layers, .control-bar, div[class*=\"control\"], div[class*=\"Controls\"], div[class*=\"banner\"], div[id*=\"ad\"], div[class*=\"ad-\"], div[class*=\"popup\"], .jw-preview, .jw-title, .vjs-big-play-button { display: none !important; opacity: 0 !important; pointer-events: none !important; visibility: hidden !important; } html, body { background: #000000 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important; width: 100vw !important; height: 100vh !important; } video { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; object-fit: contain !important; z-index: 999999 !important; pointer-events: none !important; }"
+                                val js = """
+                                    (function() {
+                                        var s = document.createElement('style');
+                                        s.innerHTML = '$css';
+                                        document.head.appendChild(s);
+                                        window.open = function() { return null; };
+                                        window.alert = function() {};
+                                        function hook() {
+                                            var v = document.querySelector('video');
+                                            if (!v) return;
+                                            if (!v.__orbit_hooked) {
+                                                v.__orbit_hooked = true;
+                                                v.controls = false;
+                                                v.play();
+                                                v.addEventListener('timeupdate', function() {
+                                                    if (window.OrbitBridge) window.OrbitBridge.onTimeUpdate(v.currentTime, v.duration || 0);
+                                                });
+                                                v.addEventListener('play', function() {
+                                                    if (window.OrbitBridge) window.OrbitBridge.onPlayState(true);
+                                                });
+                                                v.addEventListener('pause', function() {
+                                                    if (window.OrbitBridge) window.OrbitBridge.onPlayState(false);
+                                                });
+                                                v.addEventListener('waiting', function() {
+                                                    if (window.OrbitBridge) window.OrbitBridge.onBuffering(true);
+                                                });
+                                                v.addEventListener('playing', function() {
+                                                    if (window.OrbitBridge) window.OrbitBridge.onBuffering(false);
+                                                });
+                                                if (v.src && (v.src.indexOf('.m3u8') !== -1 || v.src.indexOf('.mp4') !== -1)) {
+                                                    if (window.OrbitBridge) window.OrbitBridge.onStreamFound(v.src);
+                                                }
+                                            }
+                                        }
+                                        setInterval(hook, 350);
+                                    })();
+                                """.trimIndent()
+                                view?.evaluateJavascript(js, null)
                             }
                         }
                         webChromeClient = object : WebChromeClient() {
@@ -543,6 +720,7 @@ private fun AdvancedProPlayerScreen(
                         }
                         loadUrl(currentUrl)
                     }
+                    attachedWebView = wv
                     onAttachWebView(wv)
                     root.addView(wv)
                     root
@@ -552,7 +730,7 @@ private fun AdvancedProPlayerScreen(
         }
 
         // CENTER BUFFERING SPINNER (Orbit Animated Logo)
-        if (useExoPlayer && isBuffering) {
+        if (isBuffering) {
             OrbitLoader(
                 size = 58.dp,
                 modifier = Modifier.align(Alignment.Center)
@@ -850,16 +1028,14 @@ private fun AdvancedProPlayerScreen(
                     }
 
                     // Quality, Audio, Subtitles, Speed Dialogs
-                    if (useExoPlayer) {
-                        IconButton(onClick = { showQualityDialog = true }) {
-                            Icon(Icons.Default.HighQuality, contentDescription = "Quality", tint = Color.White)
-                        }
-                        IconButton(onClick = { showAudioDialog = true }) {
-                            Icon(Icons.Default.Language, contentDescription = "Audio Language", tint = Color.White)
-                        }
-                        IconButton(onClick = { showSubtitleDialog = true }) {
-                            Icon(Icons.Default.Subtitles, contentDescription = "Subtitles", tint = if (selectedSubtitle == "Off") Color(0xFF9EABB8) else Color(0xFFF1F5F9))
-                        }
+                    IconButton(onClick = { showQualityDialog = true }) {
+                        Icon(Icons.Default.HighQuality, contentDescription = "Quality", tint = Color.White)
+                    }
+                    IconButton(onClick = { showAudioDialog = true }) {
+                        Icon(Icons.Default.Language, contentDescription = "Audio Language", tint = Color.White)
+                    }
+                    IconButton(onClick = { showSubtitleDialog = true }) {
+                        Icon(Icons.Default.Subtitles, contentDescription = "Subtitles", tint = if (selectedSubtitle == "Off") Color(0xFF9EABB8) else Color(0xFFF1F5F9))
                     }
                     IconButton(onClick = { showSpeedDialog = true }) {
                         Icon(Icons.Default.Speed, contentDescription = "Speed", tint = Color.White)
@@ -871,90 +1047,86 @@ private fun AdvancedProPlayerScreen(
                     }
                 }
 
-                // CENTER CONTROLS (Previous Ep, -10s, Play/Pause, +10s, Next Ep)
-                if (useExoPlayer && player != null) {
-                    Row(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalArrangement = Arrangement.spacedBy(22.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                // CENTER CONTROLS (Previous Ep, -10s, Play/Pause, +10s, Next Ep) - Always Visible
+                Row(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalArrangement = Arrangement.spacedBy(22.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Previous Episode (if TV series and has previous)
+                    if (mediaType == "tv" && currentEpisode > 1) {
+                        IconButton(
+                            onClick = { switchEpisode(currentEpisode - 1) },
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x66151D29))
+                        ) {
+                            Icon(Icons.Default.SkipPrevious, contentDescription = "Previous Episode", tint = Color.White, modifier = Modifier.size(28.dp))
+                        }
+                    }
+
+                    // Rewind 10s
+                    IconButton(
+                        onClick = { performRelativeSeek(-10000L) },
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x66151D29))
                     ) {
-                        // Previous Episode (if TV series and has previous)
-                        if (mediaType == "tv" && currentEpisode > 1) {
-                            IconButton(
-                                onClick = { switchEpisode(currentEpisode - 1) },
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0x66151D29))
-                            ) {
-                                Icon(Icons.Default.SkipPrevious, contentDescription = "Previous Episode", tint = Color.White, modifier = Modifier.size(28.dp))
-                            }
-                        }
+                        Icon(Icons.Default.Replay10, contentDescription = "-10s", tint = Color.White, modifier = Modifier.size(30.dp))
+                    }
 
-                        // Rewind 10s
+                    // Play / Pause glowing center button
+                    IconButton(
+                        onClick = { performPlayPause() },
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFF1F5F9))
+                    ) {
+                        Icon(
+                            if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = if (isPlaying) "Pause" else "Play",
+                            tint = Color(0xFF17120B),
+                            modifier = Modifier.size(44.dp)
+                        )
+                    }
+
+                    // Forward 10s
+                    IconButton(
+                        onClick = { performRelativeSeek(10000L) },
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x66151D29))
+                    ) {
+                        Icon(Icons.Default.Forward10, contentDescription = "+10s", tint = Color.White, modifier = Modifier.size(30.dp))
+                    }
+
+                    // Next Episode (if TV series and has next)
+                    if (mediaType == "tv" && hasNextEpisode) {
                         IconButton(
-                            onClick = { seekRelative(-10000L) },
+                            onClick = { switchEpisode(currentEpisode + 1) },
                             modifier = Modifier
-                                .size(50.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
                                 .background(Color(0x66151D29))
                         ) {
-                            Icon(Icons.Default.Replay10, contentDescription = "-10s", tint = Color.White, modifier = Modifier.size(30.dp))
-                        }
-
-                        // Play / Pause glowing center button
-                        IconButton(
-                            onClick = {
-                                if (isPlaying) player.pause() else player.play()
-                            },
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFF1F5F9))
-                        ) {
-                            Icon(
-                                if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = if (isPlaying) "Pause" else "Play",
-                                tint = Color(0xFF17120B),
-                                modifier = Modifier.size(44.dp)
-                            )
-                        }
-
-                        // Forward 10s
-                        IconButton(
-                            onClick = { seekRelative(10000L) },
-                            modifier = Modifier
-                                .size(50.dp)
-                                .clip(CircleShape)
-                                .background(Color(0x66151D29))
-                        ) {
-                            Icon(Icons.Default.Forward10, contentDescription = "+10s", tint = Color.White, modifier = Modifier.size(30.dp))
-                        }
-
-                        // Next Episode (if TV series and has next)
-                        if (mediaType == "tv" && hasNextEpisode) {
-                            IconButton(
-                                onClick = { switchEpisode(currentEpisode + 1) },
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0x66151D29))
-                            ) {
-                                Icon(Icons.Default.SkipNext, contentDescription = "Next Episode", tint = Color.White, modifier = Modifier.size(28.dp))
-                            }
+                            Icon(Icons.Default.SkipNext, contentDescription = "Next Episode", tint = Color.White, modifier = Modifier.size(28.dp))
                         }
                     }
                 }
 
                 // FLOATING SKIP INTRO (+85s) BUTTON (AniDash Signature Feature)
-                if (useExoPlayer && player != null && duration > 100000) {
+                if (duration > 60000L || duration == 0L) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(bottom = 75.dp, end = 20.dp)
                     ) {
                         Button(
-                            onClick = { seekRelative(85000L) }, // Skips standard anime/movie intro 85 seconds
+                            onClick = { performRelativeSeek(85000L) }, // Skips standard anime/movie intro 85 seconds
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xDD1E293B),
                                 contentColor = Color(0xFFF1F5F9)
@@ -969,7 +1141,7 @@ private fun AdvancedProPlayerScreen(
                     }
                 }
 
-                // BOTTOM CONTROLS BAR (Seekbar, Current Time, Minus Countdown, Mode)
+                // BOTTOM CONTROLS BAR (Seekbar, Current Time, Minus Countdown, Mode) - Unified Cinema HUD
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -982,93 +1154,67 @@ private fun AdvancedProPlayerScreen(
                         .navigationBarsPadding()
                         .padding(horizontal = 20.dp, vertical = 8.dp)
                 ) {
-                    if (useExoPlayer && player != null) {
-                        // Slider / Progress Scrubber
-                        Slider(
-                            value = if (duration > 0) (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f) else 0f,
-                            onValueChange = { fraction ->
-                                currentPosition = (fraction * duration).toLong()
-                            },
-                            onValueChangeFinished = {
-                                player.seekTo(currentPosition)
-                            },
-                            colors = SliderDefaults.colors(
-                                thumbColor = Color(0xFFF1F5F9),
-                                activeTrackColor = Color(0xFFF1F5F9),
-                                inactiveTrackColor = Color(0x55556677)
-                            ),
-                            modifier = Modifier.fillMaxWidth().height(24.dp)
+                    // Slider / Progress Scrubber
+                    Slider(
+                        value = if (duration > 0) (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f) else 0f,
+                        onValueChange = { fraction ->
+                            currentPosition = (fraction * duration).toLong()
+                        },
+                        onValueChangeFinished = {
+                            performSeek(currentPosition)
+                        },
+                        colors = SliderDefaults.colors(
+                            thumbColor = Color(0xFFF1F5F9),
+                            activeTrackColor = Color(0xFFF1F5F9),
+                            inactiveTrackColor = Color(0x55556677)
+                        ),
+                        modifier = Modifier.fillMaxWidth().height(24.dp)
+                    )
+
+                    // Time Labels Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Current Elapsed Time
+                        Text(
+                            formatTime(currentPosition),
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
                         )
 
-                        // Time Labels Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        // Center Info Tag (Quality / Speed indicator)
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFF161E2C)
                         ) {
-                            // Current Elapsed Time
                             Text(
-                                formatTime(currentPosition),
-                                color = Color.White,
+                                "${selectedQuality.substringBefore(" ")} • ${selectedSpeed}x",
+                                color = Color(0xFF8E9BAE),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+
+                        // Minus Remaining Time Countdown (Tap to toggle between remaining time and duration)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .clickable { showMinusRemainingTime = !showMinusRemainingTime }
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            val remaining = (duration - currentPosition).coerceAtLeast(0L)
+                            val timeText = if (showMinusRemainingTime && duration > 0) "-${formatTime(remaining)}" else formatTime(duration)
+                            Text(
+                                timeText,
+                                color = if (showMinusRemainingTime) Color(0xFFF1F5F9) else Color.White,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
-
-                            // Center Info Tag (Quality / Speed indicator)
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color(0xFF161E2C)
-                            ) {
-                                Text(
-                                    "${selectedQuality.substringBefore(" ")} • ${selectedSpeed}x",
-                                    color = Color(0xFF8E9BAE),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                )
-                            }
-
-                            // Minus Remaining Time Countdown (Tap to toggle between remaining time and duration)
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .clickable { showMinusRemainingTime = !showMinusRemainingTime }
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                val remaining = (duration - currentPosition).coerceAtLeast(0L)
-                                val timeText = if (showMinusRemainingTime) "-${formatTime(remaining)}" else formatTime(duration)
-                                Text(
-                                    timeText,
-                                    color = if (showMinusRemainingTime) Color(0xFFF1F5F9) else Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    } else {
-                        // Web Embed Bar
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "Streaming via $currentServerName",
-                                color = Color(0xFFCBD5E1),
-                                fontSize = 12.sp
-                            )
-                            if (availableServers.isNotEmpty()) {
-                                Button(
-                                    onClick = { showServerDialog = true },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2B3E), contentColor = Color(0xFFF1F5F9)),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                                ) {
-                                    Icon(Icons.Default.SwapHoriz, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Switch Server", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
                         }
                     }
                 }
@@ -1304,7 +1450,7 @@ private fun AdvancedProPlayerScreen(
                                 .clip(RoundedCornerShape(10.dp))
                                 .clickable {
                                     selectedSpeed = sp
-                                    player?.playbackParameters = PlaybackParameters(sp)
+                                    performSetSpeed(sp)
                                     Toast.makeText(context, "Speed: ${sp}x", Toast.LENGTH_SHORT).show()
                                     showSpeedDialog = false
                                 }
