@@ -14,6 +14,44 @@ data class Movie(
     val source: String = "tmdb"
 )
 
+data class WatchProgressEntry(
+    val id: Int,
+    val title: String,
+    @SerializedName("poster_path") val posterPath: String? = null,
+    @SerializedName("backdrop_path") val backdropPath: String? = null,
+    @SerializedName("media_type") val mediaType: String = "movie",
+    @SerializedName("position_ms") val positionMs: Long = 0L,
+    @SerializedName("duration_ms") val durationMs: Long = 0L,
+    @SerializedName("season_number") val seasonNumber: Int? = null,
+    @SerializedName("episode_number") val episodeNumber: Int? = null,
+    @SerializedName("episode_name") val episodeName: String? = null,
+    @SerializedName("last_watched_timestamp") val lastWatchedTimestamp: Long = System.currentTimeMillis()
+) {
+    val progressFraction: Float
+        get() {
+            if (durationMs <= 0L) return 0.05f
+            val ratio = positionMs.toFloat() / durationMs.toFloat()
+            return ratio.coerceIn(0.02f, 1f)
+        }
+
+    val remainingMinutes: Int
+        get() {
+            if (durationMs <= positionMs) return 0
+            val remSec = (durationMs - positionMs) / 1000L
+            return (remSec / 60L).toInt().coerceAtLeast(1)
+        }
+}
+
+fun buildTmdbImageUrl(path: String?, size: String = "w500"): String? {
+    if (path.isNullOrBlank()) return null
+    val trimmed = path.trim()
+    if (trimmed.startsWith("http://", ignoreCase = true) || trimmed.startsWith("https://", ignoreCase = true)) {
+        return trimmed
+    }
+    val cleanPath = if (trimmed.startsWith("/")) trimmed else "/$trimmed"
+    return "https://image.tmdb.org/t/p/$size$cleanPath"
+}
+
 data class HomeCatalog(
     @SerializedName("trending_movies") val trendingMovies: List<Movie> = emptyList(),
     @SerializedName("trending_series") val trendingSeries: List<Movie> = emptyList(),
@@ -98,23 +136,35 @@ data class StreamServer(
 )
 
 fun isUnreleasedTitle(releaseDate: String?, status: String? = null, title: String? = null): Boolean {
-    val cleanTitle = title?.lowercase() ?: ""
-    if (cleanTitle.contains("doomsday") || cleanTitle.contains("secret wars") || 
-        cleanTitle.contains("vision quest") || cleanTitle.contains("batman part ii") || 
-        cleanTitle.contains("batman: part ii") || cleanTitle.contains("batman part 2") ||
-        cleanTitle.contains("the batman part") || cleanTitle.contains("avatar: fire and ash") ||
-        cleanTitle.contains("fire and ash") || cleanTitle.contains("beyond the spider-verse") ||
-        cleanTitle.contains("blade") || cleanTitle.contains("fast xi") ||
-        cleanTitle.contains("pushpa 2") || cleanTitle.contains("toxic")) {
-        return true
-    }
     val cleanStatus = status?.lowercase() ?: ""
-    if (cleanStatus in listOf("in production", "post production", "planned", "announced", "upcoming", "rumored")) {
+    if (cleanStatus == "released") return false
+
+    val cleanTitle = title?.lowercase() ?: ""
+    val knownUpcomingTitles = listOf(
+        "avengers: doomsday",
+        "avengers doomsday",
+        "avengers: secret wars",
+        "avengers secret wars",
+        "vision quest",
+        "the batman part ii",
+        "the batman part 2",
+        "batman: part ii",
+        "batman part 2",
+        "beyond the spider-verse",
+        "spider-man: beyond the spider-verse"
+    )
+    if (knownUpcomingTitles.any { cleanTitle.contains(it) }) {
         return true
     }
-    if (releaseDate.isNullOrBlank()) return false
-    val currentDate = "2024-12-31"
-    return releaseDate.trim() > currentDate
+    if (cleanStatus in listOf("in production", "planned", "announced", "rumored")) {
+        return true
+    }
+    // Only flag as unreleased if releaseDate is strictly in the future (after today) and status is not released
+    if (!releaseDate.isNullOrBlank()) {
+        val today = "2026-11-10"
+        return releaseDate.trim() > today && cleanStatus != "released"
+    }
+    return false
 }
 
 fun isCamOrLowQuality(text: String?): Boolean {

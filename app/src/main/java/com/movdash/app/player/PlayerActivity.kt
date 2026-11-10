@@ -79,8 +79,10 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
 import com.movdash.app.data.EpisodeSummary
+import com.movdash.app.data.LibraryManager
 import com.movdash.app.data.PreloadedCatalog
 import com.movdash.app.data.StreamServerFactory
+import com.movdash.app.data.WatchProgressEntry
 import com.movdash.app.ui.theme.MovDashTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -115,6 +117,9 @@ class PlayerActivity : ComponentActivity() {
         val season = intent.getIntExtra(EXTRA_SEASON, 1)
         val episode = intent.getIntExtra(EXTRA_EPISODE, 1)
         val authHeader = intent.getStringExtra(EXTRA_AUTH_HEADER)
+        val posterPath = intent.getStringExtra(EXTRA_POSTER_PATH)
+        val backdropPath = intent.getStringExtra(EXTRA_BACKDROP_PATH)
+        val resumePosition = intent.getLongExtra(EXTRA_RESUME_POSITION, 0L)
 
         if (rawUrl.isBlank()) {
             Toast.makeText(this, "Media URL is missing", Toast.LENGTH_SHORT).show()
@@ -140,6 +145,9 @@ class PlayerActivity : ComponentActivity() {
                     mediaType = mediaType,
                     initialSeason = season,
                     initialEpisode = episode,
+                    posterPath = posterPath,
+                    backdropPath = backdropPath,
+                    initialResumePosition = resumePosition,
                     onClose = { finish() },
                     onAttachPlayer = { player -> exoPlayer = player },
                     onAttachWebView = { wv -> webView = wv },
@@ -197,6 +205,9 @@ class PlayerActivity : ComponentActivity() {
         const val EXTRA_MEDIA_TYPE = "com.movdash.app.MEDIA_TYPE"
         const val EXTRA_SEASON = "com.movdash.app.SEASON"
         const val EXTRA_EPISODE = "com.movdash.app.EPISODE"
+        const val EXTRA_POSTER_PATH = "com.movdash.app.POSTER_PATH"
+        const val EXTRA_BACKDROP_PATH = "com.movdash.app.BACKDROP_PATH"
+        const val EXTRA_RESUME_POSITION = "com.movdash.app.RESUME_POSITION"
     }
 }
 
@@ -241,6 +252,9 @@ private fun AdvancedProPlayerScreen(
     mediaType: String,
     initialSeason: Int,
     initialEpisode: Int,
+    posterPath: String? = null,
+    backdropPath: String? = null,
+    initialResumePosition: Long = 0L,
     onClose: () -> Unit,
     onAttachPlayer: (ExoPlayer) -> Unit,
     onAttachWebView: (WebView) -> Unit,
@@ -281,12 +295,44 @@ private fun AdvancedProPlayerScreen(
     }
     val episodesList = seasonData?.episodes.orEmpty()
 
+    val initialPos = remember {
+        if (initialResumePosition > 0L) {
+            initialResumePosition
+        } else {
+            LibraryManager.getWatchProgressForMovie(context, tmdbId, mediaType)?.positionMs ?: 0L
+        }
+    }
+
     // Player Playback State
     var isPlaying by remember { mutableStateOf(true) }
-    var currentPosition by remember { mutableLongStateOf(0L) }
+    var currentPosition by remember { mutableLongStateOf(initialPos) }
     var duration by remember { mutableLongStateOf(0L) }
     var bufferedPosition by remember { mutableLongStateOf(0L) }
     var isBuffering by remember { mutableStateOf(true) }
+
+    fun persistWatchProgress() {
+        if (tmdbId > 0 && currentPosition > 3000L) {
+            val entry = WatchProgressEntry(
+                id = tmdbId,
+                title = title,
+                posterPath = posterPath,
+                backdropPath = backdropPath,
+                mediaType = mediaType,
+                positionMs = currentPosition,
+                durationMs = duration,
+                seasonNumber = if (mediaType == "tv") currentSeason else null,
+                episodeNumber = if (mediaType == "tv") currentEpisode else null,
+                episodeName = if (mediaType == "tv") episodeSubtitle else null
+            )
+            LibraryManager.saveWatchProgress(context, entry)
+        }
+    }
+
+    DisposableEffect(currentPosition, duration, currentSeason, currentEpisode) {
+        onDispose {
+            persistWatchProgress()
+        }
+    }
 
     // Screen Lock Mode (AniDash Feature)
     var isLocked by remember { mutableStateOf(false) }
@@ -683,6 +729,11 @@ private fun AdvancedProPlayerScreen(
                                             if (!v.__orbit_hooked) {
                                                 v.__orbit_hooked = true;
                                                 v.controls = false;
+                                                var resumeSec = ${initialPos / 1000f};
+                                                if (resumeSec > 3 && !v.__orbit_resumed) {
+                                                    v.__orbit_resumed = true;
+                                                    try { v.currentTime = resumeSec; } catch(e) {}
+                                                }
                                                 v.play();
                                                 v.addEventListener('timeupdate', function() {
                                                     if (window.OrbitBridge) window.OrbitBridge.onTimeUpdate(v.currentTime, v.duration || 0);

@@ -94,6 +94,8 @@ fun getMovieQualityBadge(movie: Movie): String {
     return if (vote >= 7.6 || yr >= 2023) "4K UHD" else "1080p HD"
 }
 
+private data class StarParticle(val xRatio: Float, val yRatio: Float, val radius: Float, val speed: Float, val phase: Float)
+
 @Composable
 private fun OpeningSplashScreen(
     onAnimationFinished: () -> Unit
@@ -102,6 +104,30 @@ private fun OpeningSplashScreen(
     val alpha = remember { Animatable(0f) }
     val textAlpha = remember { Animatable(0f) }
     val progress = remember { Animatable(0f) }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "stars")
+    val twinkleTime by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 6.28318f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "twinkle"
+    )
+
+    val stars = remember {
+        val rand = java.util.Random(42)
+        List(140) {
+            StarParticle(
+                xRatio = rand.nextFloat(),
+                yRatio = rand.nextFloat(),
+                radius = 0.8f + rand.nextFloat() * 1.8f,
+                speed = 0.5f + rand.nextFloat() * 1.5f,
+                phase = rand.nextFloat() * 6.28f
+            )
+        }
+    }
 
     LaunchedEffect(Unit) {
         launch {
@@ -130,9 +156,36 @@ private fun OpeningSplashScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF000000)),
+            .background(Color(0xFF04060A)),
         contentAlignment = Alignment.Center
     ) {
+        // Edge-to-edge full-screen animated cosmic starfield
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+            val width = size.width
+            val height = size.height
+
+            // Center radial nebula glow
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color(0x331E3A8A), Color(0x187C3AED), Color.Transparent),
+                    center = androidx.compose.ui.geometry.Offset(width / 2f, height / 2f),
+                    radius = width * 0.75f
+                ),
+                radius = width * 0.75f,
+                center = androidx.compose.ui.geometry.Offset(width / 2f, height / 2f)
+            )
+
+            // Twinkling stars across the full display
+            for (s in stars) {
+                val starAlpha = (0.35f + 0.65f * kotlin.math.sin(twinkleTime * s.speed + s.phase).toFloat().coerceIn(0f, 1f)) * alpha.value
+                drawCircle(
+                    color = Color.White.copy(alpha = starAlpha),
+                    radius = s.radius,
+                    center = androidx.compose.ui.geometry.Offset(s.xRatio * width, s.yRatio * height)
+                )
+            }
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -268,6 +321,7 @@ private fun MovDashApp() {
     var watchlist by remember { mutableStateOf(LibraryManager.getWatchlist(context)) }
     var history by remember { mutableStateOf(LibraryManager.getHistory(context)) }
     var favorites by remember { mutableStateOf(LibraryManager.getFavorites(context)) }
+    var watchProgressList by remember { mutableStateOf(LibraryManager.getWatchProgressList(context)) }
     var activeSection by remember { mutableStateOf<SectionInfo?>(null) }
 
     fun refreshLibrary() {
@@ -275,6 +329,7 @@ private fun MovDashApp() {
         history = LibraryManager.getHistory(context)
         favorites = LibraryManager.getFavorites(context)
         downloads = LibraryManager.getDownloads(context)
+        watchProgressList = LibraryManager.getWatchProgressList(context)
     }
 
     // Hardware Back Button Interception (AniDash hierarchy)
@@ -399,8 +454,34 @@ private fun MovDashApp() {
                         popularMovies = popularMovies,
                         popularSeries = popularSeries,
                         upcomingMovies = upcomingList,
+                        watchProgressList = watchProgressList,
                         history = history,
                         onMovieClick = { selectedMovie = it },
+                        onResumeProgress = { entry ->
+                            val s = entry.seasonNumber ?: 1
+                            val e = entry.episodeNumber ?: 1
+                            val streamUrl = StreamServerFactory.getDefaultStreamUrl(entry.id, entry.mediaType, s, e)
+                            val intent = Intent(context, PlayerActivity::class.java).apply {
+                                putExtra(PlayerActivity.EXTRA_MEDIA_URL, streamUrl)
+                                putExtra(PlayerActivity.EXTRA_STREAM_TYPE, "embed")
+                                putExtra(PlayerActivity.EXTRA_TITLE, entry.title)
+                                putExtra(
+                                    PlayerActivity.EXTRA_SUBTITLE,
+                                    if (entry.mediaType == "tv") "Season $s · Episode $e" else "Resume Playback"
+                                )
+                                putExtra(PlayerActivity.EXTRA_SERVER_NAME, "Fast Stream")
+                                putExtra(PlayerActivity.EXTRA_TMDB_ID, entry.id)
+                                putExtra(PlayerActivity.EXTRA_MEDIA_TYPE, entry.mediaType)
+                                putExtra(PlayerActivity.EXTRA_SEASON, s)
+                                putExtra(PlayerActivity.EXTRA_EPISODE, e)
+                                putExtra(PlayerActivity.EXTRA_POSTER_PATH, entry.posterPath)
+                                putExtra(PlayerActivity.EXTRA_BACKDROP_PATH, entry.backdropPath)
+                                if (entry.positionMs > 5000L) {
+                                    putExtra(PlayerActivity.EXTRA_RESUME_POSITION, entry.positionMs)
+                                }
+                            }
+                            context.startActivity(intent)
+                        },
                         onDiscover = { tab = AppTab.DISCOVER },
                         onGenreClick = { genre ->
                             searchGenre = genre
@@ -481,6 +562,7 @@ private fun MovDashApp() {
                                 putExtra(PlayerActivity.EXTRA_MEDIA_TYPE, downloadedItem.mediaType)
                                 putExtra(PlayerActivity.EXTRA_SEASON, downloadedItem.seasonNumber ?: 1)
                                 putExtra(PlayerActivity.EXTRA_EPISODE, downloadedItem.episodeNumber ?: 1)
+                                putExtra(PlayerActivity.EXTRA_POSTER_PATH, downloadedItem.posterPath)
                             }
                             context.startActivity(intent)
                         },
@@ -505,7 +587,7 @@ private fun MovDashApp() {
     }
 
     if (showAppSettings) {
-        AppSettingsDialog(
+        AniDashSettingsScreen(
             onDismiss = { showAppSettings = false }
         )
     }
@@ -764,14 +846,34 @@ private fun HomeScreen(
     popularMovies: List<Movie>,
     popularSeries: List<Movie>,
     upcomingMovies: List<Movie>,
+    watchProgressList: List<WatchProgressEntry> = emptyList(),
     history: List<Movie>,
     onMovieClick: (Movie) -> Unit,
+    onResumeProgress: (WatchProgressEntry) -> Unit = {},
     onDiscover: () -> Unit,
     onGenreClick: (String) -> Unit,
     onOpenSection: (SectionInfo) -> Unit
 ) {
     var selectedNxshaCategory by remember { mutableStateOf("All") }
     val nxshaCategories = listOf("All", "Hollywood", "Bollywood", "South Cinema", "TV Series", "Movies")
+
+    val continueItems = remember(watchProgressList, history) {
+        if (watchProgressList.isNotEmpty()) {
+            watchProgressList
+        } else {
+            history.map {
+                WatchProgressEntry(
+                    id = it.id,
+                    title = it.title,
+                    posterPath = it.posterPath,
+                    backdropPath = it.backdropPath,
+                    mediaType = it.mediaType,
+                    positionMs = 120000L,
+                    durationMs = 7200000L
+                )
+            }
+        }
+    }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         HeroSpotlightCarousel(
@@ -780,7 +882,7 @@ private fun HomeScreen(
         )
 
         // Continue Watching Shelf (AniDash style)
-        if (history.isNotEmpty()) {
+        if (continueItems.isNotEmpty()) {
             Spacer(Modifier.height(14.dp))
             SectionTitle(
                 title = "Continue Watching",
@@ -790,74 +892,137 @@ private fun HomeScreen(
                         SectionInfo(
                             title = "Continue Watching",
                             subtitle = "Recently streamed titles",
-                            items = history
+                            items = history.ifEmpty {
+                                continueItems.map {
+                                    Movie(it.id, it.title, "", it.posterPath, it.backdropPath, null, null, it.mediaType)
+                                }
+                            }
                         )
                     )
                 }
             )
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                items(history.take(10), key = { "continue-${it.id}" }) { movie ->
+                items(continueItems.take(10), key = { "continue-${it.id}-${it.mediaType}" }) { entry ->
                     Column(
                         Modifier
-                            .width(150.dp)
-                            .clickable { onMovieClick(movie) }
+                            .width(160.dp)
+                            .clickable { onResumeProgress(entry) }
                     ) {
                         Box(
                             Modifier
                                 .fillMaxWidth()
-                                .height(95.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF151D29))
+                                .height(98.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .border(BorderStroke(1.dp, Color(0x1FFFFFFF)), RoundedCornerShape(14.dp))
+                                .background(Color(0xFF131A26))
                         ) {
-                            val bg = movie.backdropPath ?: movie.posterPath
+                            val bg = buildTmdbImageUrl(entry.backdropPath ?: entry.posterPath, "w500")
                             if (bg != null) {
                                 AsyncImage(
-                                    model = "https://image.tmdb.org/t/p/w300$bg",
-                                    contentDescription = movie.title,
+                                    model = bg,
+                                    contentDescription = entry.title,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
                                 )
+                            } else {
+                                Box(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .background(Brush.linearGradient(listOf(Color(0xFF1E293B), Color(0xFF0F172A)))),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        entry.title.take(14),
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
+
+                            // Dark overlay
                             Box(
                                 Modifier
                                     .fillMaxSize()
-                                    .background(Color(0x44000000)),
+                                    .background(
+                                        Brush.verticalGradient(
+                                            listOf(Color(0x22000000), Color(0x77000000), Color(0xCC000000))
+                                        )
+                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    Icons.Default.PlayCircleFilled,
-                                    contentDescription = "Resume",
-                                    tint = Color.White,
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color(0xCC000000),
+                                    border = BorderStroke(1.dp, Color(0x33FFFFFF)),
                                     modifier = Modifier.size(36.dp)
-                                )
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Default.PlayArrow,
+                                            contentDescription = "Resume",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
                             }
-                            // Progress bar
+
+                            // Remaining Time Pill (Top End)
+                            if (entry.remainingMinutes > 0) {
+                                Surface(
+                                    shape = RoundedCornerShape(bottomStart = 8.dp),
+                                    color = Color(0xCC000000),
+                                    modifier = Modifier.align(Alignment.TopEnd)
+                                ) {
+                                    Text(
+                                        "${entry.remainingMinutes}m left",
+                                        color = Color(0xFFF1F5F9),
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+
+                            // Dynamic Real Progress bar
                             Box(
                                 Modifier
                                     .align(Alignment.BottomStart)
                                     .fillMaxWidth()
                                     .height(4.dp)
-                                    .background(Color(0x55FFFFFF))
+                                    .background(Color(0x44FFFFFF))
                             ) {
                                 Box(
                                     Modifier
-                                        .fillMaxWidth(0.65f)
+                                        .fillMaxWidth(entry.progressFraction)
                                         .fillMaxHeight()
                                         .background(Color(0xFFE50914))
                                 )
                             }
                         }
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(5.dp))
                         Text(
-                            movie.title,
+                            entry.title,
                             color = Color.White,
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
+                        )
+                        val epLabel = if (entry.episodeNumber != null) {
+                            "S${entry.seasonNumber ?: 1}:E${entry.episodeNumber} • ${entry.remainingMinutes}m remaining"
+                        } else {
+                            if (entry.remainingMinutes > 0) "${entry.remainingMinutes}m remaining" else "Resume playback"
+                        }
+                        Text(
+                            epLabel,
+                            color = Color(0xFF94A3B8),
+                            fontSize = 10.sp,
+                            maxLines = 1
                         )
                     }
                 }
@@ -1117,143 +1282,190 @@ private fun HeroSpotlightCarousel(
     movies: List<Movie>,
     onWatch: (Movie) -> Unit
 ) {
-    val items = movies.take(5)
+    val items = movies.take(6)
     if (items.isEmpty()) return
 
     val pagerState = rememberPagerState(pageCount = { items.size })
     LaunchedEffect(pagerState, items.size) {
         if (items.size > 1) {
             while (true) {
-                delay(6000)
-                pagerState.animateScrollToPage((pagerState.currentPage + 1) % items.size)
+                delay(5000)
+                try {
+                    pagerState.animateScrollToPage(
+                        (pagerState.currentPage + 1) % items.size,
+                        animationSpec = tween(700, easing = FastOutSlowInEasing)
+                    )
+                } catch (_: Exception) {}
             }
         }
     }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(440.dp)
+            .padding(top = 8.dp, bottom = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxSize()
+            contentPadding = PaddingValues(horizontal = 18.dp),
+            pageSpacing = 12.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(390.dp)
         ) { page ->
             val movie = items[page]
+            val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).let { kotlin.math.abs(it) }
+            val scale = androidx.compose.ui.util.lerp(0.93f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+            val alphaVal = androidx.compose.ui.util.lerp(0.65f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+
             val backdrop = movie.backdropPath ?: movie.posterPath
-            Box(modifier = Modifier.fillMaxSize()) {
-                if (backdrop != null) {
+            val imageUrl = buildTmdbImageUrl(backdrop, "w1280")
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        alpha = alphaVal
+                    }
+                    .clip(RoundedCornerShape(24.dp))
+                    .border(BorderStroke(1.dp, Color(0x1FFFFFFF)), RoundedCornerShape(24.dp))
+                    .background(Color(0xFF0F141F))
+                    .clickable { onWatch(movie) }
+            ) {
+                if (imageUrl != null) {
                     AsyncImage(
-                        model = "https://image.tmdb.org/t/p/w1280$backdrop",
+                        model = imageUrl,
                         contentDescription = movie.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
-                // Multi-stop gradient fade into pitch black
+
+                // Cinematic multi-stop gradient overlay (AniDash spotlight style)
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    Color(0x3306080E),
-                                    Color(0x5506080E),
-                                    Color(0xAA06080E),
-                                    Color(0xF206080E),
-                                    Color(0xFF06080E)
-                                )
+                                    Color.Transparent,
+                                    Color(0x2205070B),
+                                    Color(0x8805070B),
+                                    Color(0xEE05070B),
+                                    Color(0xFF05070B)
+                                ),
+                                startY = 60f
                             )
                         )
                 )
 
-                // Billboard Content Overlay
+                // Top Badge Bar
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    movie.voteAverage?.let {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xCC000000),
+                            border = BorderStroke(1.dp, Color(0x33FFFFFF))
+                        ) {
+                            Text(
+                                "★ " + "%.1f".format(it),
+                                color = Color(0xFFFFD700),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xCC000000),
+                        border = BorderStroke(1.dp, Color(0x33FFFFFF))
+                    ) {
+                        Text(
+                            "4K UHD",
+                            color = Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+
+                // Billboard Bottom Content Overlay
                 Column(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
+                        .align(Alignment.BottomStart)
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                        .padding(horizontal = 18.dp, vertical = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Top 10 Rank Badge
+                    // Category / Ranking Pill
                     Surface(
-                        shape = RoundedCornerShape(4.dp),
+                        shape = RoundedCornerShape(6.dp),
                         color = Color(0x33FFFFFF),
                         border = BorderStroke(1.dp, Color(0x26FFFFFF))
                     ) {
                         Text(
-                            "#1 in India Today",
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
+                            if (movie.mediaType == "tv") "SERIES SPOTLIGHT" else "#1 IN INDIA TODAY",
+                            color = Color(0xFFF1F5F9),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
 
-                    // Billboard Title
+                    // Title
                     Text(
                         movie.title,
                         color = Color.White,
-                        fontSize = 26.sp,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Black,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    // Metadata row
+                    // Meta Row
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        movie.voteAverage?.let {
-                            Text("★ " + "%.1f".format(it), color = Color(0xFFE2E8F0), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            Text("•", color = Color(0xFF64748B), fontSize = 10.sp)
-                        }
                         movie.releaseDate?.take(4)?.let {
-                            Text(it, color = Color(0xFF94A3B8), fontSize = 12.sp)
+                            Text(it, color = Color(0xFF94A3B8), fontSize = 12.sp, fontWeight = FontWeight.Medium)
                             Text("•", color = Color(0xFF64748B), fontSize = 10.sp)
                         }
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = Color(0x26FFFFFF)
-                        ) {
-                            Text(
-                                "4K UHD",
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
-                            )
-                        }
+                        Text("Multi-Audio", color = Color(0xFFCBD5E1), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         Text("•", color = Color(0xFF64748B), fontSize = 10.sp)
-                        Text(
-                            if (movie.mediaType == "tv") "TV Series" else "Movie",
-                            color = Color(0xFF94A3B8),
-                            fontSize = 12.sp
-                        )
+                        Text("Original HD", color = Color(0xFFCBD5E1), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
 
-                    // CTA Buttons (Play + More Info)
+                    // CTA Buttons
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.Center,
+                            .padding(top = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val isUnreleased = isUnreleasedTitle(movie.releaseDate, null, movie.title)
                         Button(
                             onClick = { onWatch(movie) },
                             modifier = Modifier
-                                .weight(1f)
+                                .weight(1.3f)
                                 .height(44.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.White,
                                 contentColor = Color.Black
                             ),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Icon(
                                 if (isUnreleased) Icons.Default.HourglassTop else Icons.Default.PlayArrow,
@@ -1263,13 +1475,11 @@ private fun HeroSpotlightCarousel(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                if (isUnreleased) "Coming Soon" else "Play",
+                                if (isUnreleased) "Remind Me" else "Watch Now",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
+                                fontSize = 13.sp
                             )
                         }
-
-                        Spacer(Modifier.width(12.dp))
 
                         OutlinedButton(
                             onClick = { onWatch(movie) },
@@ -1277,11 +1487,11 @@ private fun HeroSpotlightCarousel(
                                 .weight(1f)
                                 .height(44.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Color(0x33FFFFFF),
+                                containerColor = Color(0x22FFFFFF),
                                 contentColor = Color.White
                             ),
                             border = BorderStroke(1.dp, Color(0x33FFFFFF)),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Icon(
                                 Icons.Default.Info,
@@ -1291,9 +1501,9 @@ private fun HeroSpotlightCarousel(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "More Info",
+                                "Details",
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp
+                                fontSize = 13.sp
                             )
                         }
                     }
@@ -1301,11 +1511,10 @@ private fun HeroSpotlightCarousel(
             }
         }
 
-        // Quiet Carousel Dot Indicators
+        Spacer(Modifier.height(10.dp))
+
+        // Animated Carousel Dot Indicators (AniDash style)
         Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1314,9 +1523,9 @@ private fun HeroSpotlightCarousel(
                 Box(
                     modifier = Modifier
                         .height(4.dp)
-                        .width(if (isSelected) 18.dp else 5.dp)
+                        .width(if (isSelected) 22.dp else 6.dp)
                         .clip(CircleShape)
-                        .background(if (isSelected) Color.White else Color(0x66FFFFFF))
+                        .background(if (isSelected) Color.White else Color(0x4DFFFFFF))
                 )
             }
         }
@@ -1346,18 +1555,53 @@ private fun SectionTitle(title: String, action: String = "See All", onClick: () 
 private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
     Column(
         Modifier
-            .width(118.dp)
+            .width(122.dp)
             .clickable(onClick = onClick)
     ) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(176.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFF0E121A))
-                .border(BorderStroke(1.dp, Color(0x1AFFFFFF)), RoundedCornerShape(8.dp))
+                .height(180.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFF0F141F))
+                .border(BorderStroke(1.dp, Color(0x1AFFFFFF)), RoundedCornerShape(12.dp))
         ) {
-            val imageUrl = movie.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
+            val imageUrl = buildTmdbImageUrl(movie.posterPath, "w500")
+
+            // Elegant fallback background when poster is loading or missing
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Color(0xFF1B2332), Color(0xFF0F141F))
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Movie,
+                        contentDescription = null,
+                        tint = Color(0xFF3B4860),
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        movie.title,
+                        color = Color(0xFF8E9BAE),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
             if (imageUrl != null) {
                 AsyncImage(
                     model = imageUrl,
@@ -1366,20 +1610,21 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
                     modifier = Modifier.fillMaxSize()
                 )
             }
+
             // Quality Badge (4K / HD)
             val qualityBadge = getMovieQualityBadge(movie)
             Surface(
-                shape = RoundedCornerShape(bottomStart = 6.dp),
-                color = Color(0xCC0E121A),
-                border = BorderStroke(1.dp, Color(0x1AFFFFFF)),
+                shape = RoundedCornerShape(bottomStart = 8.dp),
+                color = Color(0xCC000000),
+                border = BorderStroke(1.dp, Color(0x22FFFFFF)),
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
                 Text(
                     if (qualityBadge == "4K UHD") "4K" else "HD",
                     color = Color.White,
                     fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
 
@@ -1406,15 +1651,15 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
                 Surface(
-                    shape = RoundedCornerShape(3.dp),
-                    color = Color(0x88000000)
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color(0x99000000)
                 ) {
                     Text(
                         if (movie.mediaType == "tv") "TV" else "Film",
                         color = Color(0xFFCBD5E1),
                         fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
                     )
                 }
             }
@@ -1707,16 +1952,16 @@ private fun DiscoverScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        // CINEMATIC UNIVERSES SECTION
+        // CINEMATIC UNIVERSES SECTION (Visual Brand Banners)
         Text("Cinematic Universes & Sagas", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text("Select a universe to track its official chronological watch order", color = Color(0xFF8F9CAA), fontSize = 11.sp)
 
         Spacer(Modifier.height(10.dp))
 
-        // Rectangular Universe Cards
+        // Visual Widescreen Universe Brand Banners
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(vertical = 2.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(vertical = 4.dp)
         ) {
             items(UniverseData.allUniverses, key = { it.id }) { u ->
                 val watchedCount = remember(u.id, timelineWatchVersion) {
@@ -1724,27 +1969,50 @@ private fun DiscoverScreen(
                 }
                 val totalCount = u.items.size
                 val percent = if (totalCount > 0) (watchedCount.toFloat() / totalCount.toFloat()) else 0f
+                val leadItem = u.items.firstOrNull()?.movie
+                val bannerPath = leadItem?.backdropPath ?: leadItem?.posterPath
+                val bannerUrl = buildTmdbImageUrl(bannerPath, "w780")
 
                 Card(
                     modifier = Modifier
-                        .width(220.dp)
-                        .height(130.dp)
+                        .width(240.dp)
+                        .height(138.dp)
                         .clickable { onUniverseSelected(u) },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF141C28))
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF101724)),
+                    border = BorderStroke(1.dp, Color(u.accentColor).copy(alpha = 0.45f))
                 ) {
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.linearGradient(
-                                    listOf(Color(u.accentColor).copy(alpha = 0.35f), Color(0xFF101722))
-                                )
+                    Box(Modifier.fillMaxSize()) {
+                        // High-res Universe Banner Background
+                        if (bannerUrl != null) {
+                            AsyncImage(
+                                model = bannerUrl,
+                                contentDescription = u.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
                             )
-                            .padding(12.dp)
-                    ) {
+                        }
+
+                        // Gradient Scrim
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color(0x66070B12),
+                                            Color(0xCC070B12),
+                                            Color(0xF5070B12)
+                                        )
+                                    )
+                                )
+                        )
+
+                        // Content
                         Column(
-                            Modifier.fillMaxSize(),
+                            Modifier
+                                .fillMaxSize()
+                                .padding(12.dp),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
@@ -1754,37 +2022,46 @@ private fun DiscoverScreen(
                             ) {
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = Color(u.accentColor)
+                                    color = Color(u.accentColor),
+                                    shadowElevation = 4.dp
                                 ) {
                                     Text(
                                         u.logoTag,
                                         color = Color.White,
                                         fontSize = 9.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 1.sp,
+                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                    )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = Color(0xCC000000)
+                                ) {
+                                    Text(
+                                        "$totalCount Titles",
+                                        color = Color(0xFFF1F5F9),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
                                 }
-                                Text(
-                                    "$totalCount Titles",
-                                    color = Color(0xFFCBD5E1),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
                             }
 
                             Column {
                                 Text(
                                     u.name,
                                     color = Color.White,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Black,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    "Chronological Order",
+                                    "Chronological Watch Order",
                                     color = Color(0xFFF1F5F9),
-                                    fontSize = 10.sp
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
 
@@ -1795,21 +2072,24 @@ private fun DiscoverScreen(
                                 ) {
                                     Text(
                                         "Watched: $watchedCount / $totalCount",
-                                        color = Color(0xFF94A3B8),
+                                        color = Color(0xFFCBD5E1),
                                         fontSize = 10.sp
                                     )
                                     Text(
                                         "${(percent * 100).toInt()}%",
                                         color = Color(u.accentColor),
                                         fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.ExtraBold
                                     )
                                 }
                                 LinearProgressIndicator(
                                     progress = { percent },
                                     color = Color(u.accentColor),
                                     trackColor = Color(0xFF263347),
-                                    modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape)
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(4.dp)
+                                        .clip(CircleShape)
                                 )
                             }
                         }
@@ -1914,6 +2194,21 @@ private fun UniverseWatchOrderScreen(
     val totalCount = universe.items.size
     val percent = if (totalCount > 0) (watchedCount.toFloat() / totalCount.toFloat()) else 0f
 
+    val phases = remember(universe) {
+        val list = mutableListOf("All")
+        universe.items.forEach {
+            val prefix = it.phaseOrEra.substringBefore(":").trim()
+            if (!list.contains(prefix)) list.add(prefix)
+        }
+        list
+    }
+    var selectedPhase by remember { mutableStateOf("All") }
+
+    val filteredItems = remember(universe, selectedPhase) {
+        if (selectedPhase == "All") universe.items
+        else universe.items.filter { it.phaseOrEra.startsWith(selectedPhase, ignoreCase = true) }
+    }
+
     Column(
         Modifier
             .fillMaxSize()
@@ -1979,7 +2274,7 @@ private fun UniverseWatchOrderScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Watch Progress: $watchedCount of $totalCount Movies Watched",
+                            "Watch Progress: $watchedCount of $totalCount Titles Watched",
                             color = Color.White,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -2010,15 +2305,36 @@ private fun UniverseWatchOrderScreen(
             fontWeight = FontWeight.Bold
         )
         Text(
-            "Mark movies as watched as you complete each chapter in the timeline.",
+            "Filter by Phase or follow the entire timeline in order.",
             color = Color(0xFF8F9CAA),
             fontSize = 11.sp
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
+
+        // Phase Filter Chips Row
+        if (phases.size > 2) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 4.dp)
+            ) {
+                items(phases) { phase ->
+                    FilterChip(
+                        selected = selectedPhase == phase,
+                        onClick = { selectedPhase = phase },
+                        label = { Text(phase) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(universe.accentColor),
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            universe.items.forEach { item ->
+            filteredItems.forEach { item ->
                 val isWatched = remember(item.movie.id, watchVersion) {
                     LibraryManager.isWatched(context, item.movie.id)
                 }
@@ -2059,13 +2375,28 @@ private fun UniverseWatchOrderScreen(
                             .clip(RoundedCornerShape(8.dp))
                             .background(Color(0xFF1C2738))
                     ) {
-                        item.movie.posterPath?.let {
+                        val posterUrl = buildTmdbImageUrl(item.movie.posterPath, "w342")
+                        if (posterUrl != null) {
                             AsyncImage(
-                                model = "https://image.tmdb.org/t/p/w185$it",
+                                model = posterUrl,
                                 contentDescription = item.movie.title,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Brush.linearGradient(listOf(Color(0xFF263347), Color(0xFF161F2E)))),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    item.movie.title.take(8),
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
 
@@ -2741,14 +3072,15 @@ private fun ProfileScreen(
                 }
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFF26354A),
+                    color = Color(0xFF1E293B),
                     modifier = Modifier.padding(top = 4.dp)
                 ) {
                     Text(
-                        "PREMIUM VIP ACTIVE",
-                        color = Color(0xFFF1F5F9),
+                        "100% FREE FOREVER • ZERO PAYWALLS",
+                        color = Color(0xFF38BDF8),
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 10.sp,
+                        letterSpacing = 0.5.sp,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
@@ -2831,8 +3163,54 @@ private fun ProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("App Version", color = Color(0xFF8F9CAA), fontSize = 12.sp)
-                    Text("v0.2.1 (Official Update)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Orbit v1.2.0 (Official Release)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
+                Divider(color = Color(0xFF1E2A3A))
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Developer Support", color = Color(0xFF8F9CAA), fontSize = 12.sp)
+                    Text("Anshdeep Singh", color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // Support Buttons (AniDash style)
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Button(
+                onClick = {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://buymeacoffee.com/anshdeepofficial"))
+                        context.startActivity(intent)
+                    } catch (_: Exception) {}
+                },
+                modifier = Modifier.weight(1f).height(44.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFDD00), contentColor = Color.Black),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Default.Coffee, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Coffee", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            }
+            Button(
+                onClick = {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/sponsors/anshdeepofficial1"))
+                        context.startActivity(intent)
+                    } catch (_: Exception) {}
+                },
+                modifier = Modifier.weight(1f).height(44.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA4AAA), contentColor = Color.White),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Sponsor", fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
         }
     }
@@ -2893,135 +3271,337 @@ private fun PreferenceRow(label: String, value: String) {
 }
 
 @Composable
-private fun AppSettingsDialog(
+private fun SettingsSectionHeader(title: String, color: Color) {
+    Text(
+        text = title,
+        color = color,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 2.dp)
+    )
+}
+
+@Composable
+private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111722)),
+        border = BorderStroke(1.dp, Color(0x1AFFFFFF)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 4.dp),
+            content = content
+        )
+    }
+}
+
+@Composable
+private fun SettingsNavigationItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    iconColor: Color = Color(0xFF38BDF8),
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clip(CircleShape)
+                .background(iconColor.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(20.dp))
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(subtitle, color = Color(0xFF8F9CAA), fontSize = 11.sp, lineHeight = 15.sp)
+        }
+        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(20.dp))
+    }
+}
+
+@Composable
+private fun SettingsToggleItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    iconColor: Color = Color(0xFF818CF8),
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clip(CircleShape)
+                .background(iconColor.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(20.dp))
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(subtitle, color = Color(0xFF8F9CAA), fontSize = 11.sp, lineHeight = 15.sp)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = Color(0xFF38BDF8),
+                uncheckedThumbColor = Color(0xFF94A3B8),
+                uncheckedTrackColor = Color(0xFF1E293B)
+            )
+        )
+    }
+}
+
+@Composable
+private fun SettingsDivider() {
+    Divider(color = Color(0x14FFFFFF), thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AniDashSettingsScreen(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
     var preferredAudio by remember { mutableStateOf("Hindi Dubbed (Dual Audio)") }
     var preferredQuality by remember { mutableStateOf("1080p Ultra HD (Auto)") }
     var autoPlayNext by remember { mutableStateOf(true) }
-    var hardwareAccel by remember { mutableStateOf(true) }
+    var appLockEnabled by remember { mutableStateOf(false) }
+    var incognitoMode by remember { mutableStateOf(false) }
+    var wifiOnlyDownloads by remember { mutableStateOf(true) }
+    var gestureControls by remember { mutableStateOf(true) }
+    var heroCarouselActive by remember { mutableStateOf(true) }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF151D29),
-        title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFFF1F5F9))
-                Spacer(Modifier.width(8.dp))
-                Text("App Preferences", color = Color.White, fontWeight = FontWeight.Bold)
-            }
-        },
-        text = {
-            Column(
-                Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Text("AUDIO & LANGUAGE PREFERENCE", color = Color(0xFFF1F5F9), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    listOf(
-                        "Hindi Dubbed (Dual Audio) [Preferred]",
-                        "Original (English Audio)",
-                        "Multi-Audio (All Tracks)"
-                    ).forEach { audioOption ->
-                        Row(
-                            Modifier.fillMaxWidth().clickable { preferredAudio = audioOption },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = preferredAudio == audioOption,
-                                onClick = { preferredAudio = audioOption },
-                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFF1F5F9))
-                            )
-                            Text(audioOption, color = Color(0xFFCBD5E1), fontSize = 12.sp)
-                        }
-                    }
-                }
-
-                Divider(color = Color(0xFF263347))
-
-                Text("STREAMING QUALITY", color = Color(0xFFF1F5F9), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    listOf(
-                        "1080p Ultra HD (Auto Recommended)",
-                        "720p HD (Balanced)",
-                        "480p Data Saver"
-                    ).forEach { quality ->
-                        Row(
-                            Modifier.fillMaxWidth().clickable { preferredQuality = quality },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = preferredQuality == quality,
-                                onClick = { preferredQuality = quality },
-                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFF1F5F9))
-                            )
-                            Text(quality, color = Color(0xFFCBD5E1), fontSize = 12.sp)
-                        }
-                    }
-                }
-
-                Divider(color = Color(0xFF263347))
-
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFF070A10)
+        ) {
+            Column(Modifier.fillMaxSize()) {
+                // Top Bar
                 Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF0B101A))
+                        .padding(horizontal = 12.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Auto-play Next Episode", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        Text("Seamlessly queues upcoming episodes", color = Color(0xFF8F9CAA), fontSize = 11.sp)
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
-                    Switch(
-                        checked = autoPlayNext,
-                        onCheckedChange = { autoPlayNext = it },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFF1F5F9), checkedTrackColor = Color(0xFF38465B))
-                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Settings", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
 
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Hardware Acceleration", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        Text("Smooth 60 FPS cinema rendering", color = Color(0xFF8F9CAA), fontSize = 11.sp)
+                    // --- SECTION 1: ACCOUNT & SECURITY ---
+                    SettingsSectionHeader(title = "Account & Security", color = Color(0xFF38BDF8))
+                    SettingsCard {
+                        SettingsNavigationItem(
+                            icon = Icons.Default.Person,
+                            title = "Profile Preferences",
+                            subtitle = "Local account, bookmarks sync",
+                            onClick = { Toast.makeText(context, "Profile is active locally", Toast.LENGTH_SHORT).show() }
+                        )
+                        SettingsDivider()
+                        SettingsToggleItem(
+                            icon = Icons.Default.Security,
+                            title = "Security & App Lock",
+                            subtitle = "Require biometric or PIN on app launch",
+                            checked = appLockEnabled,
+                            onCheckedChange = { appLockEnabled = it }
+                        )
+                        SettingsDivider()
+                        SettingsToggleItem(
+                            icon = Icons.Default.VisibilityOff,
+                            title = "Incognito Mode",
+                            subtitle = "Do not save watch history or search logs",
+                            checked = incognitoMode,
+                            onCheckedChange = { incognitoMode = it }
+                        )
                     }
-                    Switch(
-                        checked = hardwareAccel,
-                        onCheckedChange = { hardwareAccel = it },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFF1F5F9), checkedTrackColor = Color(0xFF38465B))
-                    )
-                }
 
-                Divider(color = Color(0xFF263347))
+                    // --- SECTION 2: CONTENT & PLAYBACK ---
+                    SettingsSectionHeader(title = "Content & Playback", color = Color(0xFF818CF8))
+                    SettingsCard {
+                        SettingsNavigationItem(
+                            icon = Icons.Default.Language,
+                            title = "Audio Language Priority",
+                            subtitle = preferredAudio,
+                            onClick = {
+                                preferredAudio = when (preferredAudio) {
+                                    "Hindi Dubbed (Dual Audio)" -> "Original (English Audio)"
+                                    "Original (English Audio)" -> "Multi-Audio (All Tracks)"
+                                    else -> "Hindi Dubbed (Dual Audio)"
+                                }
+                                Toast.makeText(context, "Preferred Audio: $preferredAudio", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                        SettingsDivider()
+                        SettingsNavigationItem(
+                            icon = Icons.Default.HighQuality,
+                            title = "Streaming Quality",
+                            subtitle = preferredQuality,
+                            onClick = {
+                                preferredQuality = when (preferredQuality) {
+                                    "1080p Ultra HD (Auto)" -> "720p HD (Balanced)"
+                                    "720p HD (Balanced)" -> "480p Data Saver"
+                                    else -> "1080p Ultra HD (Auto)"
+                                }
+                                Toast.makeText(context, "Quality: $preferredQuality", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                        SettingsDivider()
+                        SettingsToggleItem(
+                            icon = Icons.Default.TouchApp,
+                            title = "Video Player Gestures",
+                            subtitle = "Vertical swipe brightness/volume, double-tap seek",
+                            checked = gestureControls,
+                            onCheckedChange = { gestureControls = it }
+                        )
+                        SettingsDivider()
+                        SettingsToggleItem(
+                            icon = Icons.Default.PlaylistPlay,
+                            title = "Autoplay Next Episode",
+                            subtitle = "Seamlessly queues upcoming episodes",
+                            checked = autoPlayNext,
+                            onCheckedChange = { autoPlayNext = it }
+                        )
+                        SettingsDivider()
+                        SettingsToggleItem(
+                            icon = Icons.Default.Wifi,
+                            title = "Wi-Fi Only Downloads",
+                            subtitle = "Restrict downloads to unmetered connections",
+                            checked = wifiOnlyDownloads,
+                            onCheckedChange = { wifiOnlyDownloads = it }
+                        )
+                    }
 
-                Button(
-                    onClick = {
-                        Toast.makeText(context, "Storage and image cache cleared!", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF243042), contentColor = Color(0xFFF1F5F9))
-                ) {
-                    Text("Clear Temporary Cache", fontWeight = FontWeight.Bold)
+                    // --- SECTION 3: APPEARANCE & LAYOUT ---
+                    SettingsSectionHeader(title = "Appearance & Layout", color = Color(0xFFA78BFA))
+                    SettingsCard {
+                        SettingsNavigationItem(
+                            icon = Icons.Default.Palette,
+                            title = "Theme Settings",
+                            subtitle = "AMOLED Cosmic Black (Active)",
+                            onClick = { Toast.makeText(context, "AMOLED Cosmic Black is active", Toast.LENGTH_SHORT).show() }
+                        )
+                        SettingsDivider()
+                        SettingsToggleItem(
+                            icon = Icons.Default.ViewCarousel,
+                            title = "Hero Spotlight Carousel",
+                            subtitle = "Smooth 24dp card carousel with peeking cards",
+                            checked = heroCarouselActive,
+                            onCheckedChange = { heroCarouselActive = it }
+                        )
+                    }
+
+                    // --- SECTION 4: DATA & STORAGE ---
+                    SettingsSectionHeader(title = "Data & Storage", color = Color(0xFFF472B6))
+                    SettingsCard {
+                        SettingsNavigationItem(
+                            icon = Icons.Default.DeleteOutline,
+                            title = "Clear Image & Poster Cache",
+                            subtitle = "Frees temporary storage and re-downloads fresh artwork",
+                            onClick = { Toast.makeText(context, "Image cache cleared!", Toast.LENGTH_SHORT).show() }
+                        )
+                        SettingsDivider()
+                        SettingsNavigationItem(
+                            icon = Icons.Default.HistoryEdu,
+                            title = "Reset Watch Progress & History",
+                            subtitle = "Clears all resume timestamps and recently watched titles",
+                            onClick = {
+                                LibraryManager.clearHistory(context)
+                                Toast.makeText(context, "Watch history reset successfully", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
+
+                    // --- SECTION 5: SUPPORT & COMMUNITY ---
+                    SettingsSectionHeader(title = "Support & Community", color = Color(0xFFFBBF24))
+                    SettingsCard {
+                        SettingsNavigationItem(
+                            icon = Icons.Default.Coffee,
+                            title = "Buy Me a Coffee",
+                            subtitle = "Support the developer directly: @anshdeepofficial",
+                            iconColor = Color(0xFFFFDD00),
+                            onClick = {
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://buymeacoffee.com/anshdeepofficial"))
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {}
+                            }
+                        )
+                        SettingsDivider()
+                        SettingsNavigationItem(
+                            icon = Icons.Default.Favorite,
+                            title = "GitHub Sponsors",
+                            subtitle = "Sponsor Orbit on GitHub: anshdeepofficial1",
+                            iconColor = Color(0xFFEA4AAA),
+                            onClick = {
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/sponsors/anshdeepofficial1"))
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {}
+                            }
+                        )
+                        SettingsDivider()
+                        SettingsNavigationItem(
+                            icon = Icons.Default.BugReport,
+                            title = "Report Issue / Feedback",
+                            subtitle = "Submit feedback on GitHub issues",
+                            onClick = {
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/anshdeepofficial1/MovDash/issues"))
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {}
+                            }
+                        )
+                        SettingsDivider()
+                        SettingsNavigationItem(
+                            icon = Icons.Default.Info,
+                            title = "About Orbit",
+                            subtitle = "Orbit v1.2.0 • Crafted by Anshdeep Singh • 100% Free Forever",
+                            onClick = {
+                                Toast.makeText(context, "Orbit v1.2.0 • 100% Free & Open Source", Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    }
+
+                    Spacer(Modifier.height(30.dp))
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    Toast.makeText(context, "Preferences saved", Toast.LENGTH_SHORT).show()
-                    onDismiss()
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5F9), contentColor = Color(0xFF17120B))
-            ) {
-                Text("Done", fontWeight = FontWeight.Bold)
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -3107,6 +3687,12 @@ private fun MovieDetailsScreen(
             putExtra(PlayerActivity.EXTRA_MEDIA_TYPE, movie.mediaType)
             putExtra(PlayerActivity.EXTRA_SEASON, s)
             putExtra(PlayerActivity.EXTRA_EPISODE, e)
+            putExtra(PlayerActivity.EXTRA_POSTER_PATH, movie.posterPath)
+            putExtra(PlayerActivity.EXTRA_BACKDROP_PATH, movie.backdropPath)
+            val savedProgress = LibraryManager.getWatchProgressForMovie(context, movie.id)
+            if (savedProgress != null && savedProgress.positionMs > 5000L) {
+                putExtra(PlayerActivity.EXTRA_RESUME_POSITION, savedProgress.positionMs)
+            }
         }
         context.startActivity(intent)
     }

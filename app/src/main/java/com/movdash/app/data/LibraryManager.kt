@@ -12,6 +12,7 @@ object LibraryManager {
     private const val KEY_DOWNLOADS = "downloads"
     private const val KEY_WATCHED_IDS = "watched_timeline_ids"
     private const val KEY_SEARCH_HISTORY = "search_history"
+    private const val KEY_WATCH_PROGRESS = "watch_progress"
     private val gson = Gson()
 
     // WATCHLIST
@@ -208,6 +209,52 @@ object LibraryManager {
     fun clearSearchHistory(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().remove(KEY_SEARCH_HISTORY).apply()
+    }
+
+    // WATCH PROGRESS (AniDash Continue Watching)
+    fun getWatchProgressList(context: Context): List<WatchProgressEntry> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val json = prefs.getString(KEY_WATCH_PROGRESS, null) ?: return emptyList()
+        return try {
+            val type = object : TypeToken<List<WatchProgressEntry>>() {}.type
+            gson.fromJson(json, type) ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveWatchProgress(context: Context, entry: WatchProgressEntry) {
+        val list = getWatchProgressList(context).toMutableList()
+        list.removeAll { it.id == entry.id && it.mediaType == entry.mediaType }
+        list.add(0, entry)
+        if (list.size > 50) {
+            list.subList(50, list.size).clear()
+        }
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_WATCH_PROGRESS, gson.toJson(list)).apply()
+
+        // Also ensure it is present in general history
+        addToHistory(
+            context,
+            Movie(
+                id = entry.id,
+                title = entry.title,
+                posterPath = entry.posterPath,
+                backdropPath = entry.backdropPath,
+                mediaType = entry.mediaType
+            )
+        )
+    }
+
+    fun getWatchProgressForMovie(context: Context, movieId: Int, mediaType: String): WatchProgressEntry? {
+        return getWatchProgressList(context).firstOrNull { it.id == movieId && it.mediaType == mediaType }
+    }
+
+    fun removeWatchProgress(context: Context, movieId: Int, mediaType: String) {
+        val list = getWatchProgressList(context).toMutableList()
+        list.removeAll { it.id == movieId && it.mediaType == mediaType }
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_WATCH_PROGRESS, gson.toJson(list)).apply()
     }
 
     private fun saveList(context: Context, key: String, list: List<Movie>) {

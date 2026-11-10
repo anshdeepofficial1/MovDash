@@ -40,81 +40,232 @@ object UniverseData {
                 accentColor = 0xFFE50914,
                 description = "Follow the exact chronological order of the Marvel Cinematic Universe from Steve Rogers in WWII through the Infinity War and the Multiverse collapse.",
                 items = listOf(
+                    // --- PHASE 1: 1942 - 2012 ---
                     UniverseItem(
                         movie = Movie(1771, "Captain America: The First Avenger", "Steve Rogers volunteers for a top secret research project that turns him into Captain America.", "/vSNxAJTlD0r02V9sPYpqjqDIfj6.jpg", "/pm0RiwNpz93NzrzIXKiFRUVvCY2.jpg", "2011-07-22", 7.0, "movie"),
-                        timelineOrder = 1, releaseYear = 2011, phaseOrEra = "Phase 1: 1942-1945", note = "WWII origins of the First Avenger & Tesseract"
+                        timelineOrder = 1, releaseYear = 2011, phaseOrEra = "Phase 1: 1942-1945", note = "WWII origins of the First Avenger & Tesseract (Space Stone)"
                     ),
                     UniverseItem(
                         movie = Movie(299537, "Captain Marvel", "Carol Danvers becomes one of the universe's most powerful heroes when Earth is caught in a galactic war.", "/AtsgWhDnHTq68L0lLsUrCnM7TDC.jpg", "/w2PMyoyCc2qvKi2rL9AxDiEg3OH.jpg", "2019-03-08", 6.8, "movie"),
-                        timelineOrder = 2, releaseYear = 2019, phaseOrEra = "Phase 3: 1995", note = "Kree-Skrull war & Nick Fury origins"
+                        timelineOrder = 2, releaseYear = 2019, phaseOrEra = "Phase 1: 1995", note = "Kree-Skrull war & Nick Fury's pager origins"
                     ),
                     UniverseItem(
                         movie = Movie(1726, "Iron Man", "After being held captive in an Afghan cave, billionaire engineer Tony Stark creates a unique weaponized suit of armor.", "/78lPtwv72eTNqFW9COBYI0dWDJa.jpg", "/cyecB7godTF6hVRNHv2XzcOFmj9.jpg", "2008-05-02", 7.6, "movie"),
-                        timelineOrder = 3, releaseYear = 2008, phaseOrEra = "Phase 1: 2008", note = "The birth of the MCU and the superhero era"
+                        timelineOrder = 3, releaseYear = 2008, phaseOrEra = "Phase 1: 2008", note = "The birth of the MCU and the superhero era: 'I am Iron Man'"
+                    ),
+                    UniverseItem(
+                        movie = Movie(1724, "The Incredible Hulk", "Scientist Bruce Banner scours the planet for an antidote to the unbridled force of rage inside him.", "/gKzYx79y0AQTL4UAi74874fvVa.jpg", "/kWYfW2Re0rUDE6IHhyvscl1UQgm.jpg", "2008-06-13", 6.2, "movie"),
+                        timelineOrder = 4, releaseYear = 2008, phaseOrEra = "Phase 1: 2008", note = "Super Soldier serum experiment & General Ross"
                     ),
                     UniverseItem(
                         movie = Movie(10138, "Iron Man 2", "Tony Stark faces pressure from the government, press, and public to share his technology with the military.", "/6WBeq40gh5741R2rPxJ5r1tM7d6.jpg", "/7vSA598PG7r65V18zPqL2d6nU9O.jpg", "2010-05-07", 6.8, "movie"),
-                        timelineOrder = 4, releaseYear = 2010, phaseOrEra = "Phase 1: 2010", note = "Introduction of Black Widow & War Machine"
+                        timelineOrder = 5, releaseYear = 2010, phaseOrEra = "Phase 1: 2010", note = "Introduction of Black Widow & War Machine"
                     ),
                     UniverseItem(
                         movie = Movie(10195, "Thor", "The powerful but arrogant god Thor is cast out of Asgard to live amongst humans in Midgard.", "/prSfAi1xGrhLQNxVSUFh61x94QW.jpg", "/cDJ61O1STkQtHJduTWJRZq3AhR.jpg", "2011-05-06", 6.8, "movie"),
-                        timelineOrder = 5, releaseYear = 2011, phaseOrEra = "Phase 1: 2011", note = "Loki, Asgard & the Nine Realms"
+                        timelineOrder = 6, releaseYear = 2011, phaseOrEra = "Phase 1: 2011", note = "Loki, Asgard & Hawkeye's first MCU appearance"
                     ),
                     UniverseItem(
                         movie = Movie(24428, "The Avengers", "Earth's mightiest heroes must come together and learn to fight as a team to stop Loki and his alien army.", "/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg", "/9BBTo63ANSmhC4e6r62OJFuK2GL.jpg", "2012-05-04", 7.7, "movie"),
-                        timelineOrder = 6, releaseYear = 2012, phaseOrEra = "Phase 1: 2012", note = "The Battle of New York: Avengers Assemble"
+                        timelineOrder = 7, releaseYear = 2012, phaseOrEra = "Phase 1: 2012", note = "The Battle of New York: Avengers Assemble & Thanos reveal"
                     ),
+
+                    // --- PHASE 2: 2013 - 2015 ---
                     UniverseItem(
                         movie = Movie(68721, "Iron Man 3", "Tony Stark encounters a formidable enemy called the Mandarin who destroys his personal world.", "/qhPt1GekbTfH9jlWb8iX13M6Z6p.jpg", "/aJctq6wN1kF1g1o3vX3kE7o7v21.jpg", "2013-05-03", 6.9, "movie"),
-                        timelineOrder = 7, releaseYear = 2013, phaseOrEra = "Phase 2: 2012", note = "Tony Stark battles PTSD post-New York"
+                        timelineOrder = 8, releaseYear = 2013, phaseOrEra = "Phase 2: 2012-2013", note = "Tony Stark battles PTSD post-New York & House Party Protocol"
+                    ),
+                    UniverseItem(
+                        movie = Movie(76338, "Thor: The Dark World", "Thor fights to restore order across the cosmos, but an ancient race led by Malekith returns to plunge the universe into darkness.", "/wp6OxE4poJ4G7c0UUh282FkmAcg.jpg", "/3V4kSt8a34GQYHa6j9cuYXMeGDq.jpg", "2013-11-08", 6.5, "movie"),
+                        timelineOrder = 9, releaseYear = 2013, phaseOrEra = "Phase 2: 2013", note = "The Aether (Reality Stone) & The Collector introduction"
                     ),
                     UniverseItem(
                         movie = Movie(100402, "Captain America: The Winter Soldier", "Steve Rogers teams with Black Widow to battle a powerful and shadowy enemy in present-day Washington D.C.", "/tVFRpFw3xTed5nGQqWLyMiZWWIX.jpg", "/7Ky51897O7k0e03K2gX2r6rU9O.jpg", "2014-04-04", 7.7, "movie"),
-                        timelineOrder = 8, releaseYear = 2014, phaseOrEra = "Phase 2: 2014", note = "Fall of S.H.I.E.L.D. & return of Bucky"
+                        timelineOrder = 10, releaseYear = 2014, phaseOrEra = "Phase 2: 2014", note = "Fall of S.H.I.E.L.D., HYDRA infiltrations & return of Bucky"
                     ),
                     UniverseItem(
                         movie = Movie(118340, "Guardians of the Galaxy", "A group of intergalactic criminals must pull together to stop a fanatical warrior with plans to purge the universe.", "/r2J02Z2OpNTctfOSN2Ydgii51I3.jpg", "/uLtViyOAjbvAB46Ws8lZVhY2hpI.jpg", "2014-08-01", 7.9, "movie"),
-                        timelineOrder = 9, releaseYear = 2014, phaseOrEra = "Phase 2: 2014", note = "Cosmic MCU & the Power Stone"
+                        timelineOrder = 11, releaseYear = 2014, phaseOrEra = "Phase 2: 2014", note = "Cosmic MCU, Star-Lord, Rocket, Groot & the Power Stone"
+                    ),
+                    UniverseItem(
+                        movie = Movie(283995, "Guardians of the Galaxy Vol. 2", "The Guardians struggle to keep together as a team while dealing with personal family issues and Ego the Living Planet.", "/y4MBh0EjBlMuOzv9HgODqok5Lqq.jpg", "/tMefBSflR6PGQLv7WvFPpKLZkyk.jpg", "2017-05-05", 7.6, "movie"),
+                        timelineOrder = 12, releaseYear = 2017, phaseOrEra = "Phase 2: 2014", note = "Set 3 months after Vol. 1 • Peter Quill's Celestial lineage"
                     ),
                     UniverseItem(
                         movie = Movie(99861, "Avengers: Age of Ultron", "Tony Stark creates the Ultron Defense Program to protect the world, but the AI turns hostile.", "/4ssDSpqymrOTmtypedef72F67bL.jpg", "/xnqustnn24419scgBAlF9q6hN1k.jpg", "2015-05-01", 7.3, "movie"),
-                        timelineOrder = 10, releaseYear = 2015, phaseOrEra = "Phase 2: 2015", note = "Birth of Vision, Scarlet Witch & Sokovia Accords trigger"
+                        timelineOrder = 13, releaseYear = 2015, phaseOrEra = "Phase 2: 2015", note = "Birth of Vision (Mind Stone), Scarlet Witch & Sokovia Accords trigger"
                     ),
                     UniverseItem(
+                        movie = Movie(102899, "Ant-Man", "Armed with an astonishing suit that shrinks in scale but increases in strength, cat burglar Scott Lang must embrace his inner hero.", "/8c2P6G4A7V4m9L0v7B6d8F7W6Y0.jpg", "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg", "2015-07-17", 7.1, "movie"),
+                        timelineOrder = 14, releaseYear = 2015, phaseOrEra = "Phase 2: 2015", note = "Hank Pym, Pym Particles & first glimpse of Quantum Realm"
+                    ),
+
+                    // --- PHASE 3: 2016 - 2019 ---
+                    UniverseItem(
                         movie = Movie(271110, "Captain America: Civil War", "Political involvement in the Avengers' affairs causes a rift between former allies Captain America and Iron Man.", "/rAGi1FiLWj2iRkzJjZ6A9u6eWbL.jpg", "/kvXLZqY0NduorRp5hX9n7vYFkL6.jpg", "2016-05-06", 7.4, "movie"),
-                        timelineOrder = 11, releaseYear = 2016, phaseOrEra = "Phase 3: 2016", note = "The fracture of Earth's Mightiest Heroes"
+                        timelineOrder = 15, releaseYear = 2016, phaseOrEra = "Phase 3: 2016", note = "The fracture of the Avengers, Spider-Man & Black Panther debuts"
+                    ),
+                    UniverseItem(
+                        movie = Movie(497698, "Black Widow", "Natasha Romanoff confronts the darker parts of her ledger when a dangerous conspiracy arises with ties to her past.", "/qAZ0pzat24kLdO3o8ejmbLxyOac.jpg", "/keG4pH92hp6svjwhKyLRUmPaq05.jpg", "2021-07-09", 7.3, "movie"),
+                        timelineOrder = 16, releaseYear = 2021, phaseOrEra = "Phase 3: 2016", note = "Set immediately post-Civil War: Red Room & Yelena Belova"
                     ),
                     UniverseItem(
                         movie = Movie(284054, "Black Panther", "T'Challa, heir to the hidden kingdom of Wakanda, must lead his people into a new era against a dangerous challenger.", "/uxzzxijgPIY7slzFvMotPv8vlum.jpg", "/b6ZJZHUytAnAOKkd0IOAQDBmJUm.jpg", "2018-02-16", 7.4, "movie"),
-                        timelineOrder = 12, releaseYear = 2018, phaseOrEra = "Phase 3: 2016", note = "Wakanda opens its borders to the world"
+                        timelineOrder = 17, releaseYear = 2018, phaseOrEra = "Phase 3: 2016", note = "Set 1 week post-Civil War • Wakanda opens its borders"
+                    ),
+                    UniverseItem(
+                        movie = Movie(315635, "Spider-Man: Homecoming", "Peter Parker balances his high school life with his responsibilities as the friendly neighborhood Spider-Man under Tony Stark's guidance.", "/c24sv2weTHPsmDa7jEMN0m2P3RT.jpg", "/vc8bCGjdVBDflSzQzTN4W3xM0rP.jpg", "2017-07-07", 7.4, "movie"),
+                        timelineOrder = 18, releaseYear = 2017, phaseOrEra = "Phase 3: 2016", note = "Set 2 months post-Civil War • Vulture & Tony Stark mentorship"
+                    ),
+                    UniverseItem(
+                        movie = Movie(284052, "Doctor Strange", "After his career is destroyed in an accident, a brilliant, arrogant surgeon embarks on a journey of healing and mystic arts.", "/uGBVj3bEbCoZbDjjl9wTxcygko1.jpg", "/aL53Oen9Rgq7hzL05fmgYlT2N2T.jpg", "2016-11-04", 7.4, "movie"),
+                        timelineOrder = 19, releaseYear = 2016, phaseOrEra = "Phase 3: 2016-2017", note = "Master of the Mystic Arts & the Time Stone (Eye of Agamotto)"
                     ),
                     UniverseItem(
                         movie = Movie(284053, "Thor: Ragnarok", "Imprisoned on the planet Sakaar, Thor must race against time to return to Asgard and stop Ragnarök.", "/rzRwTcFvttcN1ZpX2xv4jvoY0w0.jpg", "/kaIfm5ryEOwYg8pahVIq1b09v5l.jpg", "2017-11-03", 7.6, "movie"),
-                        timelineOrder = 13, releaseYear = 2017, phaseOrEra = "Phase 3: 2017", note = "Destruction of Asgard leading directly to Thanos"
+                        timelineOrder = 20, releaseYear = 2017, phaseOrEra = "Phase 3: 2017", note = "Destruction of Asgard, Thor meets Hulk • Leads directly to Thanos"
+                    ),
+                    UniverseItem(
+                        movie = Movie(363088, "Ant-Man and the Wasp", "As Scott Lang balances being both a superhero and a father, Hope van Dyne and Dr. Hank Pym present an urgent new mission.", "/eivQmS3wqz9Q1v8K7d8F7W6Y0A.jpg", "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg", "2018-07-06", 7.0, "movie"),
+                        timelineOrder = 21, releaseYear = 2018, phaseOrEra = "Phase 3: 2018", note = "Quantum Realm rescue • Post-credits scene links to the Snap"
                     ),
                     UniverseItem(
                         movie = Movie(299536, "Avengers: Infinity War", "The Avengers and their allies must be willing to sacrifice all in an attempt to defeat the powerful Thanos before his blitz of devastation.", "/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg", "/mDfJG3LC3Dqb67AZ52xY9h0m61F.jpg", "2018-04-27", 8.3, "movie"),
-                        timelineOrder = 14, releaseYear = 2018, phaseOrEra = "Phase 3: 2018", note = "The Decimation: 50% of all life turned to dust"
+                        timelineOrder = 22, releaseYear = 2018, phaseOrEra = "Phase 3: 2018", note = "The Decimation: 50% of all life turned to dust in the Snap"
                     ),
                     UniverseItem(
                         movie = Movie(299534, "Avengers: Endgame", "After the devastating events of Infinity War, the universe is in ruins. The remaining Avengers assemble to undo Thanos' actions.", "/or06FN3Dka5tukK1e9sl16pB3iy.jpg", "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg", "2019-04-26", 8.3, "movie"),
-                        timelineOrder = 15, releaseYear = 2019, phaseOrEra = "Phase 3: 2023", note = "The Time Heist & Tony Stark's ultimate sacrifice"
+                        timelineOrder = 23, releaseYear = 2019, phaseOrEra = "Phase 3: 2018-2023", note = "Five-Year Time Jump, The Time Heist & Tony Stark's sacrifice"
+                    ),
+
+                    // --- PHASE 4: 2021 - 2022 (THE MULTIVERSE SAGA) ---
+                    UniverseItem(
+                        movie = Movie(84958, "Loki (Season 1)", "The mercurial villain Loki resumes his role as the God of Mischief following the events of Avengers: Endgame at the TVA.", "/kEl2t3OhXc39HGhg97o9ql981qE.jpg", "/7vSA598PG7r65V18zPqL2d6nU9O.jpg", "2021-06-09", 8.2, "tv"),
+                        timelineOrder = 24, releaseYear = 2021, phaseOrEra = "Phase 4: Outside Time", note = "The Sacred Timeline shatters & He Who Remains (Kang) is unleashed"
+                    ),
+                    UniverseItem(
+                        movie = Movie(91363, "What If...? (Season 1)", "Exploring pivotal moments from the Marvel Cinematic Universe and turning them on their head, leading audience into uncharted territory.", "/lB5T5bJz8P7W6Y0A1v4m9L0v7B6.jpg", "/xnqustnn24419scgBAlF9q6hN1k.jpg", "2021-08-11", 7.4, "tv"),
+                        timelineOrder = 25, releaseYear = 2021, phaseOrEra = "Phase 4: Alternate Realities", note = "The Watcher observes alternate multiverse branches & Infinity Ultron"
+                    ),
+                    UniverseItem(
+                        movie = Movie(85271, "WandaVision", "Wanda Maximoff and Vision—two super-powered beings living idealized suburban lives—begin to suspect that everything is not as it seems.", "/glKDvtWY0hp9nxqlvgOu5yljhYP.jpg", "/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg", "2021-01-15", 8.2, "tv"),
+                        timelineOrder = 26, releaseYear = 2021, phaseOrEra = "Phase 4: 2023 (3 weeks post-Endgame)", note = "The Westview Hex, Wanda becomes the Scarlet Witch & the Darkhold"
+                    ),
+                    UniverseItem(
+                        movie = Movie(88396, "The Falcon and the Winter Soldier", "Following the events of Avengers: Endgame, Sam Wilson and Bucky Barnes team up in a global adventure that tests their abilities.", "/6kbAMLteGO8yyewYau6bJ683sw7.jpg", "/56v2KjBlU4XaOv9rVYEQypROD7P.jpg", "2021-03-19", 7.6, "tv"),
+                        timelineOrder = 27, releaseYear = 2021, phaseOrEra = "Phase 4: 2024 (6 months post-Endgame)", note = "Sam Wilson embraces the mantle of Captain America"
+                    ),
+                    UniverseItem(
+                        movie = Movie(566525, "Shang-Chi and the Legend of the Ten Rings", "Shang-Chi must confront the past he thought he left behind when he is drawn into the web of the mysterious Ten Rings organization.", "/1BIoJGKbXjd2JWv8kgIIAcSdXAc.jpg", "/dK12GIdyTW0W4Na02oH19n8F60y.jpg", "2021-09-03", 7.5, "movie"),
+                        timelineOrder = 28, releaseYear = 2021, phaseOrEra = "Phase 4: 2024", note = "Wenwu, Ta Lo mystical realm & the cosmic beacon of the Ten Rings"
+                    ),
+                    UniverseItem(
+                        movie = Movie(524434, "Eternals", "The Eternals, a race of immortal beings with superhuman powers who have secretly lived on Earth for thousands of years, reunite.", "/bcCBq9N1EMo3daNIjWJ1vAeJJUt.jpg", "/c6Splshb8r6vOiUp972W6Y0A1v.jpg", "2021-11-05", 6.9, "movie"),
+                        timelineOrder = 29, releaseYear = 2021, phaseOrEra = "Phase 4: 2024", note = "The Emergence of Tiamut & Celestials Arishem contact"
+                    ),
+                    UniverseItem(
+                        movie = Movie(429617, "Spider-Man: Far From Home", "Peter Parker's relaxing European vacation takes an unexpected turn when Nick Fury shows up to recruit him against elemental creatures.", "/4q2P6G4A7V4m9L0v7B6d8F7W6Y0.jpg", "/ng6SSB3JvuSpCxqvPp5tw4kNhUT.jpg", "2019-07-02", 7.5, "movie"),
+                        timelineOrder = 30, releaseYear = 2019, phaseOrEra = "Phase 4: 2024 (8 months post-Endgame)", note = "Mysterio frames Peter Parker and unmasks his identity to the world"
                     ),
                     UniverseItem(
                         movie = Movie(634649, "Spider-Man: No Way Home", "Peter Parker's identity is revealed, prompting him to ask Doctor Strange for help, tearing open the Multiverse.", "/1g0dhYtq4irTY1GPXvft6k4IRKS.jpg", "/iQFcwSGbZXMkeyKrxbPnwnRo5fl.jpg", "2021-12-17", 8.0, "movie"),
-                        timelineOrder = 16, releaseYear = 2021, phaseOrEra = "Multiverse Saga: 2024", note = "Three generations of Spider-Men unite"
+                        timelineOrder = 31, releaseYear = 2021, phaseOrEra = "Phase 4: 2024 (Immediately post-FFH)", note = "Tobey Maguire, Andrew Garfield & villains from across the Multiverse unite"
+                    ),
+                    UniverseItem(
+                        movie = Movie(453395, "Doctor Strange in the Multiverse of Madness", "Doctor Strange teams up with a mysterious teenage girl from his dreams who can travel across the multiverse to battle multiple threats.", "/9Gtg2DzBhmYamXBS1hKAhiwbBKS.jpg", "/wcKFYgnvdvRCSFtgflYhoTVNJMI.jpg", "2022-05-06", 7.3, "movie"),
+                        timelineOrder = 32, releaseYear = 2022, phaseOrEra = "Phase 4: 2024", note = "America Chavez, Earth-838 Illuminati & the Scarlet Witch's rampaging grief"
+                    ),
+                    UniverseItem(
+                        movie = Movie(88329, "Hawkeye", "Former Avenger Clint Barton has a seemingly simple mission: get back to his family for Christmas. Possible? Maybe with the help of Kate Bishop.", "/pqzjYW77xOVyGlotukrHgCGiZrZ.jpg", "/1R6cvNd3nxPltlC226G2fR8L0m7.jpg", "2021-11-24", 7.9, "tv"),
+                        timelineOrder = 33, releaseYear = 2021, phaseOrEra = "Phase 4: 2024 (Christmas)", note = "Kate Bishop debut & Vincent D'Onofrio's Kingpin enters the MCU"
+                    ),
+                    UniverseItem(
+                        movie = Movie(92749, "Moon Knight", "Steven Grant discovers he has dissociative identity disorder and shares a body with mercenary Marc Spector as Egyptian gods clash.", "/x6FsYvt33846spx7FsR7W6Y0A1v.jpg", "/8rde3xWpZ7qV1aK2Z3e6R7W7Y0.jpg", "2022-03-30", 7.8, "tv"),
+                        timelineOrder = 34, releaseYear = 2022, phaseOrEra = "Phase 4: 2025", note = "Oscar Isaac as Marc Spector, Steven Grant & avatar of Khonshu"
+                    ),
+                    UniverseItem(
+                        movie = Movie(505642, "Black Panther: Wakanda Forever", "Queen Ramonda, Shuri, M'Baku, Okoye and the Dora Milaje fight to protect their nation from intervening world powers in the wake of King T'Challa's death.", "/sv1xJUazXeYqALzczSZ3O6nkH75.jpg", "/xDMIl84Qo5Tsu62c9DGWhmPI67A.jpg", "2022-11-11", 7.1, "movie"),
+                        timelineOrder = 35, releaseYear = 2022, phaseOrEra = "Phase 4: 2025", note = "Namor of Talokan, Ironheart debut & Shuri becomes Black Panther"
+                    ),
+                    UniverseItem(
+                        movie = Movie(92783, "She-Hulk: Attorney at Law", "Jennifer Walters navigates the complicated life of a single, 30-something attorney who also happens to be a green 6-foot-7-inch superpowered hulk.", "/3prl4W8kG5yL3f7s9L6L9H4M1j9.jpg", "/2rmK7mnchsl935x72PmyvpYdiip.jpg", "2022-08-18", 6.3, "tv"),
+                        timelineOrder = 36, releaseYear = 2022, phaseOrEra = "Phase 4: 2025", note = "Fourth-wall breaking, Daredevil romance & K.E.V.I.N. finale"
+                    ),
+                    UniverseItem(
+                        movie = Movie(92782, "Ms. Marvel", "Kamala Khan, a Muslim American teen growing up in Jersey City, is a superhero mega-fan who gains her own cosmic hard-light powers.", "/8X9P6G4A7V4m9L0v7B6d8F7W6Y0.jpg", "/3V4kSt8a34GQYHa6j9cuYXMeGDq.jpg", "2022-06-08", 6.8, "tv"),
+                        timelineOrder = 37, releaseYear = 2022, phaseOrEra = "Phase 4: 2025", note = "Noor dimension bangles, mutant genetics reveal & sets up The Marvels"
+                    ),
+                    UniverseItem(
+                        movie = Movie(616037, "Thor: Love and Thunder", "Thor enlists the help of Valkyrie, Korg and ex-girlfriend Jane Foster, who now wields Mjolnir as the Mighty Thor, to fight Gorr the God Butcher.", "/pIkRyD18kl4F0b68cu7omj9neap.jpg", "/jsoz1AZRoVe3ykSCgWNs5Bhm4q5.jpg", "2022-07-08", 6.4, "movie"),
+                        timelineOrder = 38, releaseYear = 2022, phaseOrEra = "Phase 4: 2025", note = "Gorr the God Butcher, Eternity & Hercules post-credits appearance"
+                    ),
+                    UniverseItem(
+                        movie = Movie(985939, "Werewolf by Night", "On a dark and somber night, a secret cabal of monster hunters emerge from the shadows and gather at the foreboding Bloodstone Temple.", "/jmv7hV1bO9vW9aB7X1d7K2Y0v4.jpg", "/fm6KqXpk3M2HVveHwCrBSSBaO0V.jpg", "2022-10-07", 7.1, "movie"),
+                        timelineOrder = 39, releaseYear = 2022, phaseOrEra = "Phase 4: 2025", note = "Marvel Studios Special Presentation • Jack Russell & Man-Thing"
+                    ),
+                    UniverseItem(
+                        movie = Movie(774752, "The Guardians of the Galaxy Holiday Special", "On a mission to make Christmas unforgettable for Peter Quill, the Guardians head to Earth in search of the perfect present: Kevin Bacon.", "/b16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/uLtViyOAjbvAB46Ws8lZVhY2hpI.jpg", "2022-11-25", 7.3, "movie"),
+                        timelineOrder = 40, releaseYear = 2022, phaseOrEra = "Phase 4: 2025 (Christmas)", note = "Knowhere headquarters & Mantis revealed as Peter Quill's sister"
+                    ),
+
+                    // --- PHASE 5: 2023 - 2025 (THE MULTIVERSE SAGA ESCALATION) ---
+                    UniverseItem(
+                        movie = Movie(640146, "Ant-Man and the Wasp: Quantumania", "Super Heroes Scott Lang and Hope Van Dyne return to continue their adventures as Ant-Man and The Wasp, sucked into the Quantum Realm.", "/qnqGbB22YJ7dSs4o6M7jiTpNxIO.jpg", "/m8JTwpmwA06hU7w0h2Gj17B6d8F.jpg", "2023-02-17", 6.3, "movie"),
+                        timelineOrder = 41, releaseYear = 2023, phaseOrEra = "Phase 5: 2025", note = "Kang the Conqueror in the Quantum Realm & Council of Kangs"
+                    ),
+                    UniverseItem(
+                        movie = Movie(447365, "Guardians of the Galaxy Vol. 3", "Peter Quill rallies his team to defend the universe and one of their own, Rocket, in a mission that could mean the end of the Guardians.", "/r2J02Z2OpNTctfOSN2Ydgii51I3.jpg", "/5YZbUmjbMa3ClvSW1Wj3D6XGolb.jpg", "2023-05-05", 8.0, "movie"),
+                        timelineOrder = 42, releaseYear = 2023, phaseOrEra = "Phase 5: 2026", note = "Rocket Raccoon's tragic backstory, High Evolutionary & Adam Warlock"
+                    ),
+                    UniverseItem(
+                        movie = Movie(114479, "Secret Invasion", "Nick Fury learns of a clandestine invasion of Earth by a faction of shapeshifting Skrulls led by Gravik.", "/fA4c6M0ljvjdRCO9aUq8jYk9yA.jpg", "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg", "2023-06-21", 6.0, "tv"),
+                        timelineOrder = 43, releaseYear = 2023, phaseOrEra = "Phase 5: 2026", note = "Super Skrulls, death of Maria Hill & G'iah absorbs Avengers DNA"
+                    ),
+                    UniverseItem(
+                        movie = Movie(84958, "Loki (Season 2)", "Loki navigates an ever-expanding and increasingly dangerous multiverse in search of Sylvie, Judge Renslayer and Miss Minutes.", "/9m2P6G4A7V4m9L0v7B6d8F7W6Y0.jpg", "/iQFcwSGbZXMkeyKrxbPnwnRo5fl.jpg", "2023-10-05", 8.2, "tv"),
+                        timelineOrder = 44, releaseYear = 2023, phaseOrEra = "Phase 5: Outside Time", note = "Loki becomes the God of Stories, holding the Multiverse Yggdrasil tree"
+                    ),
+                    UniverseItem(
+                        movie = Movie(609681, "The Marvels", "Carol Danvers, Kamala Khan and Monica Rambeau begin swapping places when they use their light-based powers, teaming up to save the universe.", "/9GBhzXMFjgcZ3FdR9w0bQv7B6d8.jpg", "/feSiISwgEpVzR1v0eG7W6Y0A1v.jpg", "2023-11-10", 6.1, "movie"),
+                        timelineOrder = 45, releaseYear = 2023, phaseOrEra = "Phase 5: 2026", note = "Kree Emperor Dar-Benn, Beast (X-Men) cameo in alternate universe"
+                    ),
+                    UniverseItem(
+                        movie = Movie(138502, "Echo", "Maya Lopez is pursued by Wilson Fisk's criminal empire, forcing her to return home to Oklahoma to reconnect with her Native American roots.", "/3x2P6G4A7V4m9L0v7B6d8F7W6Y0.jpg", "/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg", "2024-01-09", 6.8, "tv"),
+                        timelineOrder = 46, releaseYear = 2024, phaseOrEra = "Phase 5: 2026", note = "Kingpin survives and sets his sights on becoming Mayor of New York"
                     ),
                     UniverseItem(
                         movie = Movie(533535, "Deadpool & Wolverine", "A listless Wade Wilson toils away in civilian life before an existential threat forces him to team with a reluctant Wolverine.", "/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg", "/yDHYTjA3R0ne82ismFR4ggIFKz8.jpg", "2024-07-26", 7.7, "movie"),
-                        timelineOrder = 17, releaseYear = 2024, phaseOrEra = "Multiverse Saga: 2024", note = "Mutants officially collide with the MCU"
+                        timelineOrder = 47, releaseYear = 2024, phaseOrEra = "Phase 5: 2024 / Void", note = "TVA Anchor Beings, Cassandra Nova, Blade, Gambit & Mutants enter MCU"
                     ),
                     UniverseItem(
-                        movie = Movie(1003596, "Avengers: Doomsday", "The Avengers assemble once more to face the universe's ultimate threat, Doctor Victor von Doom.", "/s4v0UX1anfXm0UvloLsTTJ4v222.jpg", "/dvBCSrm9Qn3Sg5m9p4h9Rz8l7e.jpg", "2026-12-18", null, "movie"),
-                        timelineOrder = 18, releaseYear = 2026, phaseOrEra = "Phase 6: 2026", note = "Coming Soon • The Return of Robert Downey Jr."
+                        movie = Movie(138501, "Agatha All Along", "A spellbound Agatha Harkness regains freedom thanks to a cynical teen's help and sets off to walk the legendary Witches' Road.", "/7b2P6G4A7V4m9L0v7B6d8F7W6Y0.jpg", "/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg", "2024-09-18", 7.6, "tv"),
+                        timelineOrder = 48, releaseYear = 2024, phaseOrEra = "Phase 5: 2026", note = "Billy Maximoff (Wiccan) identity revealed & Rio Vidal (Lady Death)"
                     ),
                     UniverseItem(
-                        movie = Movie(1003598, "Avengers: Secret Wars", "The multiverse collapses, bringing forth Battleworld where champions clash for reality itself.", "/or06FN3Dka5tukK1e9sl16pB3iy.jpg", "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg", "2027-05-07", null, "movie"),
-                        timelineOrder = 19, releaseYear = 2027, phaseOrEra = "Phase 6: 2027", note = "Coming Soon • Multiverse Saga Finale"
+                        movie = Movie(822119, "Captain America: Brave New World", "Sam Wilson finds himself in the middle of an international incident and must discover the motive behind a nefarious global plot.", "/pzIdUdEMiW99L51oN2w3K7d8F7W.jpg", "/6kdDoTq8Vq3HuQHULzuvPiCJbMI.jpg", "2025-02-14", 7.2, "movie"),
+                        timelineOrder = 49, releaseYear = 2025, phaseOrEra = "Phase 5: 2026", note = "President Thaddeus 'Thunderbolt' Ross transforms into Red Hulk • Adamantium"
+                    ),
+                    UniverseItem(
+                        movie = Movie(970347, "Thunderbolts*", "A team of reformed villains, antiheroes, and outcasts go on black-ops covert missions for the United States government.", "/4y2P6G4A7V4m9L0v7B6d8F7W6Y0.jpg", "/fm6KqXpk3M2HVveHwCrBSSBaO0V.jpg", "2025-05-02", 7.3, "movie"),
+                        timelineOrder = 50, releaseYear = 2025, phaseOrEra = "Phase 5: 2026", note = "Yelena Belova, Bucky Barnes, Red Guardian, US Agent, Ghost & Sentry (Bob)"
+                    ),
+                    UniverseItem(
+                        movie = Movie(202250, "Daredevil: Born Again", "Matt Murdock and Wilson Fisk try to put behind their darker alter-egos to serve the people of New York, but their pasts catch up.", "/5q2P6G4A7V4m9L0v7B6d8F7W6Y0.jpg", "/7Ky51897O7k0e03K2gX2r6rU9O.jpg", "2025-03-04", 8.4, "tv"),
+                        timelineOrder = 51, releaseYear = 2025, phaseOrEra = "Phase 5: 2026", note = "Charlie Cox returns as Daredevil against Mayor Wilson Fisk & Punisher"
+                    ),
+
+                    // --- PHASE 6: 2025 - 2027 (MULTIVERSE SAGA FINALE) ---
+                    UniverseItem(
+                        movie = Movie(77434, "The Fantastic Four: First Steps", "Marvel's First Family—Reed Richards, Sue Storm, Johnny Storm, and Ben Grimm—face cosmic peril from Galactus in a retro-future 1960s Earth.", "/c16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/3V4kSt8a34GQYHa6j9cuYXMeGDq.jpg", "2025-07-25", 7.5, "movie"),
+                        timelineOrder = 52, releaseYear = 2025, phaseOrEra = "Phase 6: 1960s Alternate Earth", note = "Pedro Pascal as Reed Richards • Galactus & Silver Surfer cosmic threat"
+                    ),
+                    UniverseItem(
+                        movie = Movie(1003596, "Avengers: Doomsday", "The Avengers assemble once more to face the universe's ultimate threat, Doctor Victor von Doom, portrayed by Robert Downey Jr.", "/cWXtJhrlruF8CeYuaBGE8vdj3Q9.jpg", "/6KDDoTq8Vq3HuQHULzuvPiCJbMI.jpg", "2026-12-18", null, "movie"),
+                        timelineOrder = 53, releaseYear = 2026, phaseOrEra = "Phase 6: 2026", note = "Robert Downey Jr. returns as Victor Von Doom • Multiverse in peril"
+                    ),
+                    UniverseItem(
+                        movie = Movie(1003598, "Avengers: Secret Wars", "The multiverse collapses, bringing forth Battleworld where champions clash for reality itself in the culmination of the Multiverse Saga.", "/cWXtJhrlruF8CeYuaBGE8vdj3Q9.jpg", "/6KDDoTq8Vq3HuQHULzuvPiCJbMI.jpg", "2027-05-07", null, "movie"),
+                        timelineOrder = 54, releaseYear = 2027, phaseOrEra = "Phase 6: 2027", note = "The Multiverse Saga Finale • Battleworld and total reality collapse"
                     )
                 )
             ),
