@@ -18,7 +18,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.graphicsLayer
@@ -3689,7 +3693,7 @@ private fun MovieDetailsScreen(
             putExtra(PlayerActivity.EXTRA_EPISODE, e)
             putExtra(PlayerActivity.EXTRA_POSTER_PATH, movie.posterPath)
             putExtra(PlayerActivity.EXTRA_BACKDROP_PATH, movie.backdropPath)
-            val savedProgress = LibraryManager.getWatchProgressForMovie(context, movie.id)
+            val savedProgress = LibraryManager.getWatchProgressForMovie(context, movie.id, movie.mediaType)
             if (savedProgress != null && savedProgress.positionMs > 5000L) {
                 putExtra(PlayerActivity.EXTRA_RESUME_POSITION, savedProgress.positionMs)
             }

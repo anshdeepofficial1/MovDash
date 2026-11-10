@@ -246,13 +246,15 @@ object LibraryManager {
         )
     }
 
-    fun getWatchProgressForMovie(context: Context, movieId: Int, mediaType: String): WatchProgressEntry? {
-        return getWatchProgressList(context).firstOrNull { it.id == movieId && it.mediaType == mediaType }
+    fun getWatchProgressForMovie(context: Context, movieId: Int, mediaType: String? = null): WatchProgressEntry? {
+        return getWatchProgressList(context).firstOrNull {
+            it.id == movieId && (mediaType == null || it.mediaType == mediaType)
+        }
     }
 
-    fun removeWatchProgress(context: Context, movieId: Int, mediaType: String) {
+    fun removeWatchProgress(context: Context, movieId: Int, mediaType: String? = null) {
         val list = getWatchProgressList(context).toMutableList()
-        list.removeAll { it.id == movieId && it.mediaType == mediaType }
+        list.removeAll { it.id == movieId && (mediaType == null || it.mediaType == mediaType) }
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putString(KEY_WATCH_PROGRESS, gson.toJson(list)).apply()
     }
