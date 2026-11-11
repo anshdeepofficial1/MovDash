@@ -24,10 +24,10 @@ val localProps = Properties().apply {
     val propsFile = rootProject.file("local.properties")
     if (propsFile.exists()) propsFile.inputStream().use { load(it) }
 }
-val releaseStoreFile = localProps.getProperty("NUVIO_RELEASE_STORE_FILE")?.takeIf { it.isNotBlank() }
-val releaseStorePassword = localProps.getProperty("NUVIO_RELEASE_STORE_PASSWORD")?.takeIf { it.isNotBlank() }
-val releaseKeyAlias = localProps.getProperty("NUVIO_RELEASE_KEY_ALIAS")?.takeIf { it.isNotBlank() }
-val releaseKeyPassword = localProps.getProperty("NUVIO_RELEASE_KEY_PASSWORD")?.takeIf { it.isNotBlank() }
+val releaseStoreFile = localProps.getProperty("NUVIO_RELEASE_STORE_FILE")?.takeIf { it.isNotBlank() } ?: "zylo-release-key.jks"
+val releaseStorePassword = localProps.getProperty("NUVIO_RELEASE_STORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: "zylosecret2026"
+val releaseKeyAlias = localProps.getProperty("NUVIO_RELEASE_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "zylo"
+val releaseKeyPassword = localProps.getProperty("NUVIO_RELEASE_KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: "zylosecret2026"
 val releaseKeystore = releaseStoreFile?.let(rootProject::file)
 fun envOrLocalProperty(key: String): String? =
     providers.environmentVariable(key).orNull?.trim()?.takeIf { it.isNotBlank() }
@@ -56,17 +56,15 @@ android {
 
     signingConfigs {
         create("release") {
-            if (releaseKeystore != null && releaseStorePassword != null && releaseKeyAlias != null && releaseKeyPassword != null) {
-                storeFile = releaseKeystore
-                storePassword = releaseStorePassword
-                keyAlias = releaseKeyAlias
-                keyPassword = releaseKeyPassword
-            }
+            storeFile = releaseKeystore
+            storePassword = releaseStorePassword
+            keyAlias = releaseKeyAlias
+            keyPassword = releaseKeyPassword
         }
     }
 
     defaultConfig {
-        applicationId = "com.orbit.app"
+        applicationId = "com.zylo.app"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = releaseAppVersionCode
@@ -116,7 +114,7 @@ android {
             isEnable = buildsReleaseApks
             reset()
             include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-            isUniversalApk = false
+            isUniversalApk = true
         }
     }
 
@@ -152,8 +150,8 @@ androidComponents {
 }
 
 sentry {
-    includeProguardMapping.set(true)
-    autoUploadProguardMapping.set(sentryMappingUploadEnabled)
+    includeProguardMapping.set(false)
+    autoUploadProguardMapping.set(false)
     uploadNativeSymbols.set(false)
     autoUploadNativeSymbols.set(false)
     includeNativeSources.set(false)

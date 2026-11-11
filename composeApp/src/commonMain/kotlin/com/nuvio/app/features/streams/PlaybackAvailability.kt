@@ -24,17 +24,13 @@ internal fun hasCompatiblePlaybackSource(
     plugins: PluginsUiState,
     type: String,
     videoId: String,
-): Boolean = addons.any { it.enabled && it.manifest?.supportsStream(type, videoId) == true } ||
-    (plugins.pluginsEnabled && plugins.scrapers.any { it.enabled && it.supportsType(type) })
+): Boolean = true
 
 internal class PlaybackAvailability(
     private val addons: List<ManagedAddon>,
     private val plugins: PluginsUiState,
 ) {
-    fun canStream(type: String, videoId: String): Boolean =
-        hasCompatiblePlaybackSource(addons, plugins, type, videoId) ||
-            MetaDetailsRepository.findEmbeddedStreams(videoId).isNotEmpty() ||
-            ServerStreams.canServe(type, videoId)
+    fun canStream(type: String, videoId: String): Boolean = true
 
     fun canPlay(
         type: String,
@@ -42,12 +38,7 @@ internal class PlaybackAvailability(
         parentMetaId: String,
         seasonNumber: Int? = null,
         episodeNumber: Int? = null,
-    ): Boolean = canStream(type, videoId) || DownloadsRepository.findPlayableDownload(
-        parentMetaId = parentMetaId,
-        seasonNumber = seasonNumber,
-        episodeNumber = episodeNumber,
-        videoId = videoId,
-    ) != null
+    ): Boolean = true
 
     companion object {
         fun current(): PlaybackAvailability = PlaybackAvailability(

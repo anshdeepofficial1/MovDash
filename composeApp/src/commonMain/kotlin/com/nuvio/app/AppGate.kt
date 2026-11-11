@@ -83,7 +83,7 @@ internal fun AppGate(
             useNativeTabBar = useNativeTabBar,
             useTabletFloatingTabBar = useTabletFloatingTabBar,
             ownsAppRuntime = ownsAppRuntime,
-            showLaunchOverlay = appGateController == null,
+            showLaunchOverlay = false,
             onNavigate = onNavigate,
             onGoBack = onGoBack,
             onReplace = onReplace,
@@ -382,10 +382,7 @@ internal fun AppGate(
         MutableTransitionState(profileOverlayVisible)
     }
     profileOverlayState.targetState = profileOverlayVisible
-    val launchOverlayVisible =
-        !renderMainContent &&
-            gateScreen == AppGateScreen.Main.name &&
-            !externalMainContentReady
+    val launchOverlayVisible = false
     val launchOverlayState = remember {
         MutableTransitionState(launchOverlayVisible)
     }
@@ -421,8 +418,7 @@ internal fun AppGate(
             targetState = gateScreen,
             label = "app_gate",
             transitionSpec = {
-                (fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.94f))
-                    .togetherWith(fadeOut(tween(250)))
+                fadeIn(tween(300)).togetherWith(fadeOut(tween(200)))
             },
         ) { currentGate ->
             when (currentGate) {
@@ -471,7 +467,7 @@ internal fun AppGate(
                             useNativeTabBar = useNativeTabBar,
                             useTabletFloatingTabBar = useTabletFloatingTabBar,
                             ownsAppRuntime = ownsAppRuntime,
-                            showLaunchOverlay = !profileSelectionLoading,
+                            showLaunchOverlay = false,
                             onNavigate = onNavigate,
                             onGoBack = onGoBack,
                             onReplace = onReplace,

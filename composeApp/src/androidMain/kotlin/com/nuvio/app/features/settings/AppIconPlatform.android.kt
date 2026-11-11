@@ -14,6 +14,7 @@ internal actual object AppIconPlatform {
     }
 
     private var context: Context? = null
+    val appContext: Context? get() = context
 
     actual fun loadSelectedIconKey(): String? =
         context?.getSharedPreferences("app_icon_settings", Context.MODE_PRIVATE)

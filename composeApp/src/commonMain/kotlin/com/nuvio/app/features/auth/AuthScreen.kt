@@ -37,6 +37,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -193,6 +194,7 @@ fun AuthScreen(
     val serverConnectionState by ServerConnectionController.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
+    var showWelcome by rememberSaveable { mutableStateOf(true) }
     var isSignUp by rememberSaveable { mutableStateOf(false) }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -276,7 +278,24 @@ fun AuthScreen(
                     .fillMaxSize()
                     .authGradientBackground(largeScreen = largeScreen),
             ) {
-                if (largeScreen) {
+                if (showWelcome) {
+                    ZyloWelcomeLayout(
+                        onSignInClick = {
+                            showWelcome = false
+                            isSignUp = false
+                        },
+                        onSignUpClick = {
+                            showWelcome = false
+                            isSignUp = true
+                        },
+                        onContinueAsGuest = {
+                            focusManager.clearFocus(force = true)
+                            DeviceLinkAuthRepository.cancel()
+                            AuthRepository.signInAnonymously()
+                        },
+                        statusBarTop = statusBarTop,
+                    )
+                } else if (largeScreen) {
                     val largeScale = largeAuthScale(screenWidth)
                     val formPaneWidth = (screenWidth * 0.30f).coerceIn(460.dp * largeScale, 720.dp * largeScale)
                     val brandHorizontalPadding = (screenWidth * 0.055f).coerceIn(56.dp * largeScale, 128.dp * largeScale)
@@ -316,6 +335,7 @@ fun AuthScreen(
                         },
                         onStartDeviceLink = ::startDeviceLink,
                         onCancelDeviceLink = DeviceLinkAuthRepository::cancel,
+                        onBackToWelcome = { showWelcome = true },
                         onEmailBoundsChange = { emailFieldBounds = it },
                         onPasswordBoundsChange = { passwordFieldBounds = it },
                     )
@@ -348,6 +368,7 @@ fun AuthScreen(
                         },
                         onStartDeviceLink = ::startDeviceLink,
                         onCancelDeviceLink = DeviceLinkAuthRepository::cancel,
+                        onBackToWelcome = { showWelcome = true },
                         onEmailBoundsChange = { emailFieldBounds = it },
                         onPasswordBoundsChange = { passwordFieldBounds = it },
                     )
@@ -417,6 +438,209 @@ fun AuthScreen(
 }
 
 @Composable
+private fun ZyloWelcomeLayout(
+    onSignInClick: () -> Unit,
+    onSignUpClick: () -> Unit,
+    onContinueAsGuest: () -> Unit,
+    statusBarTop: Dp,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(
+                start = 28.dp,
+                top = statusBarTop + 36.dp,
+                end = 28.dp,
+                bottom = 36.dp,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(
+            modifier = Modifier
+                .widthIn(max = 380.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            AppBrandWordmark(
+                contentDescription = "ZYLO",
+                modifier = Modifier
+                    .fillMaxWidth(0.55f)
+                    .height(60.dp),
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "Stream Without Limits",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = AuthTextPrimary,
+                    textAlign = TextAlign.Center,
+                ),
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Movies, TV Series & Cinematic Universes in Ultra HD",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 14.sp,
+                    color = AuthTextSecondary,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp,
+                ),
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Color.White.copy(alpha = 0.04f),
+                        RoundedCornerShape(18.dp),
+                    )
+                    .border(
+                        1.dp,
+                        Color.White.copy(alpha = 0.08f),
+                        RoundedCornerShape(18.dp),
+                    )
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                WelcomeFeatureRow(
+                    title = "Ultra HD 4K & 1080p",
+                    subtitle = "Direct high-speed streaming without lag",
+                )
+                WelcomeFeatureRow(
+                    title = "Multi-Audio & Dubbed",
+                    subtitle = "Hindi, English, Regional, and Dual Audio",
+                )
+                WelcomeFeatureRow(
+                    title = "Cinematic Universes",
+                    subtitle = "Marvel, DC, Star Wars, YRF Spy, Cop Universe",
+                )
+                WelcomeFeatureRow(
+                    title = "100% Ad-Free Experience",
+                    subtitle = "Zero ads, zero interruptions, pure streaming",
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Column(
+            modifier = Modifier
+                .widthIn(max = 380.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Button(
+                onClick = onSignInClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(26.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color.Black,
+                ),
+            ) {
+                Text(
+                    text = "Sign In",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                )
+            }
+
+            Button(
+                onClick = onSignUpClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(26.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White.copy(alpha = 0.08f),
+                    contentColor = Color.White,
+                ),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+            ) {
+                Text(
+                    text = "Create Account",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp,
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .clickable(onClick = onContinueAsGuest)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            ) {
+                Text(
+                    text = "Continue as Guest",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = AuthTextSecondary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WelcomeFeatureRow(
+    title: String,
+    subtitle: String,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.PlayArrow,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = AuthTextPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                ),
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = AuthTextSecondary,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                ),
+            )
+        }
+    }
+}
+
+@Composable
 private fun AuthMobileLayout(
     isSignUp: Boolean,
     email: String,
@@ -435,6 +659,7 @@ private fun AuthMobileLayout(
     onContinueWithoutAccount: () -> Unit,
     onStartDeviceLink: () -> Unit,
     onCancelDeviceLink: () -> Unit,
+    onBackToWelcome: (() -> Unit)? = null,
     onEmailBoundsChange: (Rect) -> Unit,
     onPasswordBoundsChange: (Rect) -> Unit,
 ) {
@@ -444,7 +669,7 @@ private fun AuthMobileLayout(
             .verticalScroll(rememberScrollState())
             .padding(
                 start = 30.dp,
-                top = statusBarTop + 48.dp,
+                top = statusBarTop + 24.dp,
                 end = 30.dp,
                 bottom = 40.dp,
             ),
@@ -456,6 +681,30 @@ private fun AuthMobileLayout(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            if (onBackToWelcome != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.Start,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(onClick = onBackToWelcome)
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
+                    ) {
+                        Text(
+                            text = "← Back",
+                            color = AuthTextSecondary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            }
+
             AuthBrandLockup(logoHeight = 38.dp)
 
             Spacer(modifier = Modifier.height(64.dp))
@@ -527,6 +776,7 @@ private fun AuthLargeLayout(
     onContinueWithoutAccount: () -> Unit,
     onStartDeviceLink: () -> Unit,
     onCancelDeviceLink: () -> Unit,
+    onBackToWelcome: (() -> Unit)? = null,
     onEmailBoundsChange: (Rect) -> Unit,
     onPasswordBoundsChange: (Rect) -> Unit,
 ) {
@@ -589,6 +839,23 @@ private fun AuthLargeLayout(
                     .fillMaxWidth()
                     .padding(horizontal = formHorizontalPadding),
             ) {
+                if (onBackToWelcome != null) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(onClick = onBackToWelcome)
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
+                    ) {
+                        Text(
+                            text = "← Back",
+                            color = AuthTextSecondary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
                 AuthHeading(
                     isSignUp = isSignUp,
                     headingStyle = MaterialTheme.typography.headlineLarge.copy(

@@ -269,16 +269,15 @@ object PlayerStreamsRepository {
                 )
             }
 
-        if (streamAddons.isEmpty() && pluginProviderGroups.isEmpty() && serverSources.isEmpty()) {
-            stateFlow.value = StreamsUiState(
-                isAnyLoading = false,
-                emptyStateReason = com.nuvio.app.features.streams.StreamsEmptyStateReason.NoCompatibleAddons,
-            )
-            return
-        }
+        val zyloDirectPlaceholder = AddonStreamGroup(
+            addonName = "ZYLO Direct",
+            addonId = "zylo_direct",
+            streams = emptyList(),
+            isLoading = true,
+        )
 
-        val installedAddonOrder = streamAddons.map { it.addonName }
-        val initialGroups = StreamAutoPlaySelector.orderAddonStreams(streamAddons.map { addon ->
+        val installedAddonOrder = listOf("ZYLO Direct") + streamAddons.map { it.addonName }
+        val initialGroups = listOf(zyloDirectPlaceholder) + StreamAutoPlaySelector.orderAddonStreams(streamAddons.map { addon ->
             AddonStreamGroup(
                 addonName = addon.addonName,
                 addonId = addon.addonId,
@@ -307,9 +306,19 @@ object PlayerStreamsRepository {
                 .associate { it.addonId to it.scrapers.size }
                 .toMutableMap()
             val pluginFirstErrorByAddonId = mutableMapOf<String, String>()
-            val totalTasks = streamAddons.size + pluginProviderGroups.sumOf { it.scrapers.size } + serverSources.size
+            val totalTasks = streamAddons.size + pluginProviderGroups.sumOf { it.scrapers.size } + serverSources.size + 1
             val completions = Channel<StreamLoadCompletion>(capacity = Channel.BUFFERED)
             val debridAvailabilityJobs = mutableListOf<Job>()
+
+            launch {
+                val directGroup = com.nuvio.app.features.streams.ZyloStreams.resolveDirectStreams(
+                    type = type,
+                    videoId = videoId,
+                    season = season,
+                    episode = episode,
+                )
+                completions.send(StreamLoadCompletion.Addon(directGroup))
+            }
 
             fun publishCompletion(completion: StreamLoadCompletion) {
                 if (completions.trySend(completion).isFailure) {
@@ -379,11 +388,22 @@ object PlayerStreamsRepository {
 
             streamAddons.forEach { addon ->
                 launch {
+                    val meta = MetaDetailsRepository.peek(type = type, id = videoId.substringBefore(":"))
+                    val imdbId = meta?.imdbId
+                    val effectiveVideoId = if (videoId.startsWith("tt", ignoreCase = true)) {
+                        videoId
+                    } else if (imdbId != null) {
+                        if (season != null && episode != null) "$imdbId:$season:$episode"
+                        else imdbId
+                    } else {
+                        videoId
+                    }
+
                     val url = buildAddonResourceUrl(
                         manifestUrl = addon.manifest.transportUrl,
                         resource = "stream",
                         type = type,
-                        id = videoId,
+                        id = effectiveVideoId,
                     )
 
                     val displayName = addon.addonName

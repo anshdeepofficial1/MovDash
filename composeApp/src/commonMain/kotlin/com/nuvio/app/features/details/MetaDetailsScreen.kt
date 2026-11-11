@@ -816,8 +816,15 @@ fun MetaDetailsScreen(
                 val playText = stringResource(Res.string.action_play)
                 val resumeText = stringResource(Res.string.action_resume)
                 val chooseEpisodesText = stringResource(Res.string.shuffle_change_selection)
-                val playButtonLabel = remember(movieProgress, seriesAction, meta.type, hasEpisodes, playText, resumeText, shufflePoolEmpty, chooseEpisodesText) {
+                val isAnime = remember(meta) {
+                    meta.genres.any { it.contains("animation", ignoreCase = true) || it.contains("anime", ignoreCase = true) } &&
+                        (meta.country?.contains("Japan", ignoreCase = true) == true ||
+                         meta.language?.equals("ja", ignoreCase = true) == true ||
+                         meta.type.equals("anime", ignoreCase = true))
+                }
+                val playButtonLabel = remember(isAnime, movieProgress, seriesAction, meta.type, hasEpisodes, playText, resumeText, shufflePoolEmpty, chooseEpisodesText) {
                     when {
+                        isAnime -> "Play on AniDash"
                         shufflePoolEmpty -> chooseEpisodesText
                         (meta.type == "series" || hasEpisodes) && seriesAction != null ->
                             seriesAction.label
@@ -827,7 +834,9 @@ fun MetaDetailsScreen(
                     }
                 }
                 val onPrimaryPlayClick: () -> Unit = {
-                    when {
+                    if (isAnime) {
+                        AniDashLauncher.launchAniDash(meta.name, meta.id)
+                    } else when {
                         shufflePoolEmpty -> showShuffle = true
                         (meta.type == "series" || hasEpisodes) && seriesAction != null -> {
                             onPlay?.invoke(

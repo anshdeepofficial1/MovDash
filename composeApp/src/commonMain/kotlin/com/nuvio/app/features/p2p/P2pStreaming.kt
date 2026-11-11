@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 data class P2pSettingsUiState(
-    val p2pEnabled: Boolean = false,
+    val p2pEnabled: Boolean = true,
     val enableUpload: Boolean = true,
     val hideTorrentStats: Boolean = false,
     val torrentProfile: P2pTorrentProfile = P2pTorrentProfile.BALANCED,
@@ -47,7 +47,7 @@ object P2pSettingsRepository {
         get() = AppFeaturePolicy.p2pEnabled
 
     private var hasLoaded = false
-    private var p2pEnabled = false
+    private var p2pEnabled = true
     private var enableUpload = true
     private var hideTorrentStats = false
     private var torrentProfile = P2pTorrentProfile.BALANCED
@@ -114,7 +114,7 @@ object P2pSettingsRepository {
 
     private fun loadFromDisk() {
         hasLoaded = true
-        p2pEnabled = P2pSettingsStorage.loadP2pEnabled() ?: false
+        p2pEnabled = P2pSettingsStorage.loadP2pEnabled() ?: true
         enableUpload = P2pSettingsStorage.loadEnableUpload() ?: true
         hideTorrentStats = P2pSettingsStorage.loadHideTorrentStats() ?: false
         torrentProfile = P2pSettingsStorage.loadTorrentProfile()

@@ -24,6 +24,10 @@ internal enum class AppIconOption(
         key = "copper",
         platformName = "AppIconCopper",
     ),
+    MAGENTA_PURPLE(
+        key = "magenta_purple",
+        platformName = "AppIconMagentaPurple",
+    ),
     GRAPHITE(
         key = "graphite",
         platformName = "AppIconGraphite",

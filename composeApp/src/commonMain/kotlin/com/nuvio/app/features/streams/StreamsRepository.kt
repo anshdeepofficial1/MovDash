@@ -203,19 +203,16 @@ object StreamsRepository {
 
         log.d { "Found ${streamAddons.size} addons for stream type=$type id=$videoId" }
 
-        if (streamAddons.isEmpty() && pluginProviderGroups.isEmpty() && serverSources.isEmpty()) {
-            _uiState.value = StreamsUiState(
-                requestToken = requestToken,
-                isAnyLoading = false,
-                emptyStateReason = StreamsEmptyStateReason.NoCompatibleAddons,
-                autoPlayDecided = true,
-            )
-            return
-        }
+        val zyloDirectPlaceholder = AddonStreamGroup(
+            addonName = "ZYLO Direct",
+            addonId = "zylo_direct",
+            streams = emptyList(),
+            isLoading = true,
+        )
 
         // Initialise loading placeholders
-        val installedAddonOrder = streamAddons.map { it.addonName }
-        val initialGroups = StreamAutoPlaySelector.orderAddonStreams(streamAddons.map { addon ->
+        val installedAddonOrder = listOf("ZYLO Direct") + streamAddons.map { it.addonName }
+        val initialGroups = listOf(zyloDirectPlaceholder) + StreamAutoPlaySelector.orderAddonStreams(streamAddons.map { addon ->
             AddonStreamGroup(
                 addonName = addon.addonName,
                 addonId = addon.addonId,
@@ -250,7 +247,18 @@ object StreamsRepository {
             val pluginFirstErrorByAddonId = mutableMapOf<String, String>()
             val totalTasks = streamAddons.size +
                 pluginProviderGroups.sumOf { it.scrapers.size } +
-                serverSources.size
+                serverSources.size + 1
+
+            launch {
+                val directGroup = ZyloStreams.resolveDirectStreams(
+                    type = type,
+                    videoId = videoId,
+                    parentMetaId = parentMetaId,
+                    season = season,
+                    episode = episode,
+                )
+                completions.send(StreamLoadCompletion.Addon(directGroup))
+            }
 
             val installedAddonNames = installedAddonOrder.toSet()
             val installedAddonIds = streamAddons.map { it.addonId }.toSet()
@@ -463,11 +471,22 @@ object StreamsRepository {
 
             streamAddons.forEach { addon ->
                 launch {
+                    val meta = MetaDetailsRepository.peek(type = type, id = parentMetaId ?: videoId.substringBefore(":"))
+                    val imdbId = meta?.imdbId
+                    val effectiveVideoId = if (videoId.startsWith("tt", ignoreCase = true)) {
+                        videoId
+                    } else if (imdbId != null) {
+                        if (season != null && episode != null) "$imdbId:$season:$episode"
+                        else imdbId
+                    } else {
+                        videoId
+                    }
+
                     val url = buildAddonResourceUrl(
                         manifestUrl = addon.manifest.transportUrl,
                         resource = "stream",
                         type = type,
-                        id = videoId,
+                        id = effectiveVideoId,
                     )
                     log.d { "Fetching streams from: $url" }
 

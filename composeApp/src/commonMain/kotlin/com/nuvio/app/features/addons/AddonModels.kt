@@ -29,7 +29,7 @@ fun AddonManifest.supportsResource(name: String, type: String, id: String): Bool
     resources.any { resource ->
         resource.name == name &&
             resource.types.contains(type) &&
-            (resource.idPrefixes.isEmpty() || resource.idPrefixes.any { id.startsWith(it) })
+            (resource.idPrefixes.isEmpty() || resource.idPrefixes.any { id.startsWith(it) || (it == "tt" && (id.startsWith("tmdb:") || id.all(Char::isDigit))) })
     }
 
 data class AddonCatalog(

@@ -26,6 +26,10 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo_copper</item>
     </style>
 
+    <style name="Theme.Nuvio.Splash.MagentaPurple" parent="@style/Theme.Nuvio.Splash">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo_magenta_purple</item>
+    </style>
+
     <style name="Theme.Nuvio.Splash.Graphite" parent="@style/Theme.Nuvio.Splash">
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo_graphite</item>
     </style>

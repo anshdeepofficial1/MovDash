@@ -12,6 +12,7 @@ internal val AppIconOption.labelResource: StringResource
         AppIconOption.EMERALD -> Res.string.settings_appearance_app_icon_emerald
         AppIconOption.ROSE_GOLD -> Res.string.settings_appearance_app_icon_rose_gold
         AppIconOption.COPPER -> Res.string.settings_appearance_app_icon_copper
+        AppIconOption.MAGENTA_PURPLE -> Res.string.settings_appearance_app_icon_magenta_purple
         AppIconOption.GRAPHITE -> Res.string.settings_appearance_app_icon_graphite
     }
 
@@ -22,6 +23,7 @@ internal val AppIconOption.previewResource: DrawableResource
         AppIconOption.EMERALD -> Res.drawable.app_icon_emerald
         AppIconOption.ROSE_GOLD -> Res.drawable.app_icon_rose_gold
         AppIconOption.COPPER -> Res.drawable.app_icon_copper
+        AppIconOption.MAGENTA_PURPLE -> Res.drawable.app_icon_magenta_purple
         AppIconOption.GRAPHITE -> Res.drawable.app_icon_graphite
     }
 
@@ -32,6 +34,7 @@ internal val AppIconOption.wordmarkResource: DrawableResource
         AppIconOption.EMERALD -> Res.drawable.app_logo_wordmark_emerald
         AppIconOption.ROSE_GOLD -> Res.drawable.app_logo_wordmark_rose_gold
         AppIconOption.COPPER -> Res.drawable.app_logo_wordmark_copper
+        AppIconOption.MAGENTA_PURPLE -> Res.drawable.app_logo_wordmark_magenta_purple
         AppIconOption.GRAPHITE -> Res.drawable.app_logo_wordmark_graphite
     }
 
