@@ -1,9 +1,32 @@
+rootProject.name = "Nuvio"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 pluginManagement {
-    repositories { google(); mavenCentral(); gradlePluginPortal() }
+    repositories {
+        google {
+            mavenContent {
+                includeGroupAndSubgroups("androidx")
+                includeGroupAndSubgroups("com.android")
+                includeGroupAndSubgroups("com.google")
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
 }
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories { google(); mavenCentral() }
+    repositories {
+        google {
+            mavenContent {
+                includeGroupAndSubgroups("androidx")
+                includeGroupAndSubgroups("com.android")
+                includeGroupAndSubgroups("com.google")
+            }
+        }
+        mavenCentral()
+    }
 }
-rootProject.name = "MovDash"
-include(":app")
+
+include(":composeApp")
+include(":androidApp")

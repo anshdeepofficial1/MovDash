@@ -1,4 +1,11 @@
 plugins {
-    id("com.android.application") version "9.3.1" apply false
-    id("org.jetbrains.kotlin.plugin.compose") version "2.4.21" apply false
+    // this is necessary to avoid the plugins to be loaded multiple times
+    // in each subproject's classloader
+    alias(libs.plugins.androidApplication) apply false
+    alias(libs.plugins.androidLibrary) apply false
+    alias(libs.plugins.androidKotlinMultiplatformLibrary) apply false
+    alias(libs.plugins.composeMultiplatform) apply false
+    alias(libs.plugins.composeCompiler) apply false
+    alias(libs.plugins.kotlinMultiplatform) apply false
+    alias(libs.plugins.sentry.android.gradle) apply false
 }
