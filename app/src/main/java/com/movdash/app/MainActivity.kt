@@ -81,6 +81,7 @@ import com.movdash.app.data.DownloadedItem
 
 import com.movdash.app.player.PlayerActivity
 import com.movdash.app.ui.onboarding.OnboardingScreen
+import com.movdash.app.ui.auth.AuthSetupScreen
 import com.movdash.app.ui.theme.MovDashTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -283,11 +284,34 @@ private fun MovDashApp() {
         return
     }
 
+    var showAuthSetup by remember { mutableStateOf(false) }
+
     if (showOnboarding) {
         OnboardingScreen(
             onFinished = {
-                prefs.edit().putBoolean("has_completed_onboarding", true).apply()
                 showOnboarding = false
+                showAuthSetup = true
+            }
+        )
+        return
+    }
+
+    if (showAuthSetup) {
+        AuthSetupScreen(
+            onFinished = { name, email, isVerified, pass, genres, audio ->
+                LibraryManager.setUserName(context, name)
+                LibraryManager.setUserEmail(context, email)
+                LibraryManager.setUserVerified(context, isVerified)
+                if (pass != null) LibraryManager.setUserPassword(context, pass)
+                LibraryManager.setUserFavoriteGenres(context, genres)
+                LibraryManager.setPreferredAudio(context, audio)
+                prefs.edit().putBoolean("has_completed_onboarding", true).apply()
+                showAuthSetup = false
+                refreshLibrary()
+            },
+            onSkip = {
+                prefs.edit().putBoolean("has_completed_onboarding", true).apply()
+                showAuthSetup = false
             }
         )
         return
@@ -561,7 +585,8 @@ private fun MovDashApp() {
                         activeUniverse = activeUniverseByDiscover,
                         onUniverseSelected = { activeUniverseByDiscover = it },
                         searchGenre = searchGenre,
-                        onGenreSelected = { searchGenre = it }
+                        onGenreSelected = { searchGenre = it },
+                        onOpenSection = { section -> activeSection = section }
                     )
                     AppTab.LIBRARY -> LibraryScreen(
                         watchlist = watchlist,
@@ -863,7 +888,7 @@ private fun SectionScreen(
                 contentPadding = PaddingValues(vertical = 12.dp)
             ) {
                 items(section.items, key = { "section-${it.id}" }) { item ->
-                    MoviePosterCard(item) { onMovieClick(item) }
+                    MoviePosterCard(item, modifier = Modifier.fillMaxWidth()) { onMovieClick(item) }
                 }
             }
         }
@@ -952,8 +977,29 @@ private fun HomeScreen(
                                 .background(Color(0xFF131A26))
                         ) {
                             val resolved = remember(entry.id) { PreloadedCatalog.findMovie(entry.id) }
-                            val bgPath = entry.backdropPath ?: entry.posterPath ?: resolved?.backdropPath ?: resolved?.posterPath
+                            val bgPath = entry.backdropPath?.takeIf { it.isNotBlank() }
+                                ?: entry.posterPath?.takeIf { it.isNotBlank() }
+                                ?: resolved?.backdropPath?.takeIf { it.isNotBlank() }
+                                ?: resolved?.posterPath?.takeIf { it.isNotBlank() }
                             val bg = buildTmdbImageUrl(bgPath, "w500")
+
+                            // Always render styled dark gradient with title behind async image
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(Brush.linearGradient(listOf(Color(0xFF1E293B), Color(0xFF0F172A)))),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    entry.title.take(16),
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(6.dp)
+                                )
+                            }
+
                             if (bg != null) {
                                 AsyncImage(
                                     model = bg,
@@ -961,20 +1007,6 @@ private fun HomeScreen(
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
                                 )
-                            } else {
-                                Box(
-                                    Modifier
-                                        .fillMaxSize()
-                                        .background(Brush.linearGradient(listOf(Color(0xFF1E293B), Color(0xFF0F172A)))),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        entry.title.take(14),
-                                        color = Color(0xFF94A3B8),
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
                             }
 
                             // Dark overlay
@@ -1059,6 +1091,38 @@ private fun HomeScreen(
                             maxLines = 1
                         )
                     }
+                }
+            }
+        }
+
+        // Personalized Feed based on User Preferences
+        val userFavoriteGenres = remember { LibraryManager.getUserFavoriteGenres(context) }
+        val preferredGenre = userFavoriteGenres.firstOrNull() ?: "Action"
+        val personalizedList = remember(preferredGenre, movies) {
+            PreloadedCatalog.getMoviesForGenre(preferredGenre).ifEmpty { movies.take(10) }
+        }
+
+        if (personalizedList.isNotEmpty()) {
+            Spacer(Modifier.height(14.dp))
+            SectionTitle(
+                title = "⚡ Tailored For Your Taste ($preferredGenre)",
+                action = "See All",
+                onClick = {
+                    onOpenSection(
+                        SectionInfo(
+                            title = "$preferredGenre Recommendations",
+                            subtitle = "Curated based on your Orbit preferences",
+                            items = personalizedList
+                        )
+                    )
+                }
+            )
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(personalizedList.take(10), key = { "taste-${it.id}" }) { movie ->
+                    MoviePosterCard(movie = movie, onClick = { onMovieClick(movie) })
                 }
             }
         }
@@ -1586,16 +1650,18 @@ private fun SectionTitle(title: String, action: String = "See All", onClick: () 
 }
 
 @Composable
-private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
+private fun MoviePosterCard(
+    movie: Movie,
+    modifier: Modifier = Modifier.width(122.dp),
+    onClick: () -> Unit
+) {
     Column(
-        Modifier
-            .width(122.dp)
-            .clickable(onClick = onClick)
+        modifier.clickable(onClick = onClick)
     ) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(180.dp)
+                .aspectRatio(2f / 3f)
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFF0F141F))
                 .border(BorderStroke(1.dp, Color(0x1AFFFFFF)), RoundedCornerShape(12.dp))
@@ -1717,6 +1783,25 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
 }
 
 @Composable
+private fun DiscoverSectionHeader(title: String, action: String = "See All", onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clickable(onClick = onClick),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(title, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.width(4.dp))
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(18.dp))
+        }
+        Text(action, color = Color(0xFFF1F5F9), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
 private fun DiscoverScreen(
     query: String,
     onQueryChange: (String) -> Unit,
@@ -1730,7 +1815,8 @@ private fun DiscoverScreen(
     activeUniverse: Universe?,
     onUniverseSelected: (Universe?) -> Unit,
     searchGenre: String? = null,
-    onGenreSelected: (String?) -> Unit = {}
+    onGenreSelected: (String?) -> Unit = {},
+    onOpenSection: (SectionInfo) -> Unit = {}
 ) {
     val context = LocalContext.current
     var timelineWatchVersion by remember { mutableIntStateOf(0) }
@@ -2290,13 +2376,116 @@ private fun DiscoverScreen(
             }
         }
 
-        Text(
-            if (query.isBlank()) (if (selectedGenre != null) "$selectedGenre Cinema" else "Trending Discoveries") else "Search Results (${displayList.size})",
-            color = Color.White,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 6.dp)
-        )
+        if (query.isBlank() && selectedGenre == null) {
+            // 1. Hidden Gems & Masterpieces Shelf
+            DiscoverSectionHeader(
+                title = "🌟 Hidden Gems & Masterpieces",
+                action = "See All",
+                onClick = {
+                    onOpenSection(
+                        SectionInfo(
+                            title = "Hidden Gems & Masterpieces",
+                            subtitle = "Critically acclaimed cinema & global favorites",
+                            items = PreloadedCatalog.topRatedMasterpieces
+                        )
+                    )
+                }
+            )
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(vertical = 4.dp)
+            ) {
+                items(PreloadedCatalog.topRatedMasterpieces.take(10), key = { "disc-top-${it.id}" }) { movie ->
+                    MoviePosterCard(movie = movie, onClick = { onMovieClick(movie) })
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // 2. Desi Blockbusters Shelf
+            val desiItems = remember {
+                (PreloadedCatalog.bollywoodHits + PreloadedCatalog.southIndianCinema).distinctBy { it.id }
+            }
+            DiscoverSectionHeader(
+                title = "🎬 Desi Blockbusters: Bollywood & South",
+                action = "See All",
+                onClick = {
+                    onOpenSection(
+                        SectionInfo(
+                            title = "Desi Blockbusters & Hits",
+                            subtitle = "Top Hindi & regional mass blockbusters",
+                            items = desiItems
+                        )
+                    )
+                }
+            )
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(vertical = 4.dp)
+            ) {
+                items(desiItems.take(10), key = { "disc-desi-${it.id}" }) { movie ->
+                    MoviePosterCard(movie = movie, onClick = { onMovieClick(movie) })
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // 3. Binge-Worthy TV Collections Shelf
+            val seriesItems = remember {
+                (PreloadedCatalog.trendingSeries + PreloadedCatalog.hollywoodSeries + PreloadedCatalog.bollywoodSeries).distinctBy { it.id }
+            }
+            DiscoverSectionHeader(
+                title = "📺 Binge-Worthy TV Collections",
+                action = "See All",
+                onClick = {
+                    onOpenSection(
+                        SectionInfo(
+                            title = "Binge-Worthy TV Collections",
+                            subtitle = "High-voltage drama, thrillers & comedy series",
+                            items = seriesItems
+                        )
+                    )
+                }
+            )
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(vertical = 4.dp)
+            ) {
+                items(seriesItems.take(10), key = { "disc-series-${it.id}" }) { movie ->
+                    MoviePosterCard(movie = movie, onClick = { onMovieClick(movie) })
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // 4. Complete Catalog Grid Header
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "🌐 All Discover Catalog",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "${displayList.size} Titles",
+                    color = Color(0xFF9AA5B5),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        } else {
+            Text(
+                if (selectedGenre != null) "$selectedGenre Cinema (${displayList.size})" else "Search Results (${displayList.size})",
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 6.dp)
+            )
+        }
 
         // Grid of movies
         val rows = displayList.chunked(3)
@@ -2308,7 +2497,7 @@ private fun DiscoverScreen(
                 ) {
                     rowMovies.forEach { movie ->
                         Box(Modifier.weight(1f)) {
-                            MoviePosterCard(movie = movie, onClick = { onMovieClick(movie) })
+                            MoviePosterCard(movie = movie, modifier = Modifier.fillMaxWidth(), onClick = { onMovieClick(movie) })
                         }
                     }
                     repeat(3 - rowMovies.size) {
@@ -3320,6 +3509,17 @@ private fun ProfileScreen(
                     Text(userName, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     IconButton(onClick = { showProfileDialog = true }, modifier = Modifier.size(24.dp)) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFFF1F5F9), modifier = Modifier.size(16.dp))
+                    }
+                }
+                val userEmail = LibraryManager.getUserEmail(context)
+                if (userEmail.isNotBlank()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    ) {
+                        Icon(Icons.Default.Verified, contentDescription = "Verified", tint = Color(0xFF10B981), modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(userEmail, color = Color(0xFF94A3B8), fontSize = 12.sp)
                     }
                 }
                 Surface(
@@ -4519,23 +4719,30 @@ private fun MovieDetailsScreen(
                                 modifier = Modifier
                                     .size(68.dp)
                                     .clip(CircleShape)
-                                    .border(2.dp, Color(0xFFF1F5F9), CircleShape)
-                                    .background(Color(0xFF1E2837)),
+                                    .border(2.dp, Color(0xFF38BDF8).copy(alpha = 0.5f), CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            listOf(Color(0xFF2C394B), Color(0xFF131A26))
+                                        )
+                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (!actor.profilePath.isNullOrBlank()) {
+                                val initials = actor.name.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString("")
+                                Text(
+                                    initials.ifEmpty { "★" },
+                                    color = Color(0xFFF1F5F9),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 18.sp
+                                )
+                                val profileUrl = actor.profilePath?.let {
+                                    if (it.startsWith("http")) it else "https://image.tmdb.org/t/p/w185$it"
+                                }
+                                if (profileUrl != null) {
                                     AsyncImage(
-                                        model = "https://image.tmdb.org/t/p/w185${actor.profilePath}",
+                                        model = profileUrl,
                                         contentDescription = actor.name,
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier.fillMaxSize()
-                                    )
-                                } else {
-                                    Text(
-                                        actor.name.take(1),
-                                        color = Color(0xFFF1F5F9),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 24.sp
                                     )
                                 }
                             }

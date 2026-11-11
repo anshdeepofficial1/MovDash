@@ -175,9 +175,7 @@ object LibraryManager {
     // SEARCH HISTORY (AniDash Style)
     fun getSearchHistory(context: Context): List<String> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val json = prefs.getString(KEY_SEARCH_HISTORY, null) ?: return listOf(
-            "Jawan", "RRR", "Stranger Things", "Interstellar", "K.G.F: Chapter 2", "Deadpool", "Avengers", "Pushpa"
-        )
+        val json = prefs.getString(KEY_SEARCH_HISTORY, null) ?: return emptyList()
         return try {
             val type = object : TypeToken<List<String>>() {}.type
             gson.fromJson(json, type) ?: emptyList()
@@ -318,6 +316,48 @@ object LibraryManager {
     fun setUserAvatarId(context: Context, avatarId: Int) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit().putInt("pref_user_avatar", avatarId).apply()
+    }
+
+    // EMAIL AUTHENTICATION & SECURITY (@gmail.com verified)
+    fun getUserEmail(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("pref_user_email", "") ?: ""
+    }
+
+    fun setUserEmail(context: Context, email: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString("pref_user_email", email.trim().lowercase()).apply()
+    }
+
+    fun isUserVerified(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean("pref_user_verified", false)
+    }
+
+    fun setUserVerified(context: Context, verified: Boolean) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putBoolean("pref_user_verified", verified).apply()
+    }
+
+    fun getUserPassword(context: Context): String? {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("pref_user_password", null)
+    }
+
+    fun setUserPassword(context: Context, pass: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString("pref_user_password", pass).apply()
+    }
+
+    // USER VIEWING PREFERENCES (Genres & Personalization)
+    fun getUserFavoriteGenres(context: Context): Set<String> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getStringSet("pref_favorite_genres", setOf("Action", "Sci-Fi", "Bollywood")) ?: setOf("Action", "Sci-Fi", "Bollywood")
+    }
+
+    fun setUserFavoriteGenres(context: Context, genres: Set<String>) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putStringSet("pref_favorite_genres", genres).apply()
     }
 
     private fun saveList(context: Context, key: String, list: List<Movie>) {

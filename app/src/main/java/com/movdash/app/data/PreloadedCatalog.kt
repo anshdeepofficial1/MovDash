@@ -1495,6 +1495,14 @@ object PreloadedCatalog {
     }
 
     fun findMovie(id: Int): Movie? {
-        return allDiscover.firstOrNull { it.id == id }
+        allDiscover.firstOrNull { it.id == id }?.let { return it }
+        bollywoodHits.firstOrNull { it.id == id }?.let { return it }
+        southIndianCinema.firstOrNull { it.id == id }?.let { return it }
+        bollywoodSeries.firstOrNull { it.id == id }?.let { return it }
+        hollywoodSeries.firstOrNull { it.id == id }?.let { return it }
+        UniverseData.allUniverses.forEach { u ->
+            u.items.firstOrNull { it.movie.id == id }?.let { return it.movie }
+        }
+        return null
     }
 }

@@ -208,12 +208,12 @@ fun OnboardingScreen(
                         )
                 )
 
-                // Slide Content Card
+                // Slide Content Card (Clean spacing above bottom controls)
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 24.dp)
-                        .padding(bottom = 120.dp),
+                        .padding(bottom = 195.dp),
                     verticalArrangement = Arrangement.Bottom,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -354,17 +354,9 @@ fun OnboardingScreen(
                 }
             }
 
-            // High-Contrast Primary Button
+            // High-Contrast Primary Button (Directly opens setup / app)
             Button(
-                onClick = {
-                    if (pagerState.currentPage < slides.size - 1) {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                        }
-                    } else {
-                        onFinished()
-                    }
-                },
+                onClick = onFinished,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -375,7 +367,7 @@ fun OnboardingScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    if (pagerState.currentPage == slides.size - 1) "Enter Orbit" else "Continue",
+                    "Get Started",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
