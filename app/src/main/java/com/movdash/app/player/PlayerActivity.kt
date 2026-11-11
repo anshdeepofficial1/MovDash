@@ -312,11 +312,12 @@ private fun AdvancedProPlayerScreen(
 
     fun persistWatchProgress() {
         if (tmdbId > 0 && currentPosition > 3000L) {
+            val fallbackMovie = PreloadedCatalog.findMovie(tmdbId)
             val entry = WatchProgressEntry(
                 id = tmdbId,
                 title = title,
-                posterPath = posterPath,
-                backdropPath = backdropPath,
+                posterPath = posterPath ?: fallbackMovie?.posterPath,
+                backdropPath = backdropPath ?: fallbackMovie?.backdropPath,
                 mediaType = mediaType,
                 positionMs = currentPosition,
                 durationMs = duration,
@@ -656,7 +657,7 @@ private fun AdvancedProPlayerScreen(
                             OrbitWebBridge(
                                 onTime = { pos, dur ->
                                     currentPosition = pos
-                                    if (dur > 0) duration = dur
+                                    if (dur > 180000L) duration = dur
                                 },
                                 onState = { playing ->
                                     isPlaying = playing

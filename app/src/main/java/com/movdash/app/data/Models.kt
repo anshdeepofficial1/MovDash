@@ -29,15 +29,24 @@ data class WatchProgressEntry(
 ) {
     val progressFraction: Float
         get() {
-            if (durationMs <= 0L) return 0.05f
-            val ratio = positionMs.toFloat() / durationMs.toFloat()
-            return ratio.coerceIn(0.02f, 1f)
+            val effDuration = when {
+                durationMs > 180000L -> durationMs
+                mediaType == "tv" -> 45 * 60 * 1000L
+                else -> 120 * 60 * 1000L
+            }
+            val ratio = positionMs.toFloat() / effDuration.toFloat()
+            return ratio.coerceIn(0.01f, 1f)
         }
 
     val remainingMinutes: Int
         get() {
-            if (durationMs <= positionMs) return 0
-            val remSec = (durationMs - positionMs) / 1000L
+            val effDuration = when {
+                durationMs > 180000L -> durationMs
+                mediaType == "tv" -> 45 * 60 * 1000L
+                else -> 120 * 60 * 1000L
+            }
+            if (effDuration <= positionMs) return 0
+            val remSec = (effDuration - positionMs) / 1000L
             return (remSec / 60L).toInt().coerceAtLeast(1)
         }
 }
@@ -140,29 +149,17 @@ fun isUnreleasedTitle(releaseDate: String?, status: String? = null, title: Strin
     if (cleanStatus == "released") return false
 
     val cleanTitle = title?.lowercase() ?: ""
-    val knownUpcomingTitles = listOf(
-        "avengers: doomsday",
-        "avengers doomsday",
+    val knownUpcomingFarFuture = listOf(
         "avengers: secret wars",
-        "avengers secret wars",
-        "vision quest",
-        "the batman part ii",
-        "the batman part 2",
-        "batman: part ii",
-        "batman part 2",
-        "beyond the spider-verse",
-        "spider-man: beyond the spider-verse"
+        "avengers secret wars"
     )
-    if (knownUpcomingTitles.any { cleanTitle.contains(it) }) {
+    if (knownUpcomingFarFuture.any { cleanTitle.contains(it) }) {
         return true
     }
-    if (cleanStatus in listOf("in production", "planned", "announced", "rumored")) {
-        return true
-    }
-    // Only flag as unreleased if releaseDate is strictly in the future (after today) and status is not released
+    // Only flag strictly beyond 2027
     if (!releaseDate.isNullOrBlank()) {
-        val today = "2026-11-10"
-        return releaseDate.trim() > today && cleanStatus != "released"
+        val farFuture = "2027-01-01"
+        return releaseDate.trim() > farFuture && cleanStatus != "released"
     }
     return false
 }

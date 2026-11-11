@@ -192,8 +192,8 @@ object PreloadedCatalog {
             id = 119051,
             title = "Wednesday",
             overview = "Wednesday Addams' misadventures as a student at Nevermore Academy.",
-            posterPath = "/9PFonQ9516KiAIIbvaRuoA8209X.jpg",
-            backdropPath = "/iHSwvRVsRyxKuXAGzrGKiVGKT1C.jpg",
+            posterPath = "/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
+            backdropPath = "/iHSwvRVsRyxpX7FE7GbviaDvgGZ.jpg",
             releaseDate = "2022-11-23",
             voteAverage = 8.5,
             mediaType = "tv"
@@ -202,8 +202,8 @@ object PreloadedCatalog {
             id = 84958,
             title = "Loki",
             overview = "After stealing the Tesseract, Loki lands before the Time Variance Authority.",
-            posterPath = "/voHUmlvjys5g2epviOIEN4smkZ.jpg",
-            backdropPath = "/q3jHCb4dMfY0o0NWReaeUcZ4CAe.jpg",
+            posterPath = "/kEl2t3OhXc3Zb9FBh1AuYzRTgZp.jpg",
+            backdropPath = "/q3jHCb4dMfYF6ojikKuHd6LscxC.jpg",
             releaseDate = "2021-06-09",
             voteAverage = 8.2,
             mediaType = "tv"
@@ -406,21 +406,27 @@ object PreloadedCatalog {
             Movie(1399, "Game of Thrones", "Nine noble families fight for control over the mythical lands of Westeros.", "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg", "/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg", "2011-04-17", 8.4, "tv"),
             Movie(299534, "Avengers: Endgame", "After Thanos wiped out half the universe, the remaining Avengers assemble.", "/or06FN3Dka5tukK1e9sl16pB3iy.jpg", "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg", "2019-04-26", 8.3, "movie"),
             Movie(872585, "Oppenheimer", "The story of J. Robert Oppenheimer's role in the development of the atomic bomb.", "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg", "/fm6KqXpk3M2HVveHwCrBSSBaO0V.jpg", "2023-07-21", 8.1, "movie"),
-            Movie(569547, "K.G.F: Chapter 1", "Rocky arrives in Bombay to fulfill his mother's promise in the gold mines.", "/b16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg", "2018-12-21", 8.2, "movie")
+            Movie(564147, "K.G.F: Chapter 1", "Rocky arrives in Bombay to fulfill his mother's promise in the gold mines.", "/ltHlJwvxKv7d0ooCiKSAvfwV9tX.jpg", "/4i1ofsSpfTuswHXcgPtXbZrSnoe.jpg", "2018-12-21", 8.2, "movie")
         )
     }
 
     val bollywoodHits: List<Movie> by lazy {
-        allDiscover.filter { movie ->
-            listOf(864692, 872906, 784651, 585268, 1087822, 587391, 546554, 119051, 71883, 287948, 458305).contains(movie.id) ||
-            movie.title.contains("Pathaan", ignoreCase = true) ||
-            movie.title.contains("Jawan", ignoreCase = true) ||
-            movie.title.contains("Tiger", ignoreCase = true) ||
-            movie.title.contains("Singham", ignoreCase = true) ||
-            movie.title.contains("War", ignoreCase = true) ||
-            movie.title.contains("Sooryavanshi", ignoreCase = true) ||
-            movie.title.contains("Simmba", ignoreCase = true)
-        }.distinctBy { "${it.mediaType}-${it.id}" }
+        listOf(
+            Movie(872906, "Jawan", "A high-octane action thriller outlining the emotional journey of a man set out to rectify the wrongs in society.", "/jFt1gS4BGHlK8xt76Y81Alp4dbt.jpg", "/5LtSjMNw6j3LkG29Oa4O0iY5U8.jpg", "2023-09-07", 7.2, "movie"),
+            Movie(864692, "Pathaan", "An exiled RAW field operative Pathaan is assigned to take down Outfit X led by Jim, who plans a deadly biological attack.", "/arf00BkwvXo0CFKbaD9OpqdE4Nu.jpg", "/o0nLkPesXPugGw0rB15hDhZd1DX.jpg", "2023-01-25", 7.4, "movie"),
+            Movie(1112426, "Stree 2", "After the events of Stree, the town of Chanderi is haunted by a new headless monster Sarkata who abducts women.", "/nfnhwfUEFuSOxxf4jDdBlY6Lccw.jpg", "/fVV0A67kDjTTQ4CvUn8LoletRmI.jpg", "2024-08-15", 7.4, "movie"),
+            Movie(781732, "Animal", "A fiercely loyal son undergoes a violent transformation to protect and avenge his estranged industrialist father.", "/hr9rjR3J0xBBKmlJ4n3gHId9ccx.jpg", "/lprsAHkwMxk2iC6VZxNmV0H7g1t.jpg", "2023-12-01", 6.8, "movie"),
+            Movie(360814, "Dangal", "Former wrestler Mahavir Singh Phogat trains his daughters Geeta and Babita to become world-class gold medalists.", "/cJRPOLEexI7qp2DKtFfCh7YaaUG.jpg", "/l0fNAHLOFReQJsxCOmGWvJDnimn.jpg", "2016-12-23", 8.0, "movie"),
+            Movie(20453, "3 Idiots", "Two friends search for their long-lost companion while revisiting their college days and unconventional mentor Rancho.", "/66A9MqXOyVFCssoloscw79z8Tew.jpg", "/u7kuUaySqXBVAtqEl9vkTkAzHV9.jpg", "2009-12-25", 8.0, "movie"),
+            Movie(12259, "Sholay", "After his family is murdered by ruthless dacoit Gabbar Singh, former police officer Thakur hires two ex-convicts Veeru and Jai.", "/ya9bwgqA4eNl5bQ9QqS0jcmRoBS.jpg", "/mUAvhPWY4r7O32txXa7VvzKMrhJ.jpg", "1975-08-15", 7.6, "movie"),
+            Movie(577328, "Kabir Singh", "A hot-tempered house surgeon descends into severe alcoholism and drug abuse when his true love is forced to marry another.", "/iHPF4rt8HTuDZzNH1L2FCiPzN48.jpg", "/yFwn006ETsYVykpI8OKocgY0Bi3.jpg", "2019-06-21", 6.9, "movie"),
+            Movie(348892, "Bajrangi Bhaijaan", "A devoted Indian man with a magnanimous spirit undertakes the perilous journey to escort a mute Pakistani girl home.", "/vhlliI7HZZlWfo5d6CiyfBAGLrW.jpg", "/n9QCm8uagvmXH476u5qFQsW8HkU.jpg", "2015-07-17", 7.8, "movie"),
+            Movie(585268, "War", "An Indian soldier is assigned to eliminate his former mentor and RAW's most lethal rogue operative Major Kabir Dhaliwal.", "/7ryK4pX4539o0lqLgWvM7Uv6K1n.jpg", "/2rmK7mnchsl935x72PmyvpYdiip.jpg", "2019-10-02", 7.1, "movie"),
+            Movie(720557, "Tiger 3", "Following the events of Pathaan and War, Tiger and Zoya are framed by a vengeful former deputy of Pakistan.", "/7wgED7Yx9VLcNWSO91VgwicHmMD.jpg", "/gwtwjhikFumL8Xf8l6HwTQ1SjMt.jpg", "2023-11-12", 6.8, "movie"),
+            Movie(85985, "Ek Tha Tiger", "A RAW agent code-named Tiger falls in love with an ISI agent while tracking a Trinity College scientist.", "/jGTyeAH5KZuCX6Qat1VcTBXnqth.jpg", "/jM8C4mURyEkQorqyGF5wPFp4M5J.jpg", "2012-08-15", 7.2, "movie"),
+            Movie(441909, "Tiger Zinda Hai", "When a group of Indian nurses are held hostage in Iraq by a terrorist group, RAW and ISI operatives join forces.", "/mdzNLFfCfuBoJz43l0SmMWWdu5t.jpg", "/enSG6SDVjZOktOQbcPk2r2Jy4ND.jpg", "2017-12-22", 7.0, "movie"),
+            Movie(1014214, "Singham Again", "DCP Bajirao Singham leads a modern Ramayana-themed battle against global crime lord Danger Lanka.", "/2JbNkHg8m7LaBy61LyrnnlenaxY.jpg", "/yLKkuYMcibmNEvb97I4t6eDSSwk.jpg", "2024-11-01", 6.5, "movie")
+        )
     }
 
         val hollywoodMovies: List<Movie> by lazy {
@@ -439,37 +445,43 @@ object PreloadedCatalog {
 
     val hollywoodSeries: List<Movie> by lazy {
         listOf(
-            Movie(1396, "Breaking Bad", "A high school chemistry teacher turned ruthless meth kingpin.", "/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg", "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg", "2008-01-20", 8.9, "tv"),
-            Movie(66732, "Stranger Things", "Secret government experiments, terrifying forces and one strange girl.", "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "/56v2KjBlU4XaOv9rVYEQypROD7P.jpg", "2016-07-15", 8.6, "tv"),
-            Movie(126308, "Shōgun", "In feudal Japan, Lord Toranaga battles against enemies on the Council of Regents.", "/7O4iVfOMQmdCSxhOg1WNzG1AgYT.jpg", "/2rmK7mnchsl935x72PmyvpYdiip.jpg", "2024-02-27", 8.5, "tv"),
-            Movie(1399, "Game of Thrones", "Nine noble families fight for control over the mythical lands of Westeros.", "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg", "/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg", "2011-04-17", 8.4, "tv"),
+            Movie(1396, "Breaking Bad", "A high school chemistry teacher turned ruthless meth kingpin.", "/anFx9aTOOYqgS3v7x3R84Kz67ly.jpg", "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg", "2008-01-20", 8.9, "tv"),
+            Movie(66732, "Stranger Things", "Secret government experiments, terrifying forces and one strange girl.", "/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg", "/9P4IIMYY3HifqeruZq0ZZ9g7YUi.jpg", "2016-07-15", 8.6, "tv"),
+            Movie(126308, "Shōgun", "In feudal Japan, Lord Toranaga battles against enemies on the Council of Regents.", "/7O4iVfOMQmdCSxhOg1WnzG1AgYT.jpg", "/bwSmgmd90hCWwqOKQYTEraeOZhJ.jpg", "2024-02-27", 8.5, "tv"),
+            Movie(1399, "Game of Thrones", "Nine noble families fight for control over the mythical lands of Westeros.", "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg", "/zZqpAXxVSBtxV9qPBcscfXBcL2w.jpg", "2011-04-17", 8.4, "tv"),
             Movie(60059, "Better Call Saul", "The trials and tribulations of criminal lawyer Jimmy McGill.", "/fC2HDm5t0kHl7mTm7jxMR31b7by.jpg", "/9XX8FfO1n3fN93a9C4i71b3eF9a.jpg", "2015-02-08", 8.7, "tv"),
-            Movie(76479, "The Boys", "A group of vigilantes set out to take down corrupt superheroes.", "/2zm25B8x3sHnQ4W46f5rX789mZ.jpg", "/n6bUvigpLqlaKLmjjTmkuZ5Yx3.jpg", "2019-07-26", 8.5, "tv")
+            Movie(76479, "The Boys", "A group of vigilantes set out to take down corrupt superheroes.", "/in1R2dDc421JxsoRWaIIAqVI2KE.jpg", "/bq28ajZaoMyzEIm6REelqyqtEDZ.jpg", "2019-07-26", 8.5, "tv")
         )
     }
 
     val bollywoodSeries: List<Movie> by lazy {
         listOf(
-            Movie(82856, "Mirzapur", "A shocking incident at a wedding procession ignites a war between Akhandanand Tripathi and two brothers.", "/1YhY012B5jR39hG4K6789mL4N5.jpg", "/3Z8X1V4N6J789mL5K2345nB1.jpg", "2018-11-16", 8.5, "tv"),
-            Movie(79240, "Sacred Games", "A link in their pasts leads an honest cop to a fugitive gang boss whose cryptic warning spurs the officer to save Mumbai.", "/7YhY012B5jR39hG4K6789mL4N5.jpg", "/4Z8X1V4N6J789mL5K2345nB1.jpg", "2018-07-06", 8.4, "tv"),
-            Movie(95558, "The Family Man", "A working man from the National Investigation Agency must protect the nation while keeping his family safe.", "/8YhY012B5jR39hG4K6789mL4N5.jpg", "/5Z8X1V4N6J789mL5K2345nB1.jpg", "2019-09-20", 8.6, "tv"),
-            Movie(209867, "Farzi", "A brilliant small-time artist is catapulted into the high-stakes world of counterfeiting.", "/9YhY012B5jR39hG4K6789mL4N5.jpg", "/6Z8X1V4N6J789mL5K2345nB1.jpg", "2023-02-10", 8.4, "tv")
+            Movie(84105, "Mirzapur", "A shocking incident at a wedding procession ignites a war between Akhandanand Tripathi and two brothers.", "/p0qM8hhlMF5DuxHBzl2EZR6TehX.jpg", "/3dV7pWAdwIPKR2lMIACMfObXdgK.jpg", "2018-11-16", 8.5, "tv"),
+            Movie(79352, "Sacred Games", "A link in their pasts leads an honest cop to a fugitive gang boss whose cryptic warning spurs the officer to save Mumbai.", "/uEbNtFbK4At9WBDGap23lt1qO9n.jpg", "/qtac9X9lSLqZFbxS71347N8MiID.jpg", "2018-07-06", 8.4, "tv"),
+            Movie(93352, "The Family Man", "A working man from the National Investigation Agency must protect the nation while keeping his family safe.", "/tE1NUJqw9gV6AVjQ1GTK78LbWJ9.jpg", "/eEzKigDI64OomZV6VTJvoPGmVu1.jpg", "2019-09-20", 8.6, "tv"),
+            Movie(132117, "Farzi", "A brilliant small-time artist is catapulted into the high-stakes world of counterfeiting.", "/cTS86RwEBIDgCgUmjWQTSoPsK6p.jpg", "/rGkjtv6UdL1ysDmZuBjbNl3PAA1.jpg", "2023-02-10", 8.4, "tv"),
+            Movie(101352, "Panchayat", "An engineering graduate takes up an administrative job in a remote Indian village due to lack of better job options.", "/8ivTX5q2otqXvH815BcOhxVkTPW.jpg", "/iZ8EtGAqKWZdRJPzWfFseNfVxjh.jpg", "2020-04-03", 8.6, "tv"),
+            Movie(103051, "Paatal Lok", "A down-and-out cop lands the case of a lifetime when four suspects are nabbed in the assassination attempt of a prime journalist.", "/8Hcq3HoJE4shH7BWkp9UNSFCE3O.jpg", "/bVKoX1AiN1jjUcvC7BkXypJPF2X.jpg", "2020-05-15", 8.2, "tv")
         )
     }
 
     val southIndianCinema: List<Movie> by lazy {
-        allDiscover.filter { movie ->
-            listOf(569547, 655431, 926393, 1022789, 1075794, 833860, 630566, 579974, 256040, 799583).contains(movie.id) ||
-            movie.title.contains("K.G.F", ignoreCase = true) ||
-            movie.title.contains("Salaar", ignoreCase = true) ||
-            movie.title.contains("Kalki", ignoreCase = true) ||
-            movie.title.contains("Leo", ignoreCase = true) ||
-            movie.title.contains("Vikram", ignoreCase = true) ||
-            movie.title.contains("Kaithi", ignoreCase = true) ||
-            movie.title.contains("RRR", ignoreCase = true) ||
-            movie.title.contains("Baahubali", ignoreCase = true) ||
-            movie.title.contains("Pushpa", ignoreCase = true)
-        }.distinctBy { "${it.mediaType}-${it.id}" }
+        listOf(
+            Movie(579974, "RRR", "A fearless revolutionary and an officer in the British force come together to wage war against the British Raj.", "/wE0I6efAW4cDDmZQWtwZMOW44EJ.jpg", "/i0Y0wP8H6SRgjr6QmuwbtQbS24D.jpg", "2022-03-24", 7.8, "movie"),
+            Movie(587412, "K.G.F: Chapter 2", "Rocky now reigns supreme over the KGF empire but must contend with his deadliest adversaries Adheera and the Prime Minister.", "/khNVygolU0TxLIDWff5tQlAhZ23.jpg", "/nsV5Mfi9FAV4w8eDsdr7uqVswOk.jpg", "2022-04-14", 8.3, "movie"),
+            Movie(564147, "K.G.F: Chapter 1", "Rocky, an ambitious orphan in 1970s Bombay, seeks power and wealth to fulfill his mother's promise in the gold mines.", "/ltHlJwvxKv7d0ooCiKSAvfwV9tX.jpg", "/4i1ofsSpfTuswHXcgPtXbZrSnoe.jpg", "2018-12-21", 8.2, "movie"),
+            Movie(801688, "Kalki 2898 AD", "A modern avatar of Vishnu is believed to have descended to earth in the year 2898 to protect the world from evil forces in Kasi.", "/rstcAnBeCkxNQjNp3YXrF6IP1tW.jpg", "/x7f1n1ToNQTzQ26TCeplJTcG4Ht.jpg", "2024-06-27", 7.4, "movie"),
+            Movie(350312, "Baahubali 2: The Conclusion", "Amarendra Baahubali must defend Mahishmati and navigate palace conspiracy before his son Mahendra avenges him.", "/21sC2assImQIYCEDA84Qh9d1RsK.jpg", "/whNjsTOUVg2lZLCKgGhnACnmV8E.jpg", "2017-04-28", 7.8, "movie"),
+            Movie(256040, "Baahubali: The Beginning", "In ancient Mahishmati, an adventurous and daring man becomes involved in a decade-old feud between two warring brothers.", "/9BAjt8nSSms62uOVYn1t3C3dVto.jpg", "/e9ZEuHGHZ06AToHlfN1L7nejJ7W.jpg", "2015-07-10", 7.6, "movie"),
+            Movie(690957, "Pushpa: The Rise", "A coolie rises through the ranks of a red sandalwood smuggling syndicate while battling ruthless police inspector Shekhawat.", "/h6Pd89ngvl9quPVsx3KoJlQsvk9.jpg", "/jQIcn51nsvMrpB9NFwEOb9QHhFt.jpg", "2021-12-17", 7.4, "movie"),
+            Movie(857598, "Pushpa 2: The Rule", "Pushpa Raj expands his red sandalwood empire globally while facing immense opposition from police and rival syndicates.", "/1T21FblunT0y8fz7YaW8JMYgUKm.jpg", "/7jGItf7idJsBm9QTNoTNTU3KiGe.jpg", "2024-12-05", 7.3, "movie"),
+            Movie(770906, "Salaar: Part 1 - Ceasefire", "In the lawless walled city of Khansaar, a prince relies on his estranged childhood friend Deva to claim the throne.", "/nlu9WbcetNFRGXXPWITr30ob7W6.jpg", "/xtOCTmGemASooRkAxRorYODig1p.jpg", "2023-12-22", 7.4, "movie"),
+            Movie(858485, "Kantara", "When greed paves the way for betrayal and wrath, a young tribal champion invokes ancestral spirits to protect his forest.", "/jIsKmkxMzdCZ0Ux1GVSnu8m6Na6.jpg", "/kXElm7wt2kAXEVwJqW4cFhP43nW.jpg", "2022-09-30", 7.8, "movie"),
+            Movie(1075794, "Leo", "A mild-mannered cafe owner in Himachal Pradesh is pursued by ruthless cartel gangsters who claim he is gangster Leo Das.", "/gSOVog7ydsaF1YpgAqBqnKYFGY.jpg", "/auXrHU6O17n9Tz11SHReoorjrU6.jpg", "2023-10-19", 7.3, "movie"),
+            Movie(743563, "Vikram", "A special investigator uncovers a shadowy black ops masked crusader waging war on drug lords.", "/774UV1aCURb4s4JfEFg3IEMu5Zj.jpg", "/dkIX4dSMuVqjfrPGunBJUR7K3LQ.jpg", "2022-06-03", 8.3, "movie"),
+            Movie(587030, "Kaithi", "A recently released prisoner Dilli races to drive a poisoned police squad to the hospital while besieged by gangsters.", "/hOF9CgPsy9aLr5GJEBESC8MEXFy.jpg", "/seTFDq1iKyJ6YHr7HePbC20DMsy.jpg", "2019-10-25", 8.4, "movie"),
+            Movie(869760, "Hanu-Man", "An underdog in the fictional village of Anjanadri gains the superpowers of Lord Hanuman to fight an evil supervillain.", "/m1zq48rWSXxplzoJR8YtbXWnnHM.jpg", "/evUpfs4dw7AuZ5k8dkePVMFSg0T.jpg", "2024-01-12", 7.6, "movie")
+        )
     }
 
     fun getMoviesForGenre(genre: String): List<Movie> {
@@ -495,7 +507,7 @@ object PreloadedCatalog {
     }
 
     val allDiscover: List<Movie>
-        get() = (spotlightItems + trendingMovies + trendingSeries + popularMovies + popularSeries + upcomingTitles + hollywoodMovies + hollywoodSeries + bollywoodSeries + UniverseData.allUniverses.flatMap { u -> u.items.map { it.movie } })
+        get() = (spotlightItems + trendingMovies + trendingSeries + popularMovies + popularSeries + upcomingTitles + bollywoodHits + southIndianCinema + bollywoodSeries + hollywoodMovies + hollywoodSeries + UniverseData.allUniverses.flatMap { u -> u.items.map { it.movie } })
         .distinctBy { "${it.mediaType}-${it.id}" }
 
     val preloadedSeasons: Map<Pair<Int, Int>, SeasonDetails> = mapOf(
@@ -1480,5 +1492,9 @@ object PreloadedCatalog {
 
     fun getSeasonDetails(seriesId: Int, seasonNumber: Int): SeasonDetails? {
         return preloadedSeasons[Pair(seriesId, seasonNumber)]
+    }
+
+    fun findMovie(id: Int): Movie? {
+        return allDiscover.firstOrNull { it.id == id }
     }
 }

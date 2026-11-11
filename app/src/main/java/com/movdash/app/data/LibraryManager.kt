@@ -176,7 +176,7 @@ object LibraryManager {
     fun getSearchHistory(context: Context): List<String> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(KEY_SEARCH_HISTORY, null) ?: return listOf(
-            "Avengers", "Deadpool", "Stranger Things", "Interstellar", "K.G.F", "Salaar"
+            "Jawan", "RRR", "Stranger Things", "Interstellar", "K.G.F: Chapter 2", "Deadpool", "Avengers", "Pushpa"
         )
         return try {
             val type = object : TypeToken<List<String>>() {}.type
@@ -224,24 +224,29 @@ object LibraryManager {
     }
 
     fun saveWatchProgress(context: Context, entry: WatchProgressEntry) {
+        val fallbackMovie = PreloadedCatalog.findMovie(entry.id)
+        val finalPoster = if (!entry.posterPath.isNullOrBlank()) entry.posterPath else fallbackMovie?.posterPath
+        val finalBackdrop = if (!entry.backdropPath.isNullOrBlank()) entry.backdropPath else fallbackMovie?.backdropPath
+        val finalEntry = entry.copy(posterPath = finalPoster, backdropPath = finalBackdrop)
+
         val list = getWatchProgressList(context).toMutableList()
-        list.removeAll { it.id == entry.id && it.mediaType == entry.mediaType }
-        list.add(0, entry)
+        list.removeAll { it.id == finalEntry.id && it.mediaType == finalEntry.mediaType }
+        list.add(0, finalEntry)
         if (list.size > 50) {
             list.subList(50, list.size).clear()
         }
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putString(KEY_WATCH_PROGRESS, gson.toJson(list)).apply()
 
-        // Also ensure it is present in general history
+        // Also ensure it is present in general history with valid poster
         addToHistory(
             context,
             Movie(
-                id = entry.id,
-                title = entry.title,
-                posterPath = entry.posterPath,
-                backdropPath = entry.backdropPath,
-                mediaType = entry.mediaType
+                id = finalEntry.id,
+                title = finalEntry.title,
+                posterPath = finalEntry.posterPath,
+                backdropPath = finalEntry.backdropPath,
+                mediaType = finalEntry.mediaType
             )
         )
     }
@@ -257,6 +262,62 @@ object LibraryManager {
         list.removeAll { it.id == movieId && (mediaType == null || it.mediaType == mediaType) }
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putString(KEY_WATCH_PROGRESS, gson.toJson(list)).apply()
+    }
+
+    fun clearWatchProgress(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().remove(KEY_WATCH_PROGRESS).apply()
+    }
+
+    // USER APP PREFERENCES (Settings Persistence)
+    fun getPreferredAudio(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("pref_audio_track", "Hindi Dubbed (Dual Audio)") ?: "Hindi Dubbed (Dual Audio)"
+    }
+
+    fun setPreferredAudio(context: Context, audio: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString("pref_audio_track", audio).apply()
+    }
+
+    fun getPreferredQuality(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("pref_stream_quality", "1080p Ultra HD (Auto)") ?: "1080p Ultra HD (Auto)"
+    }
+
+    fun setPreferredQuality(context: Context, quality: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString("pref_stream_quality", quality).apply()
+    }
+
+    fun getAppTheme(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("pref_app_theme", "AMOLED Cosmic Black (Pure Deep Black)") ?: "AMOLED Cosmic Black (Pure Deep Black)"
+    }
+
+    fun setAppTheme(context: Context, theme: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString("pref_app_theme", theme).apply()
+    }
+
+    fun getUserName(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("pref_user_name", "Movie Enthusiast") ?: "Movie Enthusiast"
+    }
+
+    fun setUserName(context: Context, name: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString("pref_user_name", name).apply()
+    }
+
+    fun getUserAvatarId(context: Context): Int {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getInt("pref_user_avatar", 0)
+    }
+
+    fun setUserAvatarId(context: Context, avatarId: Int) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putInt("pref_user_avatar", avatarId).apply()
     }
 
     private fun saveList(context: Context, key: String, list: List<Movie>) {

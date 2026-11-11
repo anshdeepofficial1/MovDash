@@ -23,6 +23,7 @@ data class Universe(
     val logoTag: String,
     val accentColor: Long,
     val description: String,
+    val bannerBackdrop: String? = null,
     val items: List<UniverseItem>
 )
 
@@ -39,6 +40,7 @@ object UniverseData {
                 logoTag = "MARVEL STUDIOS",
                 accentColor = 0xFFE50914,
                 description = "Follow the exact chronological order of the Marvel Cinematic Universe from Steve Rogers in WWII through the Infinity War and the Multiverse collapse.",
+                bannerBackdrop = "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg",
                 items = listOf(
                     // --- PHASE 1: 1942 - 2012 ---
                     UniverseItem(
@@ -278,45 +280,46 @@ object UniverseData {
                 logoTag = "FAST SAGA",
                 accentColor = 0xFFF59E0B,
                 description = "Follow Dominic Toretto and his family through the official chronological timeline across Miami, Rio, Tokyo, and beyond.",
+                bannerBackdrop = "/4XM8DUTQb3lhLemJC51Jx4a2EuA.jpg",
                 items = listOf(
                     UniverseItem(
-                        movie = Movie(9799, "The Fast and the Furious", "Dominic Toretto rules the underground street racing world of Los Angeles.", "/lgceD0qVb826Q9q9hZtF6yE0K9A.jpg", "/g18Q3f7s9L6L9H4M1j9G7q2.jpg", "2001-06-22", 6.9, "movie"),
+                        movie = Movie(20174, "The Fast and the Furious", "Dominic Toretto rules the underground street racing world of Los Angeles.", "/731NMB4a85McIYcftPtbH4D3l5x.jpg", "/8asUJMTcr1KEfbGtpZhESI0I7X6.jpg", "2001-06-22", 6.9, "movie"),
                         timelineOrder = 1, releaseYear = 2001, phaseOrEra = "Timeline #1", note = "Brian O'Conner infiltrates Dom Toretto's crew"
                     ),
                     UniverseItem(
-                        movie = Movie(584, "2 Fast 2 Furious", "Ex-cop Brian O'Conner is called upon to bust a dangerous criminal in Miami with Roman Pearce.", "/6Amv9qX46eRk70G9e6F7W7Y0v3L.jpg", "/iQFcwSGbZXMkeyKrxbPnwnRo5fl.jpg", "2003-06-06", 6.5, "movie"),
+                        movie = Movie(584, "2 Fast 2 Furious", "Ex-cop Brian O'Conner is called upon to bust a dangerous criminal in Miami with Roman Pearce.", "/6nDZExrDKIXvSAghsFKVFRVJuSf.jpg", "/90ooE5SbUEO0OVJHewNO7pgySb6.jpg", "2003-06-06", 6.5, "movie"),
                         timelineOrder = 2, releaseYear = 2003, phaseOrEra = "Timeline #2", note = "Miami street racing & Roman Pearce debut"
                     ),
                     UniverseItem(
-                        movie = Movie(13804, "Fast & Furious", "When a crime brings them back to LA, fugitive ex-con Dom Toretto reignites his feud with Brian O'Conner.", "/xXWqM31vO9vW9aB7X1d7K2Y0v4.jpg", "/cDJ61O1STkQtHJduTWJRZq3AhR.jpg", "2009-04-03", 6.7, "movie"),
+                        movie = Movie(13804, "Fast & Furious", "When a crime brings them back to LA, fugitive ex-con Dom Toretto reignites his feud with Brian O'Conner.", "/bOFaWh7svndQYFBspZwQtlv70xQ.jpg", "/cDJ61O1STkQtHJduTWJRZq3AhR.jpg", "2009-04-03", 6.7, "movie"),
                         timelineOrder = 3, releaseYear = 2009, phaseOrEra = "Timeline #3", note = "Reunited in Mexico to take down Braga"
                     ),
                     UniverseItem(
-                        movie = Movie(51497, "Fast Five", "Dominic Toretto and his crew of street racers plan a massive heist in Rio while pursued by DSS Agent Hobbs.", "/1fP6G4A7V4m9L0v7B6d8F7W6Y0.jpg", "/9BBTo63ANSmhC4e6r62OJFuK2GL.jpg", "2011-04-29", 7.3, "movie"),
+                        movie = Movie(51497, "Fast Five", "Dominic Toretto and his crew of street racers plan a massive heist in Rio while pursued by DSS Agent Hobbs.", "/gEfQjjQwY7fh5bI4GlG0RrBu7Pz.jpg", "/tQN9JEQ4N4aqej7O6AkQtt0dLpt.jpg", "2011-04-29", 7.3, "movie"),
                         timelineOrder = 4, releaseYear = 2011, phaseOrEra = "Timeline #4", note = "The Rio Vault Heist & Agent Hobbs arrives"
                     ),
                     UniverseItem(
-                        movie = Movie(82992, "Fast & Furious 6", "Hobbs enlists Dom and his crew to help take down a team of mercenary drivers led by Owen Shaw.", "/e0eG6P9L0m7B6d8F7W6Y0A1v.jpg", "/pm0RiwNpz93NzrzIXKiFRUVvCY2.jpg", "2013-05-24", 6.8, "movie"),
+                        movie = Movie(82992, "Fast & Furious 6", "Hobbs enlists Dom and his crew to help take down a team of mercenary drivers led by Owen Shaw.", "/thSmnRdrzPBBospIOJjLZBReqzo.jpg", "/u1IfymTvKtftECKJR1vVF0mkvKV.jpg", "2013-05-24", 6.8, "movie"),
                         timelineOrder = 5, releaseYear = 2013, phaseOrEra = "Timeline #5", note = "Letty returns & the London Tank pursuit"
                     ),
                     UniverseItem(
-                        movie = Movie(9615, "The Fast and the Furious: Tokyo Drift", "Sean Boswell is sent to live in Tokyo and discovers the thrilling world of drift racing.", "/b16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/aJctq6wN1kF1g1o3vX3kE7o7v21.jpg", "2006-06-16", 6.5, "movie"),
+                        movie = Movie(9615, "The Fast and the Furious: Tokyo Drift", "Sean Boswell is sent to live in Tokyo and discovers the thrilling world of drift racing.", "/46xqGOwHbh2TH2avWSw3SMXph4E.jpg", "/dMARcKLrv0T7kVJ4iQR3vqTTdtT.jpg", "2006-06-16", 6.5, "movie"),
                         timelineOrder = 6, releaseYear = 2006, phaseOrEra = "Timeline #6", note = "Chronologically set here: Han's Tokyo crash"
                     ),
                     UniverseItem(
-                        movie = Movie(168259, "Furious 7", "Deckard Shaw seeks revenge against Dominic Toretto and his family for his comatose brother.", "/kM2F4L0m7B6d8F7W6Y0A1v4m9L.jpg", "/kvXLZqY0NduorRp5hX9n7vYFkL6.jpg", "2015-04-03", 7.3, "movie"),
+                        movie = Movie(168259, "Furious 7", "Deckard Shaw seeks revenge against Dominic Toretto and his family for his comatose brother.", "/wurKlC3VKUgcfsn0K51MJYEleS2.jpg", "/ehzI1mVcnHqB58NqPyQwpMqcVoz.jpg", "2015-04-03", 7.3, "movie"),
                         timelineOrder = 7, releaseYear = 2015, phaseOrEra = "Timeline #7", note = "Skydiving cars & emotional tribute to Paul Walker"
                     ),
                     UniverseItem(
-                        movie = Movie(337339, "The Fate of the Furious", "A mysterious cyberterrorist seduces Dom into the world of crime and betrays those closest to him.", "/d8B7F7W6Y0A1v4m9L0v7B6d8F7.jpg", "/b6ZJZHUytAnAOKkd0IOAQDBmJUm.jpg", "2017-04-14", 6.9, "movie"),
+                        movie = Movie(337339, "The Fate of the Furious", "A mysterious cyberterrorist seduces Dom into the world of crime and betrays those closest to him.", "/dImWM7GJqryWJO9LHa3XQ8DD5NH.jpg", "/3IJ8kG8i84PncXkSovu0PaZQfjM.jpg", "2017-04-14", 6.9, "movie"),
                         timelineOrder = 8, releaseYear = 2017, phaseOrEra = "Timeline #8", note = "Cipher hacks New York & submarine on ice"
                     ),
                     UniverseItem(
-                        movie = Movie(384018, "F9: The Fast Saga", "Dom Toretto faces his estranged younger brother Jakob, who is working with high-tech enemy Cipher.", "/bOFaWh7svndQYFBspZwQtlv70xQ.jpg", "/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg", "2021-06-25", 6.7, "movie"),
+                        movie = Movie(385128, "F9: The Fast Saga", "Dom Toretto faces his estranged younger brother Jakob, who is working with high-tech enemy Cipher.", "/deEmLILTPejEb6OGsXRJ5MCvyDW.jpg", "/xXHZeb1yhJvnSHPzZDqee0zfMb6.jpg", "2021-06-25", 6.7, "movie"),
                         timelineOrder = 9, releaseYear = 2021, phaseOrEra = "Timeline #9", note = "Magnet planes, Pontiac Fiero in space & Han returns"
                     ),
                     UniverseItem(
-                        movie = Movie(385687, "Fast X", "Over many missions, Dom Toretto and his family have outsmarted every foe. Now, they confront Dante Reyes.", "/fiVW06jE7z9YnO4trhaMEdAhSiC.jpg", "/4HodYYKEIsGOdinkGi2Ucz6X9i0.jpg", "2023-05-19", 7.1, "movie"),
+                        movie = Movie(385687, "Fast X", "Over many missions, Dom Toretto and his family have outsmarted every foe. Now, they confront Dante Reyes.", "/fiVW06jE7z9YnO4trhaMEdclSiC.jpg", "/4XM8DUTQb3lhLemJC51Jx4a2EuA.jpg", "2023-05-19", 7.1, "movie"),
                         timelineOrder = 10, releaseYear = 2023, phaseOrEra = "Timeline #10", note = "Dante Reyes targets Rome & explosive cliffhanger"
                     )
                 )
@@ -330,30 +333,35 @@ object UniverseData {
                 logoTag = "AUTOBOTS SAGA",
                 accentColor = 0xFF0284C7,
                 description = "Experience the war for the Allspark, the rise of the Primes, and Earth's defense by Optimus Prime and Bumblebee.",
+                bannerBackdrop = "/2vFuG6bWGyQUzYS9d69E5l85nIz.jpg",
                 items = listOf(
                     UniverseItem(
-                        movie = Movie(424783, "Bumblebee", "On the run in the year 1987, Bumblebee finds refuge in a junkyard in a small California beach town.", "/fw02ONlDhrErjZGg5bZA87nry39.jpg", "/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg", "2018-12-21", 6.8, "movie"),
+                        movie = Movie(424783, "Bumblebee", "On the run in the year 1987, Bumblebee finds refuge in a junkyard in a small California beach town.", "/fw02ONlDhrYjTSZV8XO6hhU3ds3.jpg", "/hMANgfPHR1tRObNp2oPiOi9mMlz.jpg", "2018-12-21", 6.8, "movie"),
                         timelineOrder = 1, releaseYear = 2018, phaseOrEra = "1987 Timeline", note = "Bumblebee arrives on Earth & befriends Charlie"
                     ),
                     UniverseItem(
-                        movie = Movie(667538, "Transformers: Rise of the Beasts", "In 1994, a pair of Brooklyn archaeologists enter an ancient conflict with three factions of Transformers.", "/gPbM0ljvjdRCO9aUq8jYk9yA1v.jpg", "/2rmK7mnchsl935x72PmyvpYdiip.jpg", "2023-06-09", 7.2, "movie"),
+                        movie = Movie(667538, "Transformers: Rise of the Beasts", "In 1994, a pair of Brooklyn archaeologists enter an ancient conflict with three factions of Transformers.", "/gPbM0MK8CP8A174rmUwGsADNYKD.jpg", "/2vFuG6bWGyQUzYS9d69E5l85nIz.jpg", "2023-06-09", 7.2, "movie"),
                         timelineOrder = 2, releaseYear = 2023, phaseOrEra = "1994 Timeline", note = "The Maximals & Unicron cosmic threat"
                     ),
                     UniverseItem(
-                        movie = Movie(1858, "Transformers", "Young Sam Witwicky buys his first car, discovering it is Autobot Bumblebee, drawing Earth into the war for the AllSpark.", "/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg", "/yDHYTjA3R0ne82ismFR4ggIFKz8.jpg", "2007-07-03", 6.8, "movie"),
+                        movie = Movie(1858, "Transformers", "Young Sam Witwicky buys his first car, discovering it is Autobot Bumblebee, drawing Earth into the war for the AllSpark.", "/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg", "/2vFuG6bWGyQUzYS9d69E5l85nIz.jpg", "2007-07-03", 6.8, "movie"),
                         timelineOrder = 3, releaseYear = 2007, phaseOrEra = "Modern Era: 2007", note = "Battle of Mission City & Megatron awakening"
                     ),
                     UniverseItem(
-                        movie = Movie(8373, "Transformers: Revenge of the Fallen", "Sam Witwicky leaves the Autobots behind for a normal life until ancient Decepticon leader The Fallen seeks Earth's sun.", "/bA4r6L0m7B6d8F7W6Y0A1v4m.jpg", "/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg", "2009-06-24", 6.1, "movie"),
+                        movie = Movie(8373, "Transformers: Revenge of the Fallen", "Sam Witwicky leaves the Autobots behind for a normal life until ancient Decepticon leader The Fallen seeks Earth's sun.", "/pLBb0whOzVDtJvyD4DPeQyQNOqp.jpg", "/bH1bhjn37uA1zOPvyHbzJSvza7v.jpg", "2009-06-24", 6.1, "movie"),
                         timelineOrder = 4, releaseYear = 2009, phaseOrEra = "Modern Era: 2009", note = "Pyramids of Egypt & the Sun Harvester"
                     ),
                     UniverseItem(
-                        movie = Movie(282035, "Transformers: Age of Extinction", "After an epic battle left a great city torn, humanity attempts to piece itself back together while Dinobots emerge.", "/c16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/3V4kSt8a34GQYHa6j9cuYXMeGDq.jpg", "2014-06-27", 5.9, "movie"),
-                        timelineOrder = 5, releaseYear = 2014, phaseOrEra = "Modern Era: 2014", note = "Optimus Prime rides Grimlock the Dinobot"
+                        movie = Movie(38356, "Transformers: Dark of the Moon", "The Autobots learn of a Cybertronian spacecraft hidden on the moon, racing against the Decepticons to reach it.", "/28YlCLrFhONteYSs9hKjD1Km0Cj.jpg", "/h3js4rulxzKMOokM2oO5Kr0mBZU.jpg", "2011-06-28", 6.2, "movie"),
+                        timelineOrder = 5, releaseYear = 2011, phaseOrEra = "Modern Era: 2011", note = "Apollo 11 secret mission & Sentinel Prime betrayal"
                     ),
                     UniverseItem(
-                        movie = Movie(698687, "Transformers One", "The untold origin story of Optimus Prime and Megatron, better known as Orion Pax and D-16.", "/1E5baAaEse26fej7uHcjOgEE2t2.jpg", "/fm6KqXpk3M2HVveHwCrBSSBaO0V.jpg", "2024-09-20", 8.1, "movie"),
-                        timelineOrder = 6, releaseYear = 2024, phaseOrEra = "Cybertron Origins", note = "How two bonded brothers became sworn enemies"
+                        movie = Movie(91314, "Transformers: Age of Extinction", "After an epic battle left a great city torn, humanity attempts to piece itself back together while Dinobots emerge.", "/jyzrfx2WaeY60kYZpPYepSjGz4S.jpg", "/wxr4Z6E83h14CogsZOzDm1vuDX3.jpg", "2014-06-27", 5.9, "movie"),
+                        timelineOrder = 6, releaseYear = 2014, phaseOrEra = "Modern Era: 2014", note = "Optimus Prime rides Grimlock the Dinobot"
+                    ),
+                    UniverseItem(
+                        movie = Movie(698687, "Transformers One", "The untold origin story of Optimus Prime and Megatron, better known as Orion Pax and D-16.", "/iRCgqpdVE4wyLQvGYU3ZP7pAtUc.jpg", "/cMfokHWle5lfCreoV08cbmkKv6G.jpg", "2024-09-20", 8.1, "movie"),
+                        timelineOrder = 7, releaseYear = 2024, phaseOrEra = "Cybertron Origins", note = "How two bonded brothers became sworn enemies"
                     )
                 )
             ),
@@ -366,25 +374,26 @@ object UniverseData {
                 logoTag = "SPY UNIVERSE",
                 accentColor = 0xFFEA580C,
                 description = "India's highest-grossing cinematic universe uniting Avinash Rathore (Tiger), Kabir Dhaliwal (War), and Pathaan in patriotic covert warfare.",
+                bannerBackdrop = "/o0nLkPesXPugGw0rB15hDhZd1DX.jpg",
                 items = listOf(
                     UniverseItem(
-                        movie = Movie(116801, "Ek Tha Tiger", "A RAW agent code-named Tiger falls in love with an ISI agent while tracking a Trinity College scientist.", "/hF7W6Y0A1v4m9L0v7B6d8F7.jpg", "/56v2KjBlU4XaOv9rVYEQypROD7P.jpg", "2012-08-15", 7.2, "movie"),
+                        movie = Movie(85985, "Ek Tha Tiger", "A RAW agent code-named Tiger falls in love with an ISI agent while tracking a Trinity College scientist.", "/jGTyeAH5KZuCX6Qat1VcTBXnqth.jpg", "/jM8C4mURyEkQorqyGF5wPFp4M5J.jpg", "2012-08-15", 7.2, "movie"),
                         timelineOrder = 1, releaseYear = 2012, phaseOrEra = "Timeline #1", note = "Salman Khan introduces Tiger & RAW Director Shenoy"
                     ),
                     UniverseItem(
-                        movie = Movie(442249, "Tiger Zinda Hai", "When a group of Indian nurses are held hostage in Iraq by a terrorist group, RAW and ISI operatives join forces.", "/b8L0m7B6d8F7W6Y0A1v4m9L.jpg", "/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg", "2017-12-22", 7.0, "movie"),
+                        movie = Movie(441909, "Tiger Zinda Hai", "When a group of Indian nurses are held hostage in Iraq by a terrorist group, RAW and ISI operatives join forces.", "/mdzNLFfCfuBoJz43l0SmMWWdu5t.jpg", "/enSG6SDVjZOktOQbcPk2r2Jy4ND.jpg", "2017-12-22", 7.0, "movie"),
                         timelineOrder = 2, releaseYear = 2017, phaseOrEra = "Timeline #2", note = "Tiger and Zoya rescue 40 nurses from ISC terrorists"
                     ),
                     UniverseItem(
-                        movie = Movie(585268, "War", "An Indian soldier is assigned to eliminate his former mentor and RAW's most lethal rogue operative Kabir.", "/7ryK8L0m7B6d8F7W6Y0A1v4m.jpg", "/2rmK7mnchsl935x72PmyvpYdiip.jpg", "2019-10-02", 7.1, "movie"),
+                        movie = Movie(585268, "War", "An Indian soldier is assigned to eliminate his former mentor and RAW's most lethal rogue operative Kabir.", "/7ryK4pX4539o0lqLgWvM7Uv6K1n.jpg", "/2rmK7mnchsl935x72PmyvpYdiip.jpg", "2019-10-02", 7.1, "movie"),
                         timelineOrder = 3, releaseYear = 2019, phaseOrEra = "Timeline #3", note = "Hrithik Roshan as Major Kabir Dhaliwal & Col. Luthra"
                     ),
                     UniverseItem(
-                        movie = Movie(864692, "Pathaan", "An exiled RAW field operative Pathaan is assigned to take down a private terror outfit Outfit X led by Jim.", "/m11bVaoazOH44B2x5wO8bV0.jpg", "/9faGSFi5jam6pDWGNd0p8J2qPtZ.jpg", "2023-01-25", 7.4, "movie"),
+                        movie = Movie(864692, "Pathaan", "An exiled RAW field operative Pathaan is assigned to take down a private terror outfit Outfit X led by Jim.", "/arf00BkwvXo0CFKbaD9OpqdE4Nu.jpg", "/o0nLkPesXPugGw0rB15hDhZd1DX.jpg", "2023-01-25", 7.4, "movie"),
                         timelineOrder = 4, releaseYear = 2023, phaseOrEra = "Timeline #4", note = "Shah Rukh Khan as Pathaan • Tiger train cameo crossover"
                     ),
                     UniverseItem(
-                        movie = Movie(787781, "Tiger 3", "Following the events of Pathaan and War, Tiger and Zoya are framed by a vengeful former deputy of Pakistan.", "/z4X8L0m7B6d8F7W6Y0A1v4m.jpg", "/yDHYTjA3R0ne82ismFR4ggIFKz8.jpg", "2023-11-12", 6.8, "movie"),
+                        movie = Movie(720557, "Tiger 3", "Following the events of Pathaan and War, Tiger and Zoya are framed by a vengeful former deputy of Pakistan.", "/7wgED7Yx9VLcNWSO91VgwicHmMD.jpg", "/gwtwjhikFumL8Xf8l6HwTQ1SjMt.jpg", "2023-11-12", 6.8, "movie"),
                         timelineOrder = 5, releaseYear = 2023, phaseOrEra = "Timeline #5", note = "Pathaan rescues Tiger • Kabir post-credits War 2 setup"
                     )
                 )
@@ -398,25 +407,26 @@ object UniverseData {
                 logoTag = "COP UNIVERSE",
                 accentColor = 0xFFD97706,
                 description = "High-octane mass action saga uniting the fearless police officers of India fighting corruption and terror.",
+                bannerBackdrop = "/7w06baRS9VPm5RYz8lawTCLiR4j.jpg",
                 items = listOf(
                     UniverseItem(
-                        movie = Movie(69668, "Singham", "An honest and valiant police officer Bajirao Singham fights against a corrupt politician who controls Goa.", "/w16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg", "2011-07-22", 7.1, "movie"),
+                        movie = Movie(70590, "Singham", "An honest and valiant police officer Bajirao Singham fights against a corrupt politician who controls Goa.", "/pggLRaurdWwjqX2vkhKIVQSBjXV.jpg", "/hEwPNUPLim6XxelWKkH4zGXdenx.jpg", "2011-07-22", 7.1, "movie"),
                         timelineOrder = 1, releaseYear = 2011, phaseOrEra = "Chapter 1", note = "Ajay Devgn as DCP Bajirao Singham"
                     ),
                     UniverseItem(
-                        movie = Movie(283995, "Singham Returns", "DCP Bajirao Singham transfers to Mumbai to clean up corruption, uncovering black money cartels.", "/x16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "2014-08-15", 6.4, "movie"),
+                        movie = Movie(285803, "Singham Returns", "DCP Bajirao Singham transfers to Mumbai to clean up corruption, uncovering black money cartels.", "/k8CDjZLYG8bCIuXWAg4gukxf0BE.jpg", "/hnlz8e3ihoZDyKGrasaaCH1aqSn.jpg", "2014-08-15", 6.4, "movie"),
                         timelineOrder = 2, releaseYear = 2014, phaseOrEra = "Chapter 2", note = "Singham cleans up Mumbai underworld"
                     ),
                     UniverseItem(
-                        movie = Movie(548539, "Simmba", "A corrupt police inspector from Shivgadh experiences a moral transformation after a horrific tragedy.", "/y16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg", "2018-12-28", 6.6, "movie"),
+                        movie = Movie(496524, "Simmba", "A corrupt police inspector from Shivgadh experiences a moral transformation after a horrific tragedy.", "/3jUuzSymG3uzYM1cUaERsFSZT58.jpg", "/fGYTO7BJzKdgLB2CSjNvYISjZtE.jpg", "2018-12-28", 6.6, "movie"),
                         timelineOrder = 3, releaseYear = 2018, phaseOrEra = "Chapter 3", note = "Ranveer Singh as ACP Sangram Bhalerao • Singham cameo"
                     ),
                     UniverseItem(
-                        movie = Movie(568349, "Sooryavanshi", "ATS Chief DCP Veer Sooryavanshi unites with Singham and Simmba to prevent a massive terror attack on Mumbai.", "/z16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg", "2021-11-05", 6.7, "movie"),
+                        movie = Movie(592508, "Sooryavanshi", "ATS Chief DCP Veer Sooryavanshi unites with Singham and Simmba to prevent a massive terror attack on Mumbai.", "/zgEc1Tn4iKvttPUzkMOUB4BNoXK.jpg", "/7w06baRS9VPm5RYz8lawTCLiR4j.jpg", "2021-11-05", 6.7, "movie"),
                         timelineOrder = 4, releaseYear = 2021, phaseOrEra = "Chapter 4", note = "Akshay Kumar • The Grand Trio Crossover"
                     ),
                     UniverseItem(
-                        movie = Movie(1067282, "Singham Again", "DCP Bajirao Singham leads a modern Ramayana-themed battle against global crime lord Danger Lanka.", "/aosm8NMQ3UyoBVpSxyimorCQykC.jpg", "/3V4kSt8a34GQYHa6j9cuYXMeGDq.jpg", "2024-11-01", 6.5, "movie"),
+                        movie = Movie(1014214, "Singham Again", "DCP Bajirao Singham leads a modern Ramayana-themed battle against global crime lord Danger Lanka.", "/2JbNkHg8m7LaBy61LyrnnlenaxY.jpg", "/yLKkuYMcibmNEvb97I4t6eDSSwk.jpg", "2024-11-01", 6.5, "movie"),
                         timelineOrder = 5, releaseYear = 2024, phaseOrEra = "Chapter 5", note = "Deepika Padukone, Tiger Shroff & Salman Khan cameo"
                     )
                 )
@@ -430,17 +440,18 @@ object UniverseData {
                 logoTag = "LCU SAGA",
                 accentColor = 0xFF991B1B,
                 description = "Lokesh Kanagaraj's gritty connected universe exploring Chennai and Trichy drug cartels, undercover agents, and vigilante justice.",
+                bannerBackdrop = "/dkIX4dSMuVqjfrPGunBJUR7K3LQ.jpg",
                 items = listOf(
                     UniverseItem(
-                        movie = Movie(633802, "Kaithi", "A recently released prisoner Dilli races to drive a poisoned police squad to the hospital while besieged by gangsters.", "/b16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/74xTEgt7R36Fpooo50r9T25onhq.jpg", "2019-10-25", 8.4, "movie"),
+                        movie = Movie(587030, "Kaithi", "A recently released prisoner Dilli races to drive a poisoned police squad to the hospital while besieged by gangsters.", "/hOF9CgPsy9aLr5GJEBESC8MEXFy.jpg", "/seTFDq1iKyJ6YHr7HePbC20DMsy.jpg", "2019-10-25", 8.4, "movie"),
                         timelineOrder = 1, releaseYear = 2019, phaseOrEra = "LCU Entry 1", note = "Karthi as Dilli • The Drug bust that started it all"
                     ),
                     UniverseItem(
-                        movie = Movie(864692, "Vikram", "A special investigator uncovers a shadowy black ops masked crusader waging war on drug lords.", "/v16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/fm6KqXpk3M2HVveHwCrBSSBaO0V.jpg", "2022-06-03", 8.3, "movie"),
+                        movie = Movie(743563, "Vikram", "A special investigator uncovers a shadowy black ops masked crusader waging war on drug lords.", "/774UV1aCURb4s4JfEFg3IEMu5Zj.jpg", "/dkIX4dSMuVqjfrPGunBJUR7K3LQ.jpg", "2022-06-03", 8.3, "movie"),
                         timelineOrder = 2, releaseYear = 2022, phaseOrEra = "LCU Entry 2", note = "Kamal Haasan, Fahadh Faasil, Vijay Sethupathi & Rolex"
                     ),
                     UniverseItem(
-                        movie = Movie(1072790, "Leo", "A mild-mannered cafe owner in Himachal Pradesh is pursued by ruthless cartel gangsters who claim he is gangster Leo Das.", "/w16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg", "2023-10-19", 7.3, "movie"),
+                        movie = Movie(1075794, "Leo", "A mild-mannered cafe owner in Himachal Pradesh is pursued by ruthless cartel gangsters who claim he is gangster Leo Das.", "/gSOVog7ydsaF1YpgAqBqnKYFGY.jpg", "/auXrHU6O17n9Tz11SHReoorjrU6.jpg", "2023-10-19", 7.3, "movie"),
                         timelineOrder = 3, releaseYear = 2023, phaseOrEra = "LCU Entry 3", note = "Thalapathy Vijay • Vikram calls Leo for the war against drugs"
                     )
                 )
@@ -454,17 +465,18 @@ object UniverseData {
                 logoTag = "KGF & SALAAR",
                 accentColor = 0xFFCA8A04,
                 description = "The colossal high-octane sagas of Rocky Bhai conquering the Kolar Gold Fields and Deva unleashing fury in the lawless city-state of Khansaar.",
+                bannerBackdrop = "/nsV5Mfi9FAV4w8eDsdr7uqVswOk.jpg",
                 items = listOf(
                     UniverseItem(
-                        movie = Movie(569547, "K.G.F: Chapter 1", "Rocky, an ambitious orphan in 1970s Bombay, seeks power and wealth to fulfill his mother's promise in the gold mines.", "/b16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg", "2018-12-21", 8.2, "movie"),
+                        movie = Movie(564147, "K.G.F: Chapter 1", "Rocky, an ambitious orphan in 1970s Bombay, seeks power and wealth to fulfill his mother's promise in the gold mines.", "/ltHlJwvxKv7d0ooCiKSAvfwV9tX.jpg", "/4i1ofsSpfTuswHXcgPtXbZrSnoe.jpg", "2018-12-21", 8.2, "movie"),
                         timelineOrder = 1, releaseYear = 2018, phaseOrEra = "Chapter 1", note = "Yash as Rocky Bhai conquers Narachi"
                     ),
                     UniverseItem(
-                        movie = Movie(655431, "K.G.F: Chapter 2", "Rocky now reigns supreme over the KGF empire but must contend with his deadliest adversaries Adheera and the Prime Minister.", "/c16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/yDHYTjA3R0ne82ismFR4ggIFKz8.jpg", "2022-04-14", 8.3, "movie"),
+                        movie = Movie(587412, "K.G.F: Chapter 2", "Rocky now reigns supreme over the KGF empire but must contend with his deadliest adversaries Adheera and the Prime Minister.", "/khNVygolU0TxLIDWff5tQlAhZ23.jpg", "/nsV5Mfi9FAV4w8eDsdr7uqVswOk.jpg", "2022-04-14", 8.3, "movie"),
                         timelineOrder = 2, releaseYear = 2022, phaseOrEra = "Chapter 2", note = "Record-shattering box office climax"
                     ),
                     UniverseItem(
-                        movie = Movie(926393, "Salaar: Part 1 – Ceasefire", "In the lawless walled city of Khansaar, a prince relies on his estranged childhood friend Deva to claim the throne.", "/d16Y8L0m7B6d8F7W6Y0A1v4m.jpg", "/4HodYYKEIsGOdinkGi2Ucz6X9i0.jpg", "2023-12-22", 7.4, "movie"),
+                        movie = Movie(770906, "Salaar: Part 1 - Ceasefire", "In the lawless walled city of Khansaar, a prince relies on his estranged childhood friend Deva to claim the throne.", "/nlu9WbcetNFRGXXPWITr30ob7W6.jpg", "/xtOCTmGemASooRkAxRorYODig1p.jpg", "2023-12-22", 7.4, "movie"),
                         timelineOrder = 3, releaseYear = 2023, phaseOrEra = "Part 1", note = "Prabhas as Deva • The violent gates of Khansaar"
                     )
                 )

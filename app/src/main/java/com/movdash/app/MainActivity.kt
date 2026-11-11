@@ -346,7 +346,17 @@ private fun MovDashApp() {
         activeSection = null
     }
 
-    BackHandler(enabled = selectedMovie == null && activeSection == null && tab != AppTab.HOME) {
+    BackHandler(enabled = selectedMovie == null && activeSection == null && activeUniverseByDiscover != null) {
+        activeUniverseByDiscover = null
+    }
+
+    BackHandler(enabled = selectedMovie == null && activeSection == null && activeUniverseByDiscover == null && tab == AppTab.DISCOVER && (query.isNotEmpty() || searchResults.isNotEmpty() || searchGenre != null)) {
+        query = ""
+        searchResults = emptyList()
+        searchGenre = null
+    }
+
+    BackHandler(enabled = selectedMovie == null && activeSection == null && activeUniverseByDiscover == null && tab != AppTab.HOME) {
         tab = AppTab.HOME
     }
 
@@ -363,6 +373,24 @@ private fun MovDashApp() {
             if (combined.isNotEmpty()) spotlightList = combined.take(5)
         } catch (_: Exception) {
             // Keep using preloaded catalog seamlessly without disturbing the user
+        }
+    }
+
+    // Background preheating of posters into Coil cache for instant 0ms scrolling
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val preheatList = (PreloadedCatalog.spotlightItems + PreloadedCatalog.trendingMovies.take(10) + PreloadedCatalog.bollywoodHits.take(10) + PreloadedCatalog.southIndianCinema.take(10)).distinctBy { it.id }
+                val imageLoader = coil3.SingletonImageLoader.get(context)
+                for (m in preheatList) {
+                    val path = m.posterPath ?: m.backdropPath ?: continue
+                    val url = buildTmdbImageUrl(path, "w342") ?: continue
+                    val req = coil3.request.ImageRequest.Builder(context)
+                        .data(url)
+                        .build()
+                    imageLoader.enqueue(req)
+                }
+            } catch (_: Exception) {}
         }
     }
 
@@ -923,7 +951,9 @@ private fun HomeScreen(
                                 .border(BorderStroke(1.dp, Color(0x1FFFFFFF)), RoundedCornerShape(14.dp))
                                 .background(Color(0xFF131A26))
                         ) {
-                            val bg = buildTmdbImageUrl(entry.backdropPath ?: entry.posterPath, "w500")
+                            val resolved = remember(entry.id) { PreloadedCatalog.findMovie(entry.id) }
+                            val bgPath = entry.backdropPath ?: entry.posterPath ?: resolved?.backdropPath ?: resolved?.posterPath
+                            val bg = buildTmdbImageUrl(bgPath, "w500")
                             if (bg != null) {
                                 AsyncImage(
                                     model = bg,
@@ -1570,7 +1600,8 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
                 .background(Color(0xFF0F141F))
                 .border(BorderStroke(1.dp, Color(0x1AFFFFFF)), RoundedCornerShape(12.dp))
         ) {
-            val imageUrl = buildTmdbImageUrl(movie.posterPath, "w500")
+            val posterPath = movie.posterPath ?: movie.backdropPath
+            val imageUrl = buildTmdbImageUrl(posterPath, "w342")
 
             // Elegant fallback background when poster is loading or missing
             Box(
@@ -1647,9 +1678,9 @@ private fun MoviePosterCard(movie: Movie, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val isUnreleased = isUnreleasedTitle(movie.releaseDate, null, movie.title)
+                val rating = movie.voteAverage?.let { "★ " + "%.1f".format(it) } ?: (movie.releaseDate?.take(4) ?: "HD")
                 Text(
-                    if (isUnreleased) "Soon" else (movie.voteAverage?.let { "★ " + "%.1f".format(it) } ?: "HD"),
+                    rating,
                     color = Color(0xFFF1F5F9),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
@@ -1716,10 +1747,41 @@ private fun DiscoverScreen(
         return
     }
 
-    val displayList = remember(results, query, mediaType, selectedGenre) {
+    val matchedUniverse = remember(query) {
+        val q = query.trim().lowercase()
+        if (q.length >= 3) {
+            UniverseData.allUniverses.firstOrNull { u ->
+                u.name.lowercase().contains(q) ||
+                u.logoTag.lowercase().contains(q) ||
+                (q.contains("marvel") || q.contains("mcu")) && u.id == "mcu" ||
+                (q.contains("fast") || q.contains("furious")) && u.id == "fast_saga" ||
+                (q.contains("transformer")) && u.id == "transformers" ||
+                (q.contains("spy") || q.contains("yrf") || q.contains("pathaan") || q.contains("tiger")) && u.id == "yrf_spy" ||
+                (q.contains("cop") || q.contains("singham") || q.contains("simmba") || q.contains("sooryavanshi")) && u.id == "cop_universe" ||
+                (q.contains("lcu") || q.contains("lokesh") || q.contains("vikram") || q.contains("kaithi") || q.contains("leo")) && u.id == "lcu" ||
+                (q.contains("neel") || q.contains("kgf") || q.contains("salaar")) && u.id == "neel_universe"
+            }
+        } else null
+    }
+
+    val displayList = remember(results, query, mediaType, selectedGenre, matchedUniverse) {
+        val q = query.trim().lowercase()
         when {
-            results.isNotEmpty() -> results
+            results.isNotEmpty() -> {
+                if (matchedUniverse != null) {
+                    (results + matchedUniverse.items.map { it.movie }).distinctBy { "${it.mediaType}-${it.id}" }
+                } else {
+                    results
+                }
+            }
             selectedGenre != null -> PreloadedCatalog.getMoviesForGenre(selectedGenre!!)
+            query.isNotBlank() -> {
+                var list = PreloadedCatalog.allDiscover.filter { it.title.lowercase().contains(q) }
+                if (matchedUniverse != null) {
+                    list = (list + matchedUniverse.items.map { it.movie }).distinctBy { "${it.mediaType}-${it.id}" }
+                }
+                list
+            }
             query.isBlank() -> {
                 var list = PreloadedCatalog.allDiscover
                 if (mediaType != "multi") {
@@ -1862,6 +1924,61 @@ private fun DiscoverScreen(
             }
         }
 
+        // Franchise Watch Order Banner match
+        if (matchedUniverse != null) {
+            Spacer(Modifier.height(10.dp))
+            Card(
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF141D2C)),
+                border = BorderStroke(1.dp, Color(matchedUniverse.accentColor).copy(alpha = 0.6f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onUniverseSelected(matchedUniverse) }
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(matchedUniverse.accentColor),
+                        modifier = Modifier.size(46.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+                        }
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "OFFICIAL FRANCHISE WATCH ORDER",
+                            color = Color(matchedUniverse.accentColor),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.8.sp
+                        )
+                        Text(
+                            matchedUniverse.name,
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Tap to view chronological order (${matchedUniverse.items.size} titles)",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 12.sp
+                        )
+                    }
+                    Icon(
+                        Icons.Default.ArrowForward,
+                        contentDescription = "Open Order",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+
         // Recent Searches (AniDash Style)
         if (query.isBlank() && searchHistory.isNotEmpty()) {
             Spacer(Modifier.height(10.dp))
@@ -1974,7 +2091,7 @@ private fun DiscoverScreen(
                 val totalCount = u.items.size
                 val percent = if (totalCount > 0) (watchedCount.toFloat() / totalCount.toFloat()) else 0f
                 val leadItem = u.items.firstOrNull()?.movie
-                val bannerPath = leadItem?.backdropPath ?: leadItem?.posterPath
+                val bannerPath = u.bannerBackdrop ?: leadItem?.backdropPath ?: leadItem?.posterPath
                 val bannerUrl = buildTmdbImageUrl(bannerPath, "w780")
 
                 Card(
@@ -2025,18 +2142,35 @@ private fun DiscoverScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = Color(u.accentColor),
-                                    shadowElevation = 4.dp
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Color(u.accentColor).copy(alpha = 0.92f),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.4f)),
+                                    shadowElevation = 6.dp
                                 ) {
-                                    Text(
-                                        u.logoTag,
-                                        color = Color.White,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Black,
-                                        letterSpacing = 1.sp,
-                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        val badgeIcon = when (u.id) {
+                                            "mcu" -> Icons.Default.Shield
+                                            "fast_saga" -> Icons.Default.Speed
+                                            "transformers" -> Icons.Default.SmartToy
+                                            "yrf_spy" -> Icons.Default.Security
+                                            "cop_universe" -> Icons.Default.LocalPolice
+                                            "lcu" -> Icons.Default.Nightlife
+                                            "neel_universe" -> Icons.Default.WorkspacePremium
+                                            else -> Icons.Default.Movie
+                                        }
+                                        Icon(badgeIcon, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                                        Spacer(Modifier.width(5.dp))
+                                        Text(
+                                            u.logoTag,
+                                            color = Color.White,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Black,
+                                            letterSpacing = 1.sp
+                                        )
+                                    }
                                 }
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
@@ -2192,6 +2326,9 @@ private fun UniverseWatchOrderScreen(
     onBack: () -> Unit,
     onMovieClick: (Movie) -> Unit
 ) {
+    BackHandler {
+        onBack()
+    }
     val context = LocalContext.current
     var watchVersion by remember { mutableIntStateOf(0) }
     val watchedCount = remember(watchVersion) { LibraryManager.getWatchedCountForUniverse(context, universe) }
@@ -2296,6 +2433,47 @@ private fun UniverseWatchOrderScreen(
                         trackColor = Color(0xFF263347),
                         modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape)
                     )
+                }
+            }
+        }
+
+        if (universe.id == "mcu") {
+            Spacer(Modifier.height(12.dp))
+            Card(
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF2B1015)),
+                border = BorderStroke(1.dp, Color(0xFFE50914).copy(alpha = 0.6f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0xFFE50914),
+                        modifier = Modifier.size(38.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Bolt, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+                        }
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            "ROAD TO AVENGERS: DOOMSDAY (DEC 2026)",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 0.5.sp
+                        )
+                        Text(
+                            "Follow Phase 1 to Phase 5 in order to understand Robert Downey Jr.'s Doctor Doom arrival!",
+                            color = Color(0xFFFCA5A5),
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
                 }
             }
         }
@@ -3038,10 +3216,71 @@ private fun ProfileScreen(
     onOpenOnboarding: () -> Unit
 ) {
     val context = LocalContext.current
-    var userName by remember { mutableStateOf("Movie Enthusiast") }
-    var showEditName by remember { mutableStateOf(false) }
-    var nameDraft by remember { mutableStateOf(userName) }
-    var preferredAudio by remember { mutableStateOf("Hindi Dubbed (Dual Audio)") }
+    var userName by remember { mutableStateOf(LibraryManager.getUserName(context)) }
+    var userAvatarId by remember { mutableIntStateOf(LibraryManager.getUserAvatarId(context)) }
+    var preferredAudio by remember { mutableStateOf(LibraryManager.getPreferredAudio(context)) }
+    var preferredQuality by remember { mutableStateOf(LibraryManager.getPreferredQuality(context)) }
+    var appTheme by remember { mutableStateOf(LibraryManager.getAppTheme(context)) }
+
+    var showAudioDialog by remember { mutableStateOf(false) }
+    var showQualityDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showProfileDialog by remember { mutableStateOf(false) }
+
+    if (showAudioDialog) {
+        AudioSelectionDialog(
+            current = preferredAudio,
+            onDismiss = { showAudioDialog = false },
+            onSelect = {
+                preferredAudio = it
+                LibraryManager.setPreferredAudio(context, it)
+                showAudioDialog = false
+                Toast.makeText(context, "Audio set to $it", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    if (showQualityDialog) {
+        QualitySelectionDialog(
+            current = preferredQuality,
+            onDismiss = { showQualityDialog = false },
+            onSelect = {
+                preferredQuality = it
+                LibraryManager.setPreferredQuality(context, it)
+                showQualityDialog = false
+                Toast.makeText(context, "Quality set to $it", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    if (showThemeDialog) {
+        ThemeSelectionDialog(
+            current = appTheme,
+            onDismiss = { showThemeDialog = false },
+            onSelect = {
+                appTheme = it
+                LibraryManager.setAppTheme(context, it)
+                showThemeDialog = false
+                Toast.makeText(context, "Theme set to $it", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    if (showProfileDialog) {
+        ProfileEditDialog(
+            initialName = userName,
+            initialAvatarId = userAvatarId,
+            onDismiss = { showProfileDialog = false },
+            onSave = { newName, newAvatarId ->
+                userName = newName
+                userAvatarId = newAvatarId
+                LibraryManager.setUserName(context, newName)
+                LibraryManager.setUserAvatarId(context, newAvatarId)
+                showProfileDialog = false
+                Toast.makeText(context, "Profile updated!", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
 
     Column(
         Modifier
@@ -3050,7 +3289,7 @@ private fun ProfileScreen(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // User Profile Header Card with Transparent Logo
+        // User Profile Header Card
         Row(
             Modifier
                 .fillMaxWidth()
@@ -3059,18 +3298,27 @@ private fun ProfileScreen(
                 .padding(18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_logo_transparent),
-                contentDescription = "Orbit Logo",
+            val avatarIcon = when (userAvatarId) {
+                1 -> Icons.Default.RocketLaunch
+                2 -> Icons.Default.Stars
+                3 -> Icons.Default.MovieFilter
+                else -> Icons.Default.AccountCircle
+            }
+            Box(
                 modifier = Modifier
-                    .size(60.dp)
+                    .size(56.dp)
                     .clip(RoundedCornerShape(14.dp))
-            )
+                    .background(Color(0xFF1E2D42))
+                    .clickable { showProfileDialog = true },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(avatarIcon, contentDescription = "Avatar", tint = Color(0xFF38BDF8), modifier = Modifier.size(32.dp))
+            }
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(userName, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    IconButton(onClick = { nameDraft = userName; showEditName = true }, modifier = Modifier.size(24.dp)) {
+                    IconButton(onClick = { showProfileDialog = true }, modifier = Modifier.size(24.dp)) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFFF1F5F9), modifier = Modifier.size(16.dp))
                     }
                 }
@@ -3098,7 +3346,7 @@ private fun ProfileScreen(
         ) {
             StatCard("Watchlist", "$watchlistCount", Modifier.weight(1f))
             StatCard("Watched", "$historyCount", Modifier.weight(1f))
-            StatCard("Quality", "1080p Ultra", Modifier.weight(1f))
+            StatCard("Quality", preferredQuality.substringBefore(" ").take(5), Modifier.weight(1f))
         }
 
         Text("Audio & Content Preferences", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -3109,11 +3357,11 @@ private fun ProfileScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                PreferenceRow("Preferred Audio", preferredAudio)
+                PreferenceRow("Preferred Audio", preferredAudio, onClick = { showAudioDialog = true })
                 Divider(color = Color(0xFF1E2A3A))
-                PreferenceRow("Default Quality", "1080p Full HD (Adaptive)")
+                PreferenceRow("Default Quality", preferredQuality, onClick = { showQualityDialog = true })
                 Divider(color = Color(0xFF1E2A3A))
-                PreferenceRow("Subtitles", "English & Hindi (Auto)")
+                PreferenceRow("Theme Settings", appTheme, onClick = { showThemeDialog = true })
             }
         }
 
@@ -3138,111 +3386,6 @@ private fun ProfileScreen(
             Spacer(Modifier.width(8.dp))
             Text("Revisit Welcome Tour & Features")
         }
-
-        // Cache & About
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF121A25)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("App Cache", color = Color.White, fontWeight = FontWeight.SemiBold)
-                        Text("Temporary poster and stream cache: 14.8 MB", color = Color(0xFF8F9CAA), fontSize = 11.sp)
-                    }
-                    TextButton(onClick = {
-                        Toast.makeText(context, "Cache cleared successfully!", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Text("Clear", color = Color(0xFFF1F5F9))
-                    }
-                }
-                Divider(color = Color(0xFF1E2A3A))
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("App Version", color = Color(0xFF8F9CAA), fontSize = 12.sp)
-                    Text("Orbit v1.2.0 (Official Release)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-                Divider(color = Color(0xFF1E2A3A))
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Developer Support", color = Color(0xFF8F9CAA), fontSize = 12.sp)
-                    Text("Anshdeep Singh", color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-
-        // Support Buttons (AniDash style)
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Button(
-                onClick = {
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://buymeacoffee.com/anshdeepofficial"))
-                        context.startActivity(intent)
-                    } catch (_: Exception) {}
-                },
-                modifier = Modifier.weight(1f).height(44.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFDD00), contentColor = Color.Black),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(Icons.Default.Coffee, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Coffee", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-            }
-            Button(
-                onClick = {
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/sponsors/anshdeepofficial1"))
-                        context.startActivity(intent)
-                    } catch (_: Exception) {}
-                },
-                modifier = Modifier.weight(1f).height(44.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA4AAA), contentColor = Color.White),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Sponsor", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-            }
-        }
-    }
-
-    if (showEditName) {
-        AlertDialog(
-            onDismissRequest = { showEditName = false },
-            containerColor = Color(0xFF151D29),
-            title = { Text("Edit Profile Name", color = Color.White) },
-            text = {
-                OutlinedTextField(
-                    value = nameDraft,
-                    onValueChange = { nameDraft = it },
-                    singleLine = true,
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    if (nameDraft.isNotBlank()) userName = nameDraft.trim()
-                    showEditName = false
-                }) { Text("Save") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditName = false }) { Text("Cancel") }
-            }
-        )
     }
 }
 
@@ -3263,14 +3406,24 @@ private fun StatCard(title: String, value: String, modifier: Modifier = Modifier
 }
 
 @Composable
-private fun PreferenceRow(label: String, value: String) {
+private fun PreferenceRow(label: String, value: String, onClick: (() -> Unit)? = null) {
     Row(
-        Modifier.fillMaxWidth(),
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(enabled = onClick != null) { onClick?.invoke() }
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, color = Color(0xFFC0CCD9), fontSize = 13.sp)
-        Text(value, color = Color(0xFFF1F5F9), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(value, color = Color(0xFFF1F5F9), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            if (onClick != null) {
+                Spacer(Modifier.width(4.dp))
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(16.dp))
+            }
+        }
     }
 }
 
@@ -3381,20 +3534,366 @@ private fun SettingsDivider() {
     Divider(color = Color(0x14FFFFFF), thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
 }
 
+@Composable
+private fun AudioSelectionDialog(
+    current: String,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit
+) {
+    val options = listOf(
+        "Hindi Dubbed (Dual Audio)",
+        "Original (English Audio)",
+        "Multi-Audio (Hindi / Tamil / Telugu / Eng)",
+        "Original with English Subtitles"
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Audio Language Priority", color = Color.White, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                options.forEach { opt ->
+                    val isSelected = opt == current
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isSelected) Color(0xFF1E2D42) else Color(0xFF101722),
+                        border = BorderStroke(1.dp, if (isSelected) Color(0xFF38BDF8) else Color(0xFF1E2836)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(opt) }
+                    ) {
+                        Row(
+                            Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(opt, color = Color.White, fontSize = 13.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium)
+                            if (isSelected) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close", color = Color(0xFF94A3B8)) }
+        },
+        containerColor = Color(0xFF0F1520),
+        shape = RoundedCornerShape(18.dp)
+    )
+}
+
+@Composable
+private fun QualitySelectionDialog(
+    current: String,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit
+) {
+    val options = listOf(
+        "4K Ultra HD (2160p)",
+        "1080p Ultra HD (Auto)",
+        "720p HD (Balanced)",
+        "480p SD (Data Saver)"
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Streaming Quality", color = Color.White, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                options.forEach { opt ->
+                    val isSelected = opt == current
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isSelected) Color(0xFF1E2D42) else Color(0xFF101722),
+                        border = BorderStroke(1.dp, if (isSelected) Color(0xFF818CF8) else Color(0xFF1E2836)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(opt) }
+                    ) {
+                        Row(
+                            Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(opt, color = Color.White, fontSize = 13.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium)
+                            if (isSelected) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF818CF8), modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close", color = Color(0xFF94A3B8)) }
+        },
+        containerColor = Color(0xFF0F1520),
+        shape = RoundedCornerShape(18.dp)
+    )
+}
+
+@Composable
+private fun ThemeSelectionDialog(
+    current: String,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit
+) {
+    val options = listOf(
+        "AMOLED Cosmic Black",
+        "Deep Midnight Navy",
+        "Cyber Nebula Purple",
+        "Charcoal Slate"
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Theme Settings", color = Color.White, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                options.forEach { opt ->
+                    val isSelected = opt == current
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isSelected) Color(0xFF1E2D42) else Color(0xFF101722),
+                        border = BorderStroke(1.dp, if (isSelected) Color(0xFFA78BFA) else Color(0xFF1E2836)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(opt) }
+                    ) {
+                        Row(
+                            Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(opt, color = Color.White, fontSize = 13.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium)
+                            if (isSelected) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFFA78BFA), modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close", color = Color(0xFF94A3B8)) }
+        },
+        containerColor = Color(0xFF0F1520),
+        shape = RoundedCornerShape(18.dp)
+    )
+}
+
+@Composable
+private fun ProfileEditDialog(
+    initialName: String,
+    initialAvatarId: Int,
+    onDismiss: () -> Unit,
+    onSave: (String, Int) -> Unit
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var selectedAvatar by remember { mutableIntStateOf(initialAvatarId) }
+    val avatarIcons = listOf(
+        Icons.Default.AccountCircle,
+        Icons.Default.RocketLaunch,
+        Icons.Default.Stars,
+        Icons.Default.MovieFilter
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Profile Preferences", color = Color.White, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text("Display Name", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Color(0xFF38BDF8),
+                        unfocusedBorderColor = Color(0xFF263347)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text("Choose Cosmic Avatar", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    avatarIcons.forEachIndexed { idx, icon ->
+                        val isSelected = idx == selectedAvatar
+                        Surface(
+                            shape = CircleShape,
+                            color = if (isSelected) Color(0xFF38BDF8) else Color(0xFF1E2837),
+                            border = BorderStroke(2.dp, if (isSelected) Color.White else Color.Transparent),
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clickable { selectedAvatar = idx }
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    icon,
+                                    contentDescription = null,
+                                    tint = if (isSelected) Color.Black else Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(name.ifBlank { "Movie Enthusiast" }, selectedAvatar) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+            ) {
+                Text("Save Changes", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = Color(0xFF94A3B8)) }
+        },
+        containerColor = Color(0xFF0F1520),
+        shape = RoundedCornerShape(18.dp)
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AniDashSettingsScreen(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    var preferredAudio by remember { mutableStateOf("Hindi Dubbed (Dual Audio)") }
-    var preferredQuality by remember { mutableStateOf("1080p Ultra HD (Auto)") }
+    var preferredAudio by remember { mutableStateOf(LibraryManager.getPreferredAudio(context)) }
+    var preferredQuality by remember { mutableStateOf(LibraryManager.getPreferredQuality(context)) }
+    var appTheme by remember { mutableStateOf(LibraryManager.getAppTheme(context)) }
+    var userName by remember { mutableStateOf(LibraryManager.getUserName(context)) }
+    var userAvatarId by remember { mutableIntStateOf(LibraryManager.getUserAvatarId(context)) }
     var autoPlayNext by remember { mutableStateOf(true) }
     var appLockEnabled by remember { mutableStateOf(false) }
     var incognitoMode by remember { mutableStateOf(false) }
     var wifiOnlyDownloads by remember { mutableStateOf(true) }
     var gestureControls by remember { mutableStateOf(true) }
     var heroCarouselActive by remember { mutableStateOf(true) }
+
+    var showAudioDialog by remember { mutableStateOf(false) }
+    var showQualityDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showProfileDialog by remember { mutableStateOf(false) }
+    var showClearHistoryDialog by remember { mutableStateOf(false) }
+    var showClearCacheDialog by remember { mutableStateOf(false) }
+
+    if (showAudioDialog) {
+        AudioSelectionDialog(
+            current = preferredAudio,
+            onDismiss = { showAudioDialog = false },
+            onSelect = {
+                preferredAudio = it
+                LibraryManager.setPreferredAudio(context, it)
+                showAudioDialog = false
+                Toast.makeText(context, "Audio set to $it", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    if (showQualityDialog) {
+        QualitySelectionDialog(
+            current = preferredQuality,
+            onDismiss = { showQualityDialog = false },
+            onSelect = {
+                preferredQuality = it
+                LibraryManager.setPreferredQuality(context, it)
+                showQualityDialog = false
+                Toast.makeText(context, "Quality set to $it", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    if (showThemeDialog) {
+        ThemeSelectionDialog(
+            current = appTheme,
+            onDismiss = { showThemeDialog = false },
+            onSelect = {
+                appTheme = it
+                LibraryManager.setAppTheme(context, it)
+                showThemeDialog = false
+                Toast.makeText(context, "Theme set to $it", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    if (showProfileDialog) {
+        ProfileEditDialog(
+            initialName = userName,
+            initialAvatarId = userAvatarId,
+            onDismiss = { showProfileDialog = false },
+            onSave = { newName, newAvatarId ->
+                userName = newName
+                userAvatarId = newAvatarId
+                LibraryManager.setUserName(context, newName)
+                LibraryManager.setUserAvatarId(context, newAvatarId)
+                showProfileDialog = false
+                Toast.makeText(context, "Profile updated!", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    if (showClearHistoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearHistoryDialog = false },
+            title = { Text("Reset Watch Progress & History?", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("This will clear all continue watching rails and history across Orbit.", color = Color(0xFFCBD5E1)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        LibraryManager.clearHistory(context)
+                        LibraryManager.clearWatchProgress(context)
+                        showClearHistoryDialog = false
+                        Toast.makeText(context, "History and watch progress reset!", Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626), contentColor = Color.White)
+                ) {
+                    Text("Clear All", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearHistoryDialog = false }) { Text("Cancel", color = Color(0xFF94A3B8)) }
+            },
+            containerColor = Color(0xFF0F1520),
+            shape = RoundedCornerShape(18.dp)
+        )
+    }
+
+    if (showClearCacheDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearCacheDialog = false },
+            title = { Text("Clear Artwork Cache?", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("Frees disk space and forces download of the newest high-resolution posters.", color = Color(0xFFCBD5E1)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        try {
+                            val loader = coil3.SingletonImageLoader.get(context)
+                            loader.diskCache?.clear()
+                            loader.memoryCache?.clear()
+                        } catch (_: Exception) {}
+                        showClearCacheDialog = false
+                        Toast.makeText(context, "Artwork cache cleared!", Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+                ) {
+                    Text("Clear Cache", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearCacheDialog = false }) { Text("Cancel", color = Color(0xFF94A3B8)) }
+            },
+            containerColor = Color(0xFF0F1520),
+            shape = RoundedCornerShape(18.dp)
+        )
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -3433,8 +3932,8 @@ private fun AniDashSettingsScreen(
                         SettingsNavigationItem(
                             icon = Icons.Default.Person,
                             title = "Profile Preferences",
-                            subtitle = "Local account, bookmarks sync",
-                            onClick = { Toast.makeText(context, "Profile is active locally", Toast.LENGTH_SHORT).show() }
+                            subtitle = "$userName • Tap to edit name & avatar",
+                            onClick = { showProfileDialog = true }
                         )
                         SettingsDivider()
                         SettingsToggleItem(
@@ -3461,28 +3960,14 @@ private fun AniDashSettingsScreen(
                             icon = Icons.Default.Language,
                             title = "Audio Language Priority",
                             subtitle = preferredAudio,
-                            onClick = {
-                                preferredAudio = when (preferredAudio) {
-                                    "Hindi Dubbed (Dual Audio)" -> "Original (English Audio)"
-                                    "Original (English Audio)" -> "Multi-Audio (All Tracks)"
-                                    else -> "Hindi Dubbed (Dual Audio)"
-                                }
-                                Toast.makeText(context, "Preferred Audio: $preferredAudio", Toast.LENGTH_SHORT).show()
-                            }
+                            onClick = { showAudioDialog = true }
                         )
                         SettingsDivider()
                         SettingsNavigationItem(
                             icon = Icons.Default.HighQuality,
                             title = "Streaming Quality",
                             subtitle = preferredQuality,
-                            onClick = {
-                                preferredQuality = when (preferredQuality) {
-                                    "1080p Ultra HD (Auto)" -> "720p HD (Balanced)"
-                                    "720p HD (Balanced)" -> "480p Data Saver"
-                                    else -> "1080p Ultra HD (Auto)"
-                                }
-                                Toast.makeText(context, "Quality: $preferredQuality", Toast.LENGTH_SHORT).show()
-                            }
+                            onClick = { showQualityDialog = true }
                         )
                         SettingsDivider()
                         SettingsToggleItem(
@@ -3516,8 +4001,8 @@ private fun AniDashSettingsScreen(
                         SettingsNavigationItem(
                             icon = Icons.Default.Palette,
                             title = "Theme Settings",
-                            subtitle = "AMOLED Cosmic Black (Active)",
-                            onClick = { Toast.makeText(context, "AMOLED Cosmic Black is active", Toast.LENGTH_SHORT).show() }
+                            subtitle = "$appTheme (Active)",
+                            onClick = { showThemeDialog = true }
                         )
                         SettingsDivider()
                         SettingsToggleItem(
@@ -3536,17 +4021,14 @@ private fun AniDashSettingsScreen(
                             icon = Icons.Default.DeleteOutline,
                             title = "Clear Image & Poster Cache",
                             subtitle = "Frees temporary storage and re-downloads fresh artwork",
-                            onClick = { Toast.makeText(context, "Image cache cleared!", Toast.LENGTH_SHORT).show() }
+                            onClick = { showClearCacheDialog = true }
                         )
                         SettingsDivider()
                         SettingsNavigationItem(
                             icon = Icons.Default.HistoryEdu,
                             title = "Reset Watch Progress & History",
                             subtitle = "Clears all resume timestamps and recently watched titles",
-                            onClick = {
-                                LibraryManager.clearHistory(context)
-                                Toast.makeText(context, "Watch history reset successfully", Toast.LENGTH_SHORT).show()
-                            }
+                            onClick = { showClearHistoryDialog = true }
                         )
                     }
 
@@ -3594,9 +4076,9 @@ private fun AniDashSettingsScreen(
                         SettingsNavigationItem(
                             icon = Icons.Default.Info,
                             title = "About Orbit",
-                            subtitle = "Orbit v1.2.0 • Crafted by Anshdeep Singh • 100% Free Forever",
+                            subtitle = "Orbit v1.3.0 • Crafted by Anshdeep Singh • 100% Free Forever",
                             onClick = {
-                                Toast.makeText(context, "Orbit v1.2.0 • 100% Free & Open Source", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Orbit v1.3.0 • 100% Free & Open Source", Toast.LENGTH_LONG).show()
                             }
                         )
                     }
@@ -3627,6 +4109,13 @@ private fun MovieDetailsScreen(
     var showDownloadDialog by remember { mutableStateOf(false) }
     var downloadingEpisode by remember { mutableStateOf<EpisodeSummary?>(null) }
     var selectedActor by remember { mutableStateOf<CastMember?>(null) }
+
+    BackHandler(enabled = selectedActor != null) {
+        selectedActor = null
+    }
+    BackHandler(enabled = selectedActor == null) {
+        onBack()
+    }
 
     var selectedSeasonNumber by remember { mutableStateOf(1) }
     var seasonDetailsData by remember(movie.id, selectedSeasonNumber) {
@@ -3814,151 +4303,115 @@ private fun MovieDetailsScreen(
             }
         }
 
-        // Action Buttons Row (WATCH NOW or COMING SOON + DOWNLOAD + WATCHLIST + FAVORITE)
+        // Action Buttons Row (Always Playable & Interactive)
         if (isUnreleased) {
-            // UNRELEASED / UPCOMING CARD
-            Card(
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = Color(0x28F59E0B),
+                border = BorderStroke(1.dp, Color(0x66F59E0B)),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF182230))
+                    .padding(horizontal = 20.dp, vertical = 6.dp)
             ) {
-                Column(
-                    Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Default.HourglassTop, contentDescription = null, tint = Color(0xFFF1F5F9), modifier = Modifier.size(22.dp))
-                        Text(
-                            "AWAITING THEATRICAL / DIGITAL RELEASE",
-                            color = Color(0xFFF1F5F9),
-                            fontWeight = FontWeight.Black,
-                            fontSize = 12.sp,
-                            letterSpacing = 1.sp
-                        )
-                    }
+                    Icon(Icons.Default.Movie, contentDescription = null, tint = Color(0xFFFBBF24), modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        "Official Release Date: " + (details?.releaseDate ?: movie.releaseDate ?: "Coming Soon"),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        "Theatrical / Early Release • Multi-Server Playback Active",
+                        color = Color(0xFFFDE68A),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        "This title is currently in production or awaiting release. Playback will be unlocked automatically on its official release date.",
-                        color = Color(0xFF9AA8BA),
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Button(
-                        onClick = {
-                            inWatchlist = LibraryManager.toggleWatchlist(context, movie)
-                            Toast.makeText(
-                                context,
-                                if (inWatchlist) "Added to Reminders & Watchlist!" else "Removed from Watchlist",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        },
-                        modifier = Modifier.fillMaxWidth().height(46.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (inWatchlist) Color(0xFF26354B) else Color(0xFFF1F5F9),
-                            contentColor = if (inWatchlist) Color(0xFFF1F5F9) else Color(0xFF17120B)
-                        )
-                    ) {
-                        Icon(if (inWatchlist) Icons.Default.Check else Icons.Default.NotificationsActive, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(if (inWatchlist) "REMINDER SET (IN WATCHLIST)" else "REMIND ME ON RELEASE", fontWeight = FontWeight.Bold)
-                    }
                 }
             }
-        } else {
-            // RELEASED TITLE: Clean Primary "WATCH NOW" + "DOWNLOAD" + "WATCHLIST" + "FAVORITE" Row
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
+        }
+
+        // Primary "WATCH NOW" + "DOWNLOAD" + "WATCHLIST" + "FAVORITE" Row
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = { playTitle() },
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFF1F5F9),
+                    contentColor = Color(0xFF17120B)
+                )
             ) {
-                Button(
-                    onClick = { playTitle() },
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF1F5F9),
-                        contentColor = Color(0xFF17120B)
-                    )
-                ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(24.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("WATCH NOW", fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
-                }
+                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("WATCH NOW", fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+            }
 
-                // Download Button with Offline Vault Status
-                IconButton(
-                    onClick = {
-                        if (isDownloaded) {
-                            Toast.makeText(context, "Already saved in Offline Vault!", Toast.LENGTH_SHORT).show()
-                        } else {
-                            showDownloadDialog = true
-                        }
-                    },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(if (isDownloaded) Color(0xFF1E3A24) else Color(0xFF16202E))
-                ) {
-                    Icon(
-                        if (isDownloaded) Icons.Default.CheckCircle else Icons.Default.Download,
-                        contentDescription = "Download Offline",
-                        tint = if (isDownloaded) Color(0xFF4CAF50) else Color(0xFFF1F5F9)
-                    )
-                }
+            // Download Button with Offline Vault Status
+            IconButton(
+                onClick = {
+                    if (isDownloaded) {
+                        Toast.makeText(context, "Already saved in Offline Vault!", Toast.LENGTH_SHORT).show()
+                    } else {
+                        showDownloadDialog = true
+                    }
+                },
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(if (isDownloaded) Color(0xFF1E3A24) else Color(0xFF16202E))
+            ) {
+                Icon(
+                    if (isDownloaded) Icons.Default.CheckCircle else Icons.Default.Download,
+                    contentDescription = "Download Offline",
+                    tint = if (isDownloaded) Color(0xFF4CAF50) else Color(0xFFF1F5F9)
+                )
+            }
 
-                IconButton(
-                    onClick = {
-                        inWatchlist = LibraryManager.toggleWatchlist(context, movie)
-                        Toast.makeText(
-                            context,
-                            if (inWatchlist) "Added to Watchlist" else "Removed from Watchlist",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF16202E))
-                ) {
-                    Icon(
-                        if (inWatchlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Watchlist",
-                        tint = if (inWatchlist) Color(0xFFF1F5F9) else Color.White
-                    )
-                }
+            IconButton(
+                onClick = {
+                    inWatchlist = LibraryManager.toggleWatchlist(context, movie)
+                    Toast.makeText(
+                        context,
+                        if (inWatchlist) "Added to Watchlist" else "Removed from Watchlist",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFF16202E))
+            ) {
+                Icon(
+                    if (inWatchlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                    contentDescription = "Watchlist",
+                    tint = if (inWatchlist) Color(0xFFF1F5F9) else Color.White
+                )
+            }
 
-                IconButton(
-                    onClick = {
-                        isFavorite = LibraryManager.toggleFavorite(context, movie)
-                        Toast.makeText(
-                            context,
-                            if (isFavorite) "Added to Favorites" else "Removed from Favorites",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF16202E))
-                ) {
-                    Icon(
-                        if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Favorite",
-                        tint = if (isFavorite) Color(0xFFFF5252) else Color.White
-                    )
-                }
+            IconButton(
+                onClick = {
+                    isFavorite = LibraryManager.toggleFavorite(context, movie)
+                    Toast.makeText(
+                        context,
+                        if (isFavorite) "Added to Favorites" else "Removed from Favorites",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFF16202E))
+            ) {
+                Icon(
+                    if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = "Favorite",
+                    tint = if (isFavorite) Color(0xFFFF5252) else Color.White
+                )
             }
         }
 
