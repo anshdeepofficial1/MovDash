@@ -307,7 +307,6 @@ private fun MovDashApp() {
                 LibraryManager.setPreferredAudio(context, audio)
                 prefs.edit().putBoolean("has_completed_onboarding", true).apply()
                 showAuthSetup = false
-                refreshLibrary()
             },
             onSkip = {
                 prefs.edit().putBoolean("has_completed_onboarding", true).apply()
@@ -911,6 +910,7 @@ private fun HomeScreen(
     onGenreClick: (String) -> Unit,
     onOpenSection: (SectionInfo) -> Unit
 ) {
+    val context = LocalContext.current
     var selectedNxshaCategory by remember { mutableStateOf("All") }
     val nxshaCategories = listOf("All", "Hollywood", "Bollywood", "South Cinema", "TV Series", "Movies")
 
