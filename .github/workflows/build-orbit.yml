@@ -26,6 +26,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
       - name: Prepare local properties
         run: |
           cat << 'EOF' > local.properties
