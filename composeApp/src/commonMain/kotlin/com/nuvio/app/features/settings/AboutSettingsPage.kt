@@ -31,7 +31,7 @@ import nuvio.composeapp.generated.resources.updates_debug_test_description
 import nuvio.composeapp.generated.resources.updates_debug_test_title
 import org.jetbrains.compose.resources.stringResource
 
-private const val PRIVACY_POLICY_URL = "https://github.com/anshdeepofficial1/MovDash#privacy-policy"
+private const val PRIVACY_POLICY_URL = "https://github.com/anshdeepofficial1/ZYLO#privacy-policy"
 
 internal fun LazyListScope.aboutSettingsContent(
     isTablet: Boolean,
