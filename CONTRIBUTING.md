@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve Nuvio.
+Thanks for helping improve ZYLO. Please preserve upstream license and attribution notices.
 
 ## Strict rules - read before opening anything
 

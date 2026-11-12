@@ -24,11 +24,17 @@ val localProps = Properties().apply {
     val propsFile = rootProject.file("local.properties")
     if (propsFile.exists()) propsFile.inputStream().use { load(it) }
 }
-val releaseStoreFile = localProps.getProperty("NUVIO_RELEASE_STORE_FILE")?.takeIf { it.isNotBlank() } ?: "zylo-release-key.jks"
-val releaseStorePassword = localProps.getProperty("NUVIO_RELEASE_STORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: "zylosecret2026"
-val releaseKeyAlias = localProps.getProperty("NUVIO_RELEASE_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "zylo"
-val releaseKeyPassword = localProps.getProperty("NUVIO_RELEASE_KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: "zylosecret2026"
+fun releaseProperty(key: String): String? =
+    providers.environmentVariable(key).orNull?.takeIf { it.isNotBlank() }
+        ?: localProps.getProperty(key)?.takeIf { it.isNotBlank() }
+
+val releaseStoreFile = releaseProperty("NUVIO_RELEASE_STORE_FILE")
+val releaseStorePassword = releaseProperty("NUVIO_RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = releaseProperty("NUVIO_RELEASE_KEY_ALIAS")
+val releaseKeyPassword = releaseProperty("NUVIO_RELEASE_KEY_PASSWORD")
 val releaseKeystore = releaseStoreFile?.let(rootProject::file)
+val hasReleaseSigning = releaseKeystore?.isFile == true &&
+    releaseStorePassword != null && releaseKeyAlias != null && releaseKeyPassword != null
 fun envOrLocalProperty(key: String): String? =
     providers.environmentVariable(key).orNull?.trim()?.takeIf { it.isNotBlank() }
         ?: localProps.getProperty(key)?.trim()?.takeIf { it.isNotBlank() }
@@ -46,7 +52,12 @@ val releaseAppVersionCode = readXcconfigValue(appVersionConfigFile, "CURRENT_PRO
     ?: error("CURRENT_PROJECT_VERSION is missing or invalid in ${appVersionConfigFile.path}")
 val requestedTaskNames = gradle.startParameter.taskNames.map { it.substringAfterLast(':') }
 val buildsReleaseApks = requestedTaskNames.any {
-    it.startsWith("assemble", ignoreCase = true) && it.endsWith("Release", ignoreCase = true)
+    (it.startsWith("assemble", ignoreCase = true) || it.startsWith("bundle", ignoreCase = true)) &&
+        it.endsWith("Release", ignoreCase = true)
+}
+
+if (buildsReleaseApks && !hasReleaseSigning) {
+    error("Release signing requires a private keystore and all four NUVIO_RELEASE_* settings. See SECURITY.md.")
 }
 
 android {
@@ -55,7 +66,7 @@ android {
     compileSdkMinor = libs.versions.android.compileSdkMinor.get().toInt()
 
     signingConfigs {
-        create("release") {
+        if (hasReleaseSigning) create("release") {
             storeFile = releaseKeystore
             storePassword = releaseStorePassword
             keyAlias = releaseKeyAlias
@@ -129,7 +140,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "../composeApp/proguard-rules.pro",
             )
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseSigning) signingConfig = signingConfigs.getByName("release")
             ndk {
                 debugSymbolLevel = "FULL"
             }
