@@ -1,0 +1,70 @@
+{
+  "name": "zylo-web",
+  "private": true,
+  "type": "module",
+  "version": "0.2.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anshdeepofficial1/ZYLO.git"
+  },
+  "bugs": {
+    "url": "https://github.com/anshdeepofficial1/ZYLO/issues"
+  },
+  "homepage": "https://github.com/anshdeepofficial1/ZYLO/tree/main/website",
+  "nuvioFork": {
+    "upstreamVersion": "0.3.35",
+    "upstreamRepository": "https://github.com/NuvioMedia/NuvioWeb",
+    "maintainer": "anshdeepofficial1",
+    "defaultBranch": "main"
+  },
+  "scripts": {
+    "build": "node ./scripts/build.mjs",
+    "prepare": "husky || true",
+    "test": "node --test \"**/*.test.mjs\"",
+    "build:on-release": "node ./scripts/release-build-poller.mjs",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "serve": "node ./scripts/serve.mjs"
+  },
+  "devDependencies": {
+    "@csstools/postcss-global-data": "^4.0.0",
+    "@eslint/js": "^9.39.4",
+    "autoprefixer": "^10.4.27",
+    "core-js": "3.49.0",
+    "core-js-compat": "3.49.0",
+    "cssnano": "^7.1.4",
+    "esbuild": "^0.27.3",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "postcss": "^8.5.9",
+    "prettier": "^3.8.4"
+  },
+  "overrides": {
+    "flatted": "3.4.2"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "0.12.10",
+    "@libav.js/variant-obsolete": "6.10.9",
+    "@mediabunny/aac-encoder": "1.65.2",
+    "@mediabunny/ac3": "1.65.2",
+    "@mediabunny/dts": "1.65.2",
+    "@mediabunny/prores": "1.65.2",
+    "@mediabunny/truehd": "1.65.2",
+    "@wasm-audio-decoders/aac": "0.0.1",
+    "cheerio": "1.2.0",
+    "crypto-js": "4.2.0",
+    "dashjs": "4.7.4",
+    "hls.js": "1.5.20",
+    "jszip": "^3.10.1",
+    "libbitsub": "^1.10.1",
+    "mediabunny": "1.65.2",
+    "quickjs-emscripten": "0.32.0",
+    "web-push": "^3.6.7"
+  },
+  "optionalDependencies": {
+    "ffmpeg-static": "5.3.0"
+  }
+}
