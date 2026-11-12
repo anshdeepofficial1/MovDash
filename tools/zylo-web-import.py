@@ -23,7 +23,7 @@ for name, size in [
     ("pwa-icon-512.png", 512), ("pwa-icon-maskable-192.png", 192),
     ("pwa-icon-maskable-512.png", 512),
 ]:
-    cmd = ["convert", str(icon), "-resize", f"{size}x{size}", "-background", "#0d0d0d", "-gravity", "center", "-extent", f"{size}x{size}", str(brand / name)]
+    cmd = [shutil.which("magick") or shutil.which("convert") or "convert", str(icon), "-resize", f"{size}x{size}", "-background", "#0d0d0d", "-gravity", "center", "-extent", f"{size}x{size}", str(brand / name)]
     if "maskable" in name:
         inset = round(size * 0.72)
         cmd[3] = f"{inset}x{inset}"

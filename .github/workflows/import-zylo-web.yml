@@ -23,6 +23,7 @@ jobs:
           test "$(git -C "$RUNNER_TEMP/web-source" rev-parse FETCH_HEAD)" = 8ab318ef050977515a69c7ee4944c9e6a90470ec
           mkdir -p website
           git -C "$RUNNER_TEMP/web-source" archive FETCH_HEAD | tar -x -C website
+          if ! command -v magick >/dev/null && ! command -v convert >/dev/null; then sudo apt-get update && sudo apt-get install -y imagemagick; fi
           python3 tools/zylo-web-import.py
           test -f website/index.html
           test -f website/LICENSE
@@ -33,8 +34,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Import pinned ZYLO Web browser source and branding"
           git push origin HEAD:work/zylo-web-import
-    outputs:
-      imported: ${{ steps.imported.outputs.sha }}
   build:
     needs: import
     runs-on: ubuntu-latest
