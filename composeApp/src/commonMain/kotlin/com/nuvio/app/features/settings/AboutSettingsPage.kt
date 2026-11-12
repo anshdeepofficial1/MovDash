@@ -128,18 +128,14 @@ internal fun LazyListScope.settingsFooterContent(isTablet: Boolean) {
                 modifier = Modifier.height(if (isTablet) 10.dp else 8.dp),
             )
             Text(
-                text = stringResource(Res.string.compose_about_made_with),
+                text = "Made with ❤️ by Anshdeep Singh",
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = stringResource(
-                    Res.string.compose_about_version_format,
-                    AppVersionConfig.VERSION_NAME,
-                    AppVersionConfig.VERSION_CODE,
-                ),
+                text = "Version ${AppVersionConfig.VERSION_NAME} (${AppVersionConfig.VERSION_CODE})",
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

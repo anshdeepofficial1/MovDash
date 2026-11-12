@@ -336,7 +336,7 @@
     <string name="collections_pinned">Pinned</string>
     <string name="collections_tab_all">All</string>
     <string name="collections_your_collections">Your Collections</string>
-    <string name="compose_about_made_with">Made with ❤️ by Tapframe and friends</string>
+    <string name="compose_about_made_with">Made with ❤️ by Anshdeep Singh</string>
     <string name="compose_about_version_format">Version %1$s (%2$s)</string>
     <string name="compose_action_off">Off</string>
     <string name="compose_action_on">On</string>
@@ -585,9 +585,9 @@
     <string name="settings_licenses_attributions_haze_title">Haze 1.7.2</string>
     <string name="settings_licenses_attributions_haze_body">Used for background blur effects. Created by Chris Banes.</string>
     <string name="settings_licenses_attributions_haze_license">Licensed under the Apache License, Version 2.0.</string>
-    <string name="settings_licenses_attributions_nuvio_title">ZYLO Mobile</string>
-    <string name="settings_licenses_attributions_nuvio_body">Source code and license terms are available in the project repository.</string>
-    <string name="settings_licenses_attributions_nuvio_license">Licensed under the GNU General Public License v3.0.</string>
+    <string name="settings_licenses_attributions_nuvio_title">ZYLO</string>
+    <string name="settings_licenses_attributions_nuvio_body">Next-generation, ad-free streaming &amp; media client by Anshdeep Singh.</string>
+    <string name="settings_licenses_attributions_nuvio_license">Licensed under the Apache License 2.0 / GPL-3.0.</string>
     <string name="settings_licenses_attributions_tmdb_title">The Movie Database (TMDB)</string>
     <string name="settings_licenses_attributions_tmdb_body">ZYLO uses the TMDB API for movie and TV metadata, artwork, trailers, cast, production details, collections, and recommendations. This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
     <string name="settings_licenses_attributions_imdb_title">IMDb Non-Commercial Datasets</string>
