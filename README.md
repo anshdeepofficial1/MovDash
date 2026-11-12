@@ -221,11 +221,9 @@ ZYLO is a media client, not a content-hosting service. It does not supply or hos
 
 ZYLO is not affiliated with or endorsed by TMDB, Trakt, Simkl, Jellyfin, Emby, or other external services.
 
-## 📄 License & Credits
+## 📄 License
 
-ZYLO is a modified distribution of the open-source [Nuvio Mobile](https://github.com/NuvioMedia/NuvioMobile) project. Original authors, contributors, copyright notices, and third-party license obligations are acknowledged and preserved.
-
-Distributed under the [GNU General Public License v3.0](LICENSE).
+Distributed under the [GNU General Public License v3.0](LICENSE). See [open-source notices](UPSTREAM_NOTICE.md).
 
 ---
 
