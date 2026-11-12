@@ -1,0 +1,56 @@
+name: Import ZYLO Web source
+on:
+  push:
+    branches: [work/zylo-web-import]
+    paths:
+      - ".github/workflows/import-zylo-web.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  import:
+    if: github.ref == 'refs/heads/work/zylo-web-import'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Import pinned source without executing it
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/web-source"
+          git -C "$RUNNER_TEMP/web-source" fetch --depth=1 https://github.com/alphasquare404/NuvioWeb.git 8ab318ef050977515a69c7ee4944c9e6a90470ec
+          test "$(git -C "$RUNNER_TEMP/web-source" rev-parse FETCH_HEAD)" = 8ab318ef050977515a69c7ee4944c9e6a90470ec
+          mkdir -p website
+          git -C "$RUNNER_TEMP/web-source" archive FETCH_HEAD | tar -x -C website
+          python3 tools/zylo-web-import.py
+          test -f website/index.html
+          test -f website/LICENSE
+          test -f website/vercel.json
+          git add -f website
+          git diff --cached --stat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Import pinned ZYLO Web browser source and branding"
+          git push origin HEAD:work/zylo-web-import
+    outputs:
+      imported: ${{ steps.imported.outputs.sha }}
+  build:
+    needs: import
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: work/zylo-web-import
+          persist-credentials: false
+      - name: Build static site without deployment credentials
+        working-directory: website
+        run: |
+          node --version
+          npm ci
+          node scripts/zylo-vercel-build.mjs
+          test -f dist/index.html
+          test -f dist/manifest.webmanifest
+          test -f dist/sw.js
