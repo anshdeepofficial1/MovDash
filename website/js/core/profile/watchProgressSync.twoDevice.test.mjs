@@ -174,9 +174,7 @@ async function pullWatched(device) {
 
 const RUNTIME_MS = 7_200_000;
 
-// Positions are given as a fraction of the runtime, because a small millisecond
-// count is ambiguous with a second count and gets rewritten by the heuristic
-// that rescues legacy rows.
+// Use the same millisecond unit as the Android RPC.
 const movie = (fraction) => ({
   contentId: "tt1375666",
   contentType: "movie",
@@ -808,4 +806,17 @@ test("an episode un-marked on one device does not come back from the other", asy
   });
   await pullWatched(a);
   assert.deepEqual(await localWatched(a, "tt1196946"), []);
+});
+
+
+test("an Android resume at exactly 12 seconds is not inflated on browser pull", async () => {
+  const cloud = createCloud();
+  const a = await createDevice("native-ms-a", cloud);
+  cloud.progress.set("tt1375666", {
+    content_id: "tt1375666", content_type: "movie", video_id: "tt1375666",
+    position: 12000, duration: RUNTIME_MS, last_watched: Date.now(),
+    progress_key: "tt1375666"
+  });
+  await a.run((service) => service.pull());
+  assert.deepEqual(positionsFor(await a.localProgress(), "tt1375666"), [12000]);
 });

@@ -1,0 +1,35 @@
+name: ZYLO Web verification
+on:
+  push:
+    branches: [main, work/zylo-web-import]
+    paths:
+      - "website/**"
+      - ".github/workflows/build-zylo-web.yml"
+  pull_request:
+    paths:
+      - "website/**"
+      - ".github/workflows/build-zylo-web.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: npm ci
+      - name: Verify account identity and watch progress reconciliation
+        run: node --test js/core/app/appIdentity.test.mjs js/core/profile/watchProgressMerge.test.mjs js/core/profile/watchProgressSync.twoDevice.test.mjs
+      - name: Build production web assets
+        run: |
+          node scripts/zylo-vercel-build.mjs
+          test -f dist/index.html
+          test -f dist/manifest.webmanifest
+          test -f dist/sw.js
+          grep -q '<title>ZYLO</title>' dist/index.html

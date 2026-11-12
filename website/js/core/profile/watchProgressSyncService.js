@@ -123,7 +123,12 @@ function mapProgressRow(row = {}) {
     }
     return Math.trunc(n > MAX_AMBIGUOUS_SECONDS_PROGRESS_VALUE ? n : n * 1000);
   };
-  const positionMs = hasPositionMs
+  // Native ZYLO and the watch-progress RPC write both values in milliseconds.
+  // Infer the legacy unit from the duration, not the position: a 12-second
+  // resume in a 2-hour movie is 12000 ms, never 12000 seconds.
+  const durationUsesMilliseconds =
+    hasDurationMs || Number(durationMsRaw) > MAX_AMBIGUOUS_SECONDS_PROGRESS_VALUE;
+  const positionMs = hasPositionMs || durationUsesMilliseconds
     ? toMilliseconds(positionMsRaw)
     : normalizeAmbiguousRemoteTime(positionMsRaw);
   const durationMs = hasDurationMs

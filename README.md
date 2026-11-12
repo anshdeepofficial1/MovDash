@@ -49,7 +49,7 @@
 
 ZYLO brings discovery, media organization, and a flexible video player together in a single app. Explore movies and TV series, find information about what you want to watch, organize your library, and continue playback from where you left off.
 
-Bring your own compatible media sources and configure the experience around your preferences. ZYLO is being developed as an independent project with an Android-only distribution.
+Bring your own compatible media sources and configure the experience around your preferences. ZYLO is being developed as an independent project with an Android application and a separately buildable browser/PWA project.
 
 > **Development preview:** Android compilation has been verified through GitHub Actions. A stable signed public release is not yet available. The features below reflect the media-client capabilities present in the source; service availability and runtime behavior depend on configuration and device compatibility.
 
@@ -96,6 +96,7 @@ Bring your own compatible media sources and configure the experience around your
 | Platform | Status |
 | --- | --- |
 | Android | Development APK available through GitHub Actions |
+| Web / PWA | Source available in [`website/`](website/); see [Vercel setup](website/ZYLO_WEB.md) |
 
 ## 📥 Install ZYLO
 
@@ -166,6 +167,7 @@ ZYLO/
 ├── androidApp/       Android application entry point
 ├── composeApp/       Shared UI, player, discovery and library
 ├── assets/           Shared project assets
+├── website/          Browser/PWA application and Vercel config
 ├── gradle/           Gradle version catalog and wrapper
 ├── testFixtures/     Test data
 └── .github/          Build workflows and issue templates

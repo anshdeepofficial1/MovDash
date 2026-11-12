@@ -39,5 +39,5 @@ test("app identity defaults a local build without a commit", () => {
 
 test("app identity rejects non-HTTPS runtime links", () => {
   const identity = createAppIdentity({ sourceRepositoryUrl: "javascript:alert(1)" });
-  assert.equal(identity.sourceRepositoryUrl, "https://github.com/alphasquare404/NuvioWeb");
+  assert.equal(identity.sourceRepositoryUrl, "https://github.com/anshdeepofficial1/ZYLO");
 });
