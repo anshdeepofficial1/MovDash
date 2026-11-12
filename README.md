@@ -22,12 +22,11 @@
   <img src="https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android 7.0 and newer" />
   <img src="https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin Multiplatform" />
   <img src="https://img.shields.io/badge/UI-Compose%20Multiplatform-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Compose Multiplatform" />
-  <img src="https://img.shields.io/badge/iOS-Source%20Included-111111?style=for-the-badge&logo=apple&logoColor=white" alt="iOS source included" />
 </p>
 
 <p align="center">
   <a href="https://github.com/anshdeepofficial1/ZYLO/actions/workflows/build-zylo.yml"><img src="https://img.shields.io/github/actions/workflow/status/anshdeepofficial1/ZYLO/build-zylo.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Android%20Build" alt="Android build status" /></a>
-  <a href="https://github.com/anshdeepofficial1/ZYLO/actions/runs/43155414384"><img src="https://img.shields.io/badge/Download-Preview%20APK-22C55E?style=for-the-badge&logo=android&logoColor=white" alt="Download ZYLO development preview" /></a>
+  <a href="https://github.com/anshdeepofficial1/ZYLO/actions/workflows/build-zylo.yml"><img src="https://img.shields.io/badge/Download-Preview%20APK-22C55E?style=for-the-badge&logo=android&logoColor=white" alt="Download ZYLO development preview" /></a>
   <a href="https://github.com/sponsors/anshdeepofficial1"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" /></a>
   <a href="https://buymeacoffee.com/anshdeepofficial1"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=000" alt="Buy Me a Coffee" /></a>
 </p>
@@ -50,7 +49,7 @@
 
 ZYLO brings discovery, media organization, and a flexible video player together in a single app. Explore movies and TV series, find information about what you want to watch, organize your library, and continue playback from where you left off.
 
-Bring your own compatible media sources and configure the experience around your preferences. ZYLO is being developed as an independent project with an Android-first distribution.
+Bring your own compatible media sources and configure the experience around your preferences. ZYLO is being developed as an independent project with an Android-only distribution.
 
 > **Development preview:** Android compilation has been verified through GitHub Actions. A stable signed public release is not yet available. The features below reflect the media-client capabilities present in the source; service availability and runtime behavior depend on configuration and device compatibility.
 
@@ -92,26 +91,23 @@ Bring your own compatible media sources and configure the experience around your
 - Configurable notifications and update-check settings.
 - Mobile and tablet layouts built with Compose Multiplatform.
 
-## 📱 Platform Availability
+## 📱 Android Availability
 
 | Platform | Status |
 | --- | --- |
 | Android | Development APK available through GitHub Actions |
-| iOS | Source project included; ZYLO-signed IPA not yet published |
-| Desktop | No ZYLO desktop release announced |
-| TV | No ZYLO TV release announced |
 
 ## 📥 Install ZYLO
 
 ### Android development preview
 
-1. Sign in to GitHub and open the [ZYLO Android build](https://github.com/anshdeepofficial1/ZYLO/actions/runs/43155414384).
+1. Sign in to GitHub, open the [ZYLO Android build workflow](https://github.com/anshdeepofficial1/ZYLO/actions/workflows/build-zylo.yml), and select the newest successful run.
 2. Scroll to **Artifacts** and download `ZYLO-Android-debug`.
 3. Extract the downloaded ZIP file and open `ZYLO-debug.apk` on your Android device.
 4. If Android asks, allow installation from the browser or file manager.
 5. Install and open the development build.
 
-The preview requires Android 7.0 or newer. GitHub Actions artifacts expire; if this particular build is unavailable, open the [Android build workflow](https://github.com/anshdeepofficial1/ZYLO/actions/workflows/build-zylo.yml) and select a newer successful run.
+The preview requires Android 7.0 or newer. GitHub Actions artifacts expire, so select a recent successful build.
 
 ### Public releases & updates
 
@@ -123,14 +119,14 @@ Development APKs and future production builds may have different application IDs
 
 | Area | Technology |
 | --- | --- |
-| Platform | Android 7.0+ / iOS source |
+| Platform | Android 7.0+ |
 | Language | Kotlin |
 | Architecture | Kotlin Multiplatform |
 | UI | Compose Multiplatform / Material 3 |
 | Android playback | Media3 / ExoPlayer, supported MPV integration |
 | Networking | Ktor |
 | Media metadata | TMDB and configured providers |
-| Build system | Gradle / Xcode |
+| Build system | Gradle |
 | CI & distribution | GitHub Actions / GitHub Releases |
 
 ## 🧑‍💻 Build From Source
@@ -141,12 +137,12 @@ Development APKs and future production builds may have different application IDs
 Requirements: Git, Android Studio, JDK 21, and Android SDK 37 with the required minor SDK level.
 
 ```bash
-git clone --recurse-submodules https://github.com/anshdeepofficial1/ZYLO.git
+git clone https://github.com/anshdeepofficial1/ZYLO.git
 cd ZYLO
 ```
 
 ```bash
-./gradlew :androidApp:assembleFullDebug -Pnuvio.android.distribution=full -Pnuvio.ios.distribution=appstore
+./gradlew :androidApp:assembleFullDebug -Pnuvio.android.distribution=full
 ```
 
 On Windows, use `gradlew.bat` instead of `./gradlew`.
@@ -163,32 +159,12 @@ Release signing requires a private keystore and the signing configuration docume
 
 </details>
 
-<details>
-<summary><strong>iOS development setup</strong></summary>
-
-Requirements: macOS, Xcode, and the applicable native dependencies.
-
-```bash
-env NUVIO_IOS_DISTRIBUTION=appstore xcodebuild \
-  -project iosApp/iosApp.xcodeproj \
-  -scheme iosApp \
-  -configuration Debug \
-  -sdk iphonesimulator \
-  -derivedDataPath build/ios-derived-simulator \
-  CODE_SIGNING_ALLOWED=NO build
-```
-
-Full iOS builds also require the upstream native engine framework. Bundle identifiers, signing, and distribution must be configured for ZYLO before releasing an IPA. The iOS build has not been independently verified as a ZYLO distribution.
-
-</details>
-
 ## 📁 Project Structure
 
 ```text
 ZYLO/
 ├── androidApp/       Android application entry point
 ├── composeApp/       Shared UI, player, discovery and library
-├── iosApp/           iOS application project
 ├── assets/           Shared project assets
 ├── gradle/           Gradle version catalog and wrapper
 ├── testFixtures/     Test data

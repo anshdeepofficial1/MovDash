@@ -4,7 +4,6 @@
 **/build/
 !composeApp/src/**/kotlin/com/nuvio/app/core/build/
 !composeApp/src/**/kotlin/com/nuvio/app/core/build/**
-xcuserdata
 !src/**/build/
 local.properties
 .idea
@@ -12,12 +11,6 @@ local.properties
 captures
 .externalNativeBuild
 .cxx
-*.xcodeproj/*
-!*.xcodeproj/project.pbxproj
-!*.xcodeproj/xcshareddata/
-!*.xcodeproj/project.xcworkspace/
-!*.xcworkspace/contents.xcworkspacedata
-**/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
 logs/
 analysis/
@@ -32,11 +25,7 @@ tools
 AGENTS.md
 PERFORMANCE_FINDINGS.md
 scripts/*
-!scripts/sign-ios-device-app.py
-iosApp/Configuration/DeviceSigning.local.json
 
-# Local MPVKit iOS build environment (sparse APFS image, see MPVKit docs)
-.mpvkit-build.sparseimage
 
 # Private signing material
 *.jks

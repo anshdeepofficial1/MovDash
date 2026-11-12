@@ -38,7 +38,7 @@ jobs:
             fi
           done
       - name: Build fullDebug APK
-        run: ./gradlew :androidApp:assembleFullDebug -Pnuvio.android.distribution=full -Pnuvio.ios.distribution=appstore --stacktrace
+        run: ./gradlew :androidApp:assembleFullDebug -Pnuvio.android.distribution=full --stacktrace
       - name: Prepare preview APK
         run: |
           mkdir -p release-output
