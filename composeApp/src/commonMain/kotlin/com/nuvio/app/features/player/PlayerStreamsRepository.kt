@@ -389,7 +389,13 @@ object PlayerStreamsRepository {
             streamAddons.forEach { addon ->
                 launch {
                     val meta = MetaDetailsRepository.peek(type = type, id = videoId.substringBefore(":"))
-                    val imdbId = meta?.imdbId
+                    var imdbId = if (videoId.startsWith("tt", ignoreCase = true)) videoId.substringBefore(":") else meta?.imdbId
+                    if (imdbId == null) {
+                        val numericId = videoId.removePrefix("tmdb:").removePrefix("series:").removePrefix("movie:").substringBefore(":").toIntOrNull()
+                        if (numericId != null) {
+                            imdbId = runCatching { com.nuvio.app.features.tmdb.TmdbService.tmdbToImdb(numericId, type) }.getOrNull()
+                        }
+                    }
                     val effectiveVideoId = if (videoId.startsWith("tt", ignoreCase = true)) {
                         videoId
                     } else if (imdbId != null) {

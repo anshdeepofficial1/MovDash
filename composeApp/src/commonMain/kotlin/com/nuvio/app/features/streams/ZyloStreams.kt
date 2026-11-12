@@ -37,9 +37,9 @@ object ZyloStreams {
             items.add(
                 StreamItem(
                     name = "ZYLO Direct • Server 1",
-                    title = "AutoEmbed Multi-Audio (S${s}E${e})",
-                    description = "Fast Adaptive • Multi-Language (Hindi / Dual / Eng)",
-                    url = "https://autoembed.cc/embed/player.php?id=$effectiveId&s=$s&e=$e",
+                    title = "NetMirror Dual Audio (S${s}E${e})",
+                    description = "Fast Adaptive • Multi-Audio (Hindi / Dual / Eng)",
+                    url = null,
                     externalUrl = "https://autoembed.cc/embed/player.php?id=$effectiveId&s=$s&e=$e",
                     addonName = "ZYLO Direct",
                     addonId = "zylo_direct",
@@ -50,8 +50,8 @@ object ZyloStreams {
                 StreamItem(
                     name = "ZYLO Direct • Server 2",
                     title = "VidLink Ultra HD (S${s}E${e})",
-                    description = "1080p Ultra • Original / Subtitles",
-                    url = "https://vidlink.pro/tv/$effectiveId/$s/$e",
+                    description = "1080p Ultra HD • Multi-Subtitles",
+                    url = null,
                     externalUrl = "https://vidlink.pro/tv/$effectiveId/$s/$e",
                     addonName = "ZYLO Direct",
                     addonId = "zylo_direct",
@@ -61,9 +61,9 @@ object ZyloStreams {
             items.add(
                 StreamItem(
                     name = "ZYLO Direct • Server 3",
-                    title = "VidSrc CC Stream (S${s}E${e})",
-                    description = "Fast HLS • Multi-Audio / Subtitles",
-                    url = "https://vidsrc.cc/v2/embed/tv/$effectiveId/$s/$e",
+                    title = "MovieBox Fast Stream (S${s}E${e})",
+                    description = "Fast HLS • Multi-Language / Dual",
+                    url = null,
                     externalUrl = "https://vidsrc.cc/v2/embed/tv/$effectiveId/$s/$e",
                     addonName = "ZYLO Direct",
                     addonId = "zylo_direct",
@@ -73,9 +73,9 @@ object ZyloStreams {
             items.add(
                 StreamItem(
                     name = "ZYLO Direct • Server 4",
-                    title = "MultiEmbed Adaptive (S${s}E${e})",
-                    description = "Adaptive HD • Global Mirrors",
-                    url = "https://multiembed.mov/?video_id=$effectiveId&tmdb=1&s=$s&e=$e",
+                    title = "DoFlakes Adaptive (S${s}E${e})",
+                    description = "Adaptive HD • Global Multi-Mirror",
+                    url = null,
                     externalUrl = "https://multiembed.mov/?video_id=$effectiveId&tmdb=1&s=$s&e=$e",
                     addonName = "ZYLO Direct",
                     addonId = "zylo_direct",
@@ -85,9 +85,9 @@ object ZyloStreams {
             items.add(
                 StreamItem(
                     name = "ZYLO Direct • Server 5",
-                    title = "Embed.su HD (S${s}E${e})",
-                    description = "Direct 1080p Stream",
-                    url = "https://embed.su/embed/tv/$effectiveId/$s/$e",
+                    title = "NXSH Direct Stream (S${s}E${e})",
+                    description = "Direct 1080p Stream • High Bitrate",
+                    url = null,
                     externalUrl = "https://embed.su/embed/tv/$effectiveId/$s/$e",
                     addonName = "ZYLO Direct",
                     addonId = "zylo_direct",
@@ -98,9 +98,9 @@ object ZyloStreams {
             items.add(
                 StreamItem(
                     name = "ZYLO Direct • Server 1",
-                    title = "AutoEmbed Multi-Audio HD",
-                    description = "Fast Adaptive • Multi-Language (Hindi / Dual / Eng)",
-                    url = "https://autoembed.cc/embed/player.php?id=$effectiveId",
+                    title = "NetMirror Dual Audio HD",
+                    description = "Fast Adaptive • Multi-Audio (Hindi / Dual / Eng)",
+                    url = null,
                     externalUrl = "https://autoembed.cc/embed/player.php?id=$effectiveId",
                     addonName = "ZYLO Direct",
                     addonId = "zylo_direct",
@@ -111,8 +111,8 @@ object ZyloStreams {
                 StreamItem(
                     name = "ZYLO Direct • Server 2",
                     title = "VidLink Ultra HD",
-                    description = "1080p Ultra • Original / Subtitles",
-                    url = "https://vidlink.pro/movie/$effectiveId",
+                    description = "1080p Ultra HD • Multi-Subtitles",
+                    url = null,
                     externalUrl = "https://vidlink.pro/movie/$effectiveId",
                     addonName = "ZYLO Direct",
                     addonId = "zylo_direct",
@@ -122,9 +122,9 @@ object ZyloStreams {
             items.add(
                 StreamItem(
                     name = "ZYLO Direct • Server 3",
-                    title = "VidSrc CC Stream",
-                    description = "Fast HLS • Multi-Audio / Dual",
-                    url = "https://vidsrc.cc/v2/embed/movie/$effectiveId",
+                    title = "MovieBox Fast Stream",
+                    description = "Fast HLS • Multi-Language / Dual",
+                    url = null,
                     externalUrl = "https://vidsrc.cc/v2/embed/movie/$effectiveId",
                     addonName = "ZYLO Direct",
                     addonId = "zylo_direct",
@@ -134,9 +134,9 @@ object ZyloStreams {
             items.add(
                 StreamItem(
                     name = "ZYLO Direct • Server 4",
-                    title = "MultiEmbed Adaptive",
-                    description = "Adaptive HD / SD • Multi-Language",
-                    url = "https://multiembed.mov/?video_id=$effectiveId&tmdb=1",
+                    title = "DoFlakes Adaptive",
+                    description = "Adaptive HD • Global Multi-Mirror",
+                    url = null,
                     externalUrl = "https://multiembed.mov/?video_id=$effectiveId&tmdb=1",
                     addonName = "ZYLO Direct",
                     addonId = "zylo_direct",
@@ -146,9 +146,9 @@ object ZyloStreams {
             items.add(
                 StreamItem(
                     name = "ZYLO Direct • Server 5",
-                    title = "Embed.su Direct",
-                    description = "Direct 1080p High Stream",
-                    url = "https://embed.su/embed/movie/$effectiveId",
+                    title = "NXSH Direct Stream",
+                    description = "Direct 1080p High Bitrate",
+                    url = null,
                     externalUrl = "https://embed.su/embed/movie/$effectiveId",
                     addonName = "ZYLO Direct",
                     addonId = "zylo_direct",

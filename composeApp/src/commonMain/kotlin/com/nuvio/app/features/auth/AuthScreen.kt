@@ -1,10 +1,14 @@
 package com.nuvio.app.features.auth
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,6 +33,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -42,6 +47,7 @@ import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
 import com.nuvio.app.core.ui.NuvioLoadingIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +56,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -111,6 +118,8 @@ import nuvio.composeapp.generated.resources.compose_auth_tagline
 import nuvio.composeapp.generated.resources.compose_auth_terms_link
 import nuvio.composeapp.generated.resources.compose_auth_terms_prefix
 import nuvio.composeapp.generated.resources.compose_auth_welcome_back
+import nuvio.composeapp.generated.resources.app_icon_original
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 internal val AuthTextPrimary = Color(0xFFF5F7F8)
@@ -445,152 +454,297 @@ private fun ZyloWelcomeLayout(
     statusBarTop: Dp,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(
-                start = 28.dp,
-                top = statusBarTop + 36.dp,
-                end = 28.dp,
-                bottom = 36.dp,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 380.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            AppBrandWordmark(
-                contentDescription = "ZYLO",
-                modifier = Modifier
-                    .fillMaxWidth(0.55f)
-                    .height(60.dp),
-            )
+    var welcomeStep by remember { mutableIntStateOf(0) }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = "Stream Without Limits",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AuthTextPrimary,
-                    textAlign = TextAlign.Center,
-                ),
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Movies, TV Series & Cinematic Universes in Ultra HD",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 14.sp,
-                    color = AuthTextSecondary,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 20.sp,
-                ),
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
+    AnimatedContent(
+        targetState = welcomeStep,
+        transitionSpec = {
+            if (targetState > initialState) {
+                slideInHorizontally { width -> width / 3 } + fadeIn() togetherWith
+                    slideOutHorizontally { width -> -width / 3 } + fadeOut()
+            } else {
+                slideInHorizontally { width -> -width / 3 } + fadeIn() togetherWith
+                    slideOutHorizontally { width -> width / 3 } + fadeOut()
+            }.using(SizeTransform(clip = false))
+        },
+        label = "welcome_steps",
+    ) { step ->
+        if (step == 0) {
+            // SLIDE 1: Professional, Centered, Clean "Welcome"
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        Color.White.copy(alpha = 0.04f),
-                        RoundedCornerShape(18.dp),
-                    )
-                    .border(
-                        1.dp,
-                        Color.White.copy(alpha = 0.08f),
-                        RoundedCornerShape(18.dp),
-                    )
-                    .padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                WelcomeFeatureRow(
-                    title = "Ultra HD 4K & 1080p",
-                    subtitle = "Direct high-speed streaming without lag",
-                )
-                WelcomeFeatureRow(
-                    title = "Multi-Audio & Dubbed",
-                    subtitle = "Hindi, English, Regional, and Dual Audio",
-                )
-                WelcomeFeatureRow(
-                    title = "Cinematic Universes",
-                    subtitle = "Marvel, DC, Star Wars, YRF Spy, Cop Universe",
-                )
-                WelcomeFeatureRow(
-                    title = "100% Ad-Free Experience",
-                    subtitle = "Zero ads, zero interruptions, pure streaming",
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Column(
-            modifier = Modifier
-                .widthIn(max = 380.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(
-                onClick = onSignInClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(26.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color.Black,
-                ),
-            ) {
-                Text(
-                    text = "Sign In",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                )
-            }
-
-            Button(
-                onClick = onSignUpClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(26.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White.copy(alpha = 0.08f),
-                    contentColor = Color.White,
-                ),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-            ) {
-                Text(
-                    text = "Create Account",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .clickable(onClick = onContinueAsGuest)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            ) {
-                Text(
-                    text = "Continue as Guest",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = AuthTextSecondary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = 32.dp,
+                        top = statusBarTop + 48.dp,
+                        end = 32.dp,
+                        bottom = 44.dp,
                     ),
-                )
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    // Big, Prominent ZYLO Logo
+                    Surface(
+                        modifier = Modifier.size(130.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        color = Color.Transparent,
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.app_icon_original),
+                            contentDescription = "ZYLO Logo",
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Text(
+                        text = "Welcome to ZYLO",
+                        style = MaterialTheme.typography.headlineLarge.copy(
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = AuthTextPrimary,
+                            textAlign = TextAlign.Center,
+                            letterSpacing = (-0.5).sp,
+                        ),
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "Your Ultimate Entertainment Destination",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 15.sp,
+                            color = AuthTextSecondary,
+                            textAlign = TextAlign.Center,
+                        ),
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 380.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Button(
+                        onClick = { welcomeStep = 1 },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp),
+                        shape = RoundedCornerShape(27.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color.Black,
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
+                    ) {
+                        Text(
+                            text = "Get Started  →",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 17.sp,
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .clickable(onClick = onContinueAsGuest)
+                            .padding(vertical = 8.dp, horizontal = 16.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "Continue as Guest",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = AuthTextSecondary.copy(alpha = 0.85f),
+                            ),
+                        )
+                    }
+                }
+            }
+        } else {
+            // SLIDE 2: Features & Sign In / Sign Up Details
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        start = 28.dp,
+                        top = statusBarTop + 24.dp,
+                        end = 28.dp,
+                        bottom = 36.dp,
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 380.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.White.copy(alpha = 0.08f),
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clickable { welcomeStep = 0 },
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "←",
+                                    color = Color.White,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+
+                        AppBrandWordmark(
+                            contentDescription = "ZYLO",
+                            modifier = Modifier
+                                .fillMaxWidth(0.45f)
+                                .height(46.dp)
+                                .align(Alignment.Center),
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Stream Without Limits",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AuthTextPrimary,
+                            textAlign = TextAlign.Center,
+                        ),
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = "Movies, TV Series & Cinematic Universes in Ultra HD",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 13.sp,
+                            color = AuthTextSecondary,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 18.sp,
+                        ),
+                    )
+
+                    Spacer(modifier = Modifier.height(22.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Color.White.copy(alpha = 0.04f),
+                                RoundedCornerShape(18.dp),
+                            )
+                            .border(
+                                1.dp,
+                                Color.White.copy(alpha = 0.08f),
+                                RoundedCornerShape(18.dp),
+                            )
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        WelcomeFeatureRow(
+                            title = "Ultra HD 4K & 1080p",
+                            subtitle = "Direct high-speed streaming without lag",
+                        )
+                        WelcomeFeatureRow(
+                            title = "Multi-Audio & Dubbed",
+                            subtitle = "Hindi, English, Regional, and Dual Audio",
+                        )
+                        WelcomeFeatureRow(
+                            title = "Cinematic Universes",
+                            subtitle = "Marvel, DC, Star Wars, YRF Spy, Cop Universe",
+                        )
+                        WelcomeFeatureRow(
+                            title = "100% Ad-Free Experience",
+                            subtitle = "Zero ads, zero interruptions, pure streaming",
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 380.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Button(
+                        onClick = onSignInClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(26.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color.Black,
+                        ),
+                    ) {
+                        Text(
+                            text = "Sign In",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                        )
+                    }
+
+                    Button(
+                        onClick = onSignUpClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(26.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White.copy(alpha = 0.08f),
+                            contentColor = Color.White,
+                        ),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+                    ) {
+                        Text(
+                            text = "Create Account",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clickable(onClick = onContinueAsGuest)
+                            .padding(vertical = 8.dp, horizontal = 16.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "Continue as Guest",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = AuthTextSecondary.copy(alpha = 0.85f),
+                            ),
+                        )
+                    }
+                }
             }
         }
     }

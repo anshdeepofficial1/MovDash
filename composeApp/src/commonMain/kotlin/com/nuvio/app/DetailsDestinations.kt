@@ -75,6 +75,7 @@ internal fun DetailsDestination(
 ) {
     val onBack = rememberGuardedPopBackStack(navController, route)
     val onOpenMeta = rememberOpenMeta(navController)
+    val scope = rememberCoroutineScope()
     val directorRole = stringResource(Res.string.person_role_director)
     val writerRole = stringResource(Res.string.person_role_writer)
     val creatorRole = stringResource(Res.string.person_role_creator)
@@ -87,10 +88,10 @@ internal fun DetailsDestination(
         onOpenMeta = onOpenMeta,
         onCastClick = { person, avatarTransitionKey ->
             val tmdbId = person.tmdbId
-            if (tmdbId != null && tmdbId > 0) {
+            val navigateToPerson: (Int) -> Unit = { id ->
                 navController.navigate(
                     PersonDetailRoute(
-                        personId = tmdbId,
+                        personId = id,
                         personName = person.name,
                         personPhoto = person.photo,
                         castAvatarTransitionKey = avatarTransitionKey,
@@ -104,6 +105,16 @@ internal fun DetailsDestination(
                         } ?: false,
                     ),
                 )
+            }
+            if (tmdbId != null && tmdbId > 0) {
+                navigateToPerson(tmdbId)
+            } else {
+                scope.launch {
+                    val resolvedId = com.nuvio.app.features.tmdb.TmdbService.searchPerson(person.name)
+                    if (resolvedId != null && resolvedId > 0) {
+                        navigateToPerson(resolvedId)
+                    }
+                }
             }
         },
         onCompanyClick = { company, entityKind ->

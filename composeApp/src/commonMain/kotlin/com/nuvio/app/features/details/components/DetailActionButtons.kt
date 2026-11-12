@@ -257,6 +257,7 @@ fun DetailActions(
     onWatchedClick: () -> Unit,
     onSaveClick: () -> Unit,
     onSaveLongClick: (() -> Unit)?,
+    onMoreClick: (() -> Unit)? = null,
 ) {
     val shuffleAction = onShuffleClick?.let { onClick ->
         DetailSecondaryAction(
@@ -289,6 +290,16 @@ fun DetailActions(
                     onLongClick = onSaveLongClick,
                 ),
             )
+            onMoreClick?.let { onClick ->
+                add(
+                    DetailSecondaryAction(
+                        label = "More Options",
+                        icon = Icons.Default.MoreHoriz,
+                        isActive = false,
+                        onClick = onClick,
+                    ),
+                )
+            }
         },
         isTablet = isTablet,
         onPlayClick = onPlayClick,

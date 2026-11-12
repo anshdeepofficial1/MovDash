@@ -8,6 +8,16 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
+    <queries>
+        <package android:name="com.anidash.anime" />
+        <package android:name="com.anidash.anime.debug" />
+        <package android:name="com.anidash.app" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="anidash" />
+        </intent>
+    </queries>
+
     <application
         android:name="com.nuvio.app.NuvioApplication"
         android:allowBackup="false"

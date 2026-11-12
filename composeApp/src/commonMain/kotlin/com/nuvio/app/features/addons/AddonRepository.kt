@@ -68,15 +68,23 @@ object AddonRepository {
         log.d { "initialize() — loading local addons for profile $currentProfileId" }
 
         val rawStoredUrls = AddonStorage.loadInstalledAddonUrls(currentProfileId)
+        val defaultAddons = listOf(
+            "https://v3-cinemeta.strem.io/manifest.json",
+            "https://torrentio.strem.fun/manifest.json",
+            "https://mediafusion.elfhosted.com/manifest.json",
+        )
         val storedUrls = if (rawStoredUrls.isEmpty()) {
-            val defaults = listOf(
-                "https://v3-cinemeta.strem.io/manifest.json",
-                "https://torrentio.strem.fun/manifest.json"
-            )
-            AddonStorage.saveInstalledAddonUrls(currentProfileId, defaults)
-            defaults
+            AddonStorage.saveInstalledAddonUrls(currentProfileId, defaultAddons)
+            defaultAddons
         } else {
-            dedupeManifestUrls(rawStoredUrls)
+            val deduped = dedupeManifestUrls(rawStoredUrls)
+            if (!deduped.contains("https://mediafusion.elfhosted.com/manifest.json")) {
+                val augmented = deduped + "https://mediafusion.elfhosted.com/manifest.json"
+                AddonStorage.saveInstalledAddonUrls(currentProfileId, augmented)
+                augmented
+            } else {
+                deduped
+            }
         }
         val enabledByUrl = loadLocalEnabledStates()
         log.d { "initialize() — local addon count: ${storedUrls.size}" }

@@ -40,3 +40,25 @@ internal fun List<MetaPreview>.filterReleasedItems(
     todayIsoDate: String,
     nowEpochMs: Long = EpisodeReleaseDatePlatform.nowEpochMs(),
 ): List<MetaPreview> = filterNot { item -> item.isUnreleased(todayIsoDate, nowEpochMs) }
+
+internal fun com.nuvio.app.features.details.MetaDetails.isUnreleased(
+    nowEpochMs: Long = EpisodeReleaseDatePlatform.nowEpochMs(),
+    todayIsoDate: String = EpisodeReleaseDatePlatform.localIsoDateAtEpochMs(nowEpochMs).orEmpty(),
+): Boolean {
+    if (type.equals("series", ignoreCase = true) || videos.isNotEmpty()) {
+        val firstEp = videos.firstOrNull { it.season == 1 && it.episode == 1 } ?: videos.firstOrNull()
+        if (firstEp?.released != null) {
+            isEpisodeReleaseAired(firstEp.released, nowEpochMs)?.let { hasAired ->
+                return !hasAired
+            }
+        }
+    }
+
+    val info = releaseInfo?.trim() ?: return false
+    isEpisodeReleaseAired(info, nowEpochMs)?.let { hasAired ->
+        return !hasAired
+    }
+    val releaseYear = yearRegex.find(info)?.value?.toIntOrNull() ?: return false
+    val currentYear = todayIsoDate.take(4).toIntOrNull() ?: return false
+    return releaseYear > currentYear
+}

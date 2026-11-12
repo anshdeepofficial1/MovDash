@@ -179,16 +179,6 @@ object StreamsRepository {
             groupByRepository = pluginUiState.groupStreamsByRepository,
         )
 
-        if (installedAddons.isEmpty() && pluginProviderGroups.isEmpty() && serverSources.isEmpty()) {
-            _uiState.value = StreamsUiState(
-                requestToken = requestToken,
-                isAnyLoading = false,
-                emptyStateReason = StreamsEmptyStateReason.NoAddonsInstalled,
-                autoPlayDecided = true,
-            )
-            return
-        }
-
         val streamAddons = installedAddons
             .mapNotNull { addon ->
                 val manifest = addon.manifest ?: return@mapNotNull null
@@ -472,7 +462,13 @@ object StreamsRepository {
             streamAddons.forEach { addon ->
                 launch {
                     val meta = MetaDetailsRepository.peek(type = type, id = parentMetaId ?: videoId.substringBefore(":"))
-                    val imdbId = meta?.imdbId
+                    var imdbId = if (videoId.startsWith("tt", ignoreCase = true)) videoId.substringBefore(":") else meta?.imdbId
+                    if (imdbId == null) {
+                        val numericId = (parentMetaId ?: videoId).removePrefix("tmdb:").removePrefix("series:").removePrefix("movie:").substringBefore(":").toIntOrNull()
+                        if (numericId != null) {
+                            imdbId = runCatching { com.nuvio.app.features.tmdb.TmdbService.tmdbToImdb(numericId, type) }.getOrNull()
+                        }
+                    }
                     val effectiveVideoId = if (videoId.startsWith("tt", ignoreCase = true)) {
                         videoId
                     } else if (imdbId != null) {

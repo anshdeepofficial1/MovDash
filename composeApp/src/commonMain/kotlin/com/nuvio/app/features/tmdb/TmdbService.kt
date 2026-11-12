@@ -66,6 +66,16 @@ object TmdbService {
         return imdbId
     }
 
+    suspend fun searchPerson(name: String): Int? {
+        val apiKey = TmdbSettingsRepository.effectiveApiKey()
+        val body = fetch<TmdbSearchPersonResponse>(
+            endpoint = "search/person",
+            apiKey = apiKey,
+            query = mapOf("query" to name.trim()),
+        ) ?: return null
+        return body.results.firstOrNull()?.id
+    }
+
     private suspend fun imdbToTmdb(imdbId: String, mediaType: String, apiKey: String): String? {
         val normalizedType = normalizeMediaType(mediaType)
         val cacheKey = "$imdbId:$normalizedType"
@@ -153,4 +163,14 @@ private data class TmdbExternalResult(
 @Serializable
 private data class TmdbExternalIdsResponse(
     @SerialName("imdb_id") val imdbId: String? = null,
+)
+
+@Serializable
+private data class TmdbSearchPersonResponse(
+    val results: List<TmdbSearchPersonResult> = emptyList(),
+)
+
+@Serializable
+private data class TmdbSearchPersonResult(
+    val id: Int,
 )

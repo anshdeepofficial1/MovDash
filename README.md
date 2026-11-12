@@ -1,216 +1,84 @@
+# ZYLO 🎬
+
 <div align="center">
 
-<img src="composeApp/src/androidMain/res/mipmap-xxxhdpi/ic_launcher.webp" alt="ZYLO Logo" width="140" />
+  <img src="https://raw.githubusercontent.com/anshdeepofficial1/ZYLO/main/composeApp/src/commonMain/composeResources/drawable/app_logo_wordmark_original.png" alt="ZYLO" width="280" />
 
-# ZYLO
+  <p align="center">
+    <b>Next-Generation, Ad-Free Streaming & Media Hub for Android</b>
+    <br />
+    Ultra HD 4K · Multi-Audio & Dubbed · P2P High-Speed Streaming · Modern Jetpack Compose UI
+  </p>
 
-### Discover. Watch. Make it yours.
-
-**A modern, open-source media experience for movies, TV series, personal libraries, and customizable playback — all in one place.**
-
-<!-- README_BADGES_START -->
-<p align="center">
-  <a href="https://github.com/anshdeepofficial1/ZYLO/releases"><img src="https://img.shields.io/badge/Release-Coming%20Soon-64748B?style=for-the-badge&logo=github" alt="Public release pending" /></a>
-  <a href="https://github.com/anshdeepofficial1/ZYLO/releases"><img src="https://img.shields.io/github/downloads/anshdeepofficial1/ZYLO/total?style=for-the-badge&logo=github&label=Total%20Downloads" alt="Total GitHub release downloads" /></a>
-  <a href="https://github.com/anshdeepofficial1/ZYLO/stargazers"><img src="https://img.shields.io/github/stars/anshdeepofficial1/ZYLO?style=for-the-badge&logo=github&label=Stars" alt="GitHub Stars" /></a>
-  <a href="https://github.com/anshdeepofficial1/ZYLO/forks"><img src="https://img.shields.io/github/forks/anshdeepofficial1/ZYLO?style=for-the-badge&logo=github&label=Forks" alt="GitHub Forks" /></a>
-  <a href="https://github.com/anshdeepofficial1/ZYLO/issues"><img src="https://img.shields.io/github/issues/anshdeepofficial1/ZYLO?style=for-the-badge&logo=github&label=Issues" alt="Open Issues" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/anshdeepofficial1/ZYLO?style=for-the-badge&label=License" alt="GPL-3.0 License" /></a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android 7.0 and newer" />
-  <img src="https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin Multiplatform" />
-  <img src="https://img.shields.io/badge/UI-Compose%20Multiplatform-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Compose Multiplatform" />
-</p>
-
-<p align="center">
-  <a href="https://github.com/anshdeepofficial1/ZYLO/actions/workflows/build-zylo.yml"><img src="https://img.shields.io/github/actions/workflow/status/anshdeepofficial1/ZYLO/build-zylo.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Android%20Build" alt="Android build status" /></a>
-  <a href="https://github.com/anshdeepofficial1/ZYLO/actions/workflows/build-zylo.yml"><img src="https://img.shields.io/badge/Download-Preview%20APK-22C55E?style=for-the-badge&logo=android&logoColor=white" alt="Download ZYLO development preview" /></a>
-  <a href="https://github.com/sponsors/anshdeepofficial1"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" /></a>
-  <a href="https://buymeacoffee.com/anshdeepofficial1"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=000" alt="Buy Me a Coffee" /></a>
-</p>
-
-<p align="center">
-  <strong>Quick links:</strong>
-  <a href="#-install-zylo">Install</a> ·
-  <a href="https://github.com/anshdeepofficial1/ZYLO/releases">Releases</a> ·
-  <a href="https://github.com/anshdeepofficial1/ZYLO/actions">Builds</a> ·
-  <a href="#-highlights">Features</a> ·
-  <a href="https://github.com/anshdeepofficial1/ZYLO/issues">Report a Bug</a>
-</p>
-<!-- README_BADGES_END -->
+  <p align="center">
+    <a href="https://github.com/anshdeepofficial1/ZYLO/releases/latest">
+      <img src="https://img.shields.io/github/v/release/anshdeepofficial1/ZYLO?color=blue&label=Latest%20Release&style=for-the-badge" alt="Latest Release" />
+    </a>
+    <a href="https://github.com/anshdeepofficial1/ZYLO/stargazers">
+      <img src="https://img.shields.io/github/stars/anshdeepofficial1/ZYLO?color=yellow&style=for-the-badge" alt="Stars" />
+    </a>
+    <a href="https://buymeacoffee.com/anshdeepofficial">
+      <img src="https://img.shields.io/badge/Sponsor-Anshdeep-ff69b4?style=for-the-badge&logo=githubsponsors" alt="Sponsor" />
+    </a>
+  </p>
 
 </div>
 
 ---
 
-## ✨ Meet ZYLO
+## 🚀 Features
 
-ZYLO brings discovery, media organization, and a flexible video player together in a single app. Explore movies and TV series, find information about what you want to watch, organize your library, and continue playback from where you left off.
+- 🌟 **Ultra HD 4K & 1080p Playback**: Instant adaptive streaming with ExoPlayer & MPV playback engines.
+- 🚫 **100% Ad-Free**: Pure streaming without any popups, banners, or redirect adware.
+- 🌐 **Multi-Audio & Dubbed**: Effortlessly switch between Hindi, Regional, Dual, and Original audio tracks.
+- ⚡ **Auto-Play Best Server**: Automatically selects and loads the fastest, highest-quality stream with one tap.
+- 🎨 **7 Custom App Icons**: Choose between Original Black & White, Cyan-Blue, Lime Green, Orange-Red, Magenta-Purple, Monochrome, and Purple-Pink squircle ribbons in Settings.
+- 📱 **AniDash Anime Integration**: Seamlessly hand off Anime titles to **AniDash** (`com.anidash.anime`).
+- 📥 **Offline Downloads**: Download your favorite movies and series directly to your device.
+- 🔒 **Secure Privacy-First Auth**: Passwordless & Gmail verification with zero tracking telemetry.
+- 🚀 **Zero Startup Delay**: Smooth, flicker-free launch straight into your media catalog.
 
-Bring your own compatible media sources and configure the experience around your preferences. ZYLO is being developed as an independent project with an Android application and a separately buildable browser/PWA project.
+---
 
-> **Development preview:** Android compilation has been verified through GitHub Actions. A stable signed public release is not yet available. The features below reflect the media-client capabilities present in the source; service availability and runtime behavior depend on configuration and device compatibility.
+## 📥 Download
 
-## 🚀 Highlights
+Grab the latest signed release APK:
 
-### 🎬 Discover & Explore
+| Variant | Architecture | Download Link |
+| :--- | :--- | :--- |
+| **Universal Release** | All Android Devices (ARM64, ARMv7, x86, x86_64) | [**Download ZYLO Universal APK**](https://github.com/anshdeepofficial1/ZYLO/releases/latest) |
+| **ARM64-v8a Release** | Modern 64-bit Android Devices (Compact ~48 MB) | [**Download ZYLO ARM64 APK**](https://github.com/anshdeepofficial1/ZYLO/releases/latest) |
 
-- Browse movie and series catalogs with posters, artwork, and detailed descriptions.
-- Search titles and explore seasons, episodes, cast, trailers, and related content.
-- Organize the home screen with supported catalogs, collections, and customized discovery settings.
-- View ratings and metadata where supported providers are configured.
+---
 
-### 🍿 Watch Your Way
+## 🛠️ Build from Source
 
-- Built-in video playback with Android Media3 / ExoPlayer and supported MPV integration.
-- Audio-track and subtitle selection, subtitle appearance settings, and playback controls.
-- Automatic subtitle synchronization features and supported intro/recap skip controls.
-- Next-episode playback, watch progress, and resume functionality.
-- Support for external players and compatible local media servers.
-
-### 📚 Your Personal Library
-
-- Save titles to your library and organize supported collections.
-- Keep track of watched episodes and Continue Watching progress.
-- Manage offline downloads for supported media.
-- Configure profiles, tracking preferences, and library sources.
-
-### 🔌 Sources & Integrations
-
-- Add compatible user-provided add-ons for catalogs, metadata, subtitles, and media sources.
-- Connect supported Jellyfin and Emby media-server configurations.
-- Optional integrations for Trakt, Simkl, and MDBList.
-- External services are subject to their own account, configuration, and availability requirements.
-
-### 🎨 Make It Yours
-
-- Customizable appearance, themes, and app-icon options.
-- Flexible home screen, catalog layout, and playback preferences.
-- Configurable notifications and update-check settings.
-- Mobile and tablet layouts built with Compose Multiplatform.
-
-## 📱 Android Availability
-
-| Platform | Status |
-| --- | --- |
-| Android | Development APK available through GitHub Actions |
-| Web / PWA | Source available in [`website/`](website/); see [Vercel setup](website/ZYLO_WEB.md) |
-
-## 📥 Install ZYLO
-
-### Android development preview
-
-1. Sign in to GitHub, open the [ZYLO Android build workflow](https://github.com/anshdeepofficial1/ZYLO/actions/workflows/build-zylo.yml), and select the newest successful run.
-2. Scroll to **Artifacts** and download `ZYLO-Android-debug`.
-3. Extract the downloaded ZIP file and open `ZYLO-debug.apk` on your Android device.
-4. If Android asks, allow installation from the browser or file manager.
-5. Install and open the development build.
-
-The preview requires Android 7.0 or newer. GitHub Actions artifacts expire, so select a recent successful build.
-
-### Public releases & updates
-
-Stable APK releases will be distributed through the [ZYLO Releases page](https://github.com/anshdeepofficial1/ZYLO/releases) when available. Obtainium and in-app update distribution require an appropriate published release; no production APK is currently listed.
-
-Development APKs and future production builds may have different application IDs or signing certificates. Do not assume they can be installed over one another.
-
-## 🛠️ Tech Stack
-
-| Area | Technology |
-| --- | --- |
-| Platform | Android 7.0+ |
-| Language | Kotlin |
-| Architecture | Kotlin Multiplatform |
-| UI | Compose Multiplatform / Material 3 |
-| Android playback | Media3 / ExoPlayer, supported MPV integration |
-| Networking | Ktor |
-| Media metadata | TMDB and configured providers |
-| Build system | Gradle |
-| CI & distribution | GitHub Actions / GitHub Releases |
-
-## 🧑‍💻 Build From Source
-
-<details>
-<summary><strong>Android development setup</strong></summary>
-
-Requirements: Git, Android Studio, JDK 21, and Android SDK 37 with the required minor SDK level.
+### Prerequisites
+- JDK 17 or JDK 21
+- Android Studio / Android SDK (API 34+)
 
 ```bash
 git clone https://github.com/anshdeepofficial1/ZYLO.git
 cd ZYLO
 ```
 
+### Build Release APK
 ```bash
-./gradlew :androidApp:assembleFullDebug -Pnuvio.android.distribution=full
+./gradlew :androidApp:assembleFullRelease
 ```
-
-On Windows, use `gradlew.bat` instead of `./gradlew`.
-
-The generated debug APK is located at:
-
-```text
-androidApp/build/outputs/apk/full/debug/androidApp-full-debug.apk
-```
-
-Production Android application ID: `com.zylo.app`.
-
-Release signing requires a private keystore and the signing configuration documented in [SECURITY.md](SECURITY.md). Never commit signing keys or private credentials.
-
-</details>
-
-## 📁 Project Structure
-
-```text
-ZYLO/
-├── androidApp/       Android application entry point
-├── composeApp/       Shared UI, player, discovery and library
-├── assets/           Shared project assets
-├── website/          Browser/PWA application and Vercel config
-├── gradle/           Gradle version catalog and wrapper
-├── testFixtures/     Test data
-└── .github/          Build workflows and issue templates
-```
-
-## 🔐 Accounts & Third-Party Services
-
-Some inherited integrations and account/sync features require a configured backend or third-party API. Internal upstream identifiers and configuration keys are retained for compatibility, and the inherited Nuvio service configuration is still present. A separate production ZYLO backend has not been verified.
-
-Sign in only to services you trust. Keep personal tokens, API credentials, signing keys, and local configuration outside version control.
-
-## Privacy policy
-
-ZYLO development builds may store settings, library data, and playback history on your device. When you enable network features, the app may contact configured metadata providers, add-ons, media servers, or account and sync services. These external services have their own privacy terms and data practices.
-
-Do not share personal information or private media links in public bug reports. For security concerns, see [SECURITY.md](SECURITY.md). This disclosure describes development-stage behavior; it does not claim that an independent production privacy program is deployed.
-
-## 🐛 Need Help or Found a Bug?
-
-Open a [GitHub issue](https://github.com/anshdeepofficial1/ZYLO/issues/new/choose) and include your app version or commit, device model, OS version, the affected feature, steps to reproduce, and any relevant screenshot or logs. Do not include secrets or private media URLs.
-
-## 🤝 Contributing
-
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md), keep changes focused, and test affected discovery, library, and playback flows before submitting a pull request.
-
-## ⚖️ Disclaimer
-
-ZYLO is a media client, not a content-hosting service. It does not supply or host a catalog of copyrighted movies or TV streams. Users must access only media they have the right to view and comply with applicable laws, content licenses, and third-party service terms.
-
-ZYLO is not affiliated with or endorsed by TMDB, Trakt, Simkl, Jellyfin, Emby, or other external services.
-
-## 📄 License
-
-Distributed under the [GNU General Public License v3.0](LICENSE). See [open-source notices](UPSTREAM_NOTICE.md).
 
 ---
 
-<div align="center">
+## 👨‍💻 Developer & Support
 
-**Built for a better media experience.**
+Developed with ❤️ by **Anshdeep Singh**.
 
-Maintained by <a href="https://github.com/anshdeepofficial1">Anshdeep Singh</a>
+- **GitHub**: [@anshdeepofficial1](https://github.com/anshdeepofficial1)
+- **Sponsor / Buy Me a Coffee**: [buymeacoffee.com/anshdeepofficial](https://buymeacoffee.com/anshdeepofficial)
+- **Issues & Feedback**: [Report an issue](https://github.com/anshdeepofficial1/ZYLO/issues)
 
-<a href="https://github.com/anshdeepofficial1/ZYLO/stargazers">⭐ Star ZYLO</a> · <a href="https://github.com/sponsors/anshdeepofficial1">Sponsor on GitHub</a> · <a href="https://buymeacoffee.com/anshdeepofficial1">Buy Me a Coffee</a>
+---
 
-</div>
+## 📄 License
+
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.

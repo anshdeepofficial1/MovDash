@@ -51,15 +51,69 @@ object CollectionRepository {
         if (hasLoaded) return
         hasLoaded = true
         val payload = CollectionStorage.loadPayload()
-        if (payload.isNullOrBlank()) return
+        val defaultIndianCollections = listOf(
+            Collection(
+                id = "zylo_bollywood",
+                title = "Bollywood & Hindi Hits",
+                folders = listOf(
+                    CollectionFolder(
+                        id = "zylo_bollywood_folder",
+                        title = "Bollywood & Hindi Hits",
+                        sources = listOf(
+                            CollectionSource(
+                                provider = "tmdb",
+                                tmdbSourceType = TmdbCollectionSourceType.DISCOVER.name,
+                                mediaType = "movie",
+                                sortBy = TmdbCollectionSort.POPULAR_DESC.value,
+                                filters = TmdbCollectionFilters(
+                                    withOriginalLanguage = "hi",
+                                    withOriginCountry = "IN",
+                                ),
+                            )
+                        ),
+                    )
+                ),
+            ),
+            Collection(
+                id = "zylo_south",
+                title = "South Indian Cinema",
+                folders = listOf(
+                    CollectionFolder(
+                        id = "zylo_south_folder",
+                        title = "South Indian Cinema",
+                        sources = listOf(
+                            CollectionSource(
+                                provider = "tmdb",
+                                tmdbSourceType = TmdbCollectionSourceType.DISCOVER.name,
+                                mediaType = "movie",
+                                sortBy = TmdbCollectionSort.POPULAR_DESC.value,
+                                filters = TmdbCollectionFilters(
+                                    withOriginalLanguage = "te|ta|ml|kn",
+                                    withOriginCountry = "IN",
+                                ),
+                            )
+                        ),
+                    )
+                ),
+            ),
+        )
+
+        if (payload.isNullOrBlank()) {
+            val normalized = normalizeCollections(defaultIndianCollections, source = "default collections")
+            _collections.value = CollectionMobileSettingsRepository.applyToCollections(normalized)
+            persist(sync = false)
+            return
+        }
 
         runCatching {
             val parsed = json.parseToJsonElement(payload)
             rawCollectionsJson = parsed
             val decoded = json.decodeFromJsonElement<List<Collection>>(parsed)
             val normalized = normalizeCollections(decoded, source = "local storage")
-            _collections.value = CollectionMobileSettingsRepository.applyToCollections(normalized)
-            if (normalized.size != decoded.size) {
+            val hasIndian = normalized.any { it.id == "zylo_bollywood" || it.id == "zylo_south" }
+            val finalCollections = if (!hasIndian) normalized + defaultIndianCollections else normalized
+            _collections.value = CollectionMobileSettingsRepository.applyToCollections(finalCollections)
+            if (finalCollections.size != decoded.size) {
                 persist(sync = false)
             }
         }.onFailure { e ->

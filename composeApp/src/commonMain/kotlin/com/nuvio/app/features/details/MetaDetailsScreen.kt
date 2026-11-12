@@ -1,5 +1,7 @@
 package com.nuvio.app.features.details
 
+import com.nuvio.app.features.home.isUnreleased
+
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -806,13 +808,16 @@ fun MetaDetailsScreen(
                 }
                 val primaryVideoId = seriesStreamVideoId ?: seriesAction?.videoId ?: meta.id
                 val shufflePoolEmpty = shuffleSettings.enabled && seriesAction == null
-                val isPrimaryPlayEnabled = shufflePoolEmpty || playbackAvailability.canPlay(
+                val isUnreleased = remember(meta) {
+                    meta.isUnreleased()
+                }
+                val isPrimaryPlayEnabled = !isUnreleased && (shufflePoolEmpty || playbackAvailability.canPlay(
                     type = meta.type,
                     videoId = primaryVideoId,
                     parentMetaId = meta.id,
                     seasonNumber = seriesAction?.seasonNumber,
                     episodeNumber = seriesAction?.episodeNumber,
-                )
+                ))
                 val playText = stringResource(Res.string.action_play)
                 val resumeText = stringResource(Res.string.action_resume)
                 val chooseEpisodesText = stringResource(Res.string.shuffle_change_selection)
@@ -822,8 +827,9 @@ fun MetaDetailsScreen(
                          meta.language?.equals("ja", ignoreCase = true) == true ||
                          meta.type.equals("anime", ignoreCase = true))
                 }
-                val playButtonLabel = remember(isAnime, movieProgress, seriesAction, meta.type, hasEpisodes, playText, resumeText, shufflePoolEmpty, chooseEpisodesText) {
+                val playButtonLabel = remember(isUnreleased, isAnime, movieProgress, seriesAction, meta.type, hasEpisodes, playText, resumeText, shufflePoolEmpty, chooseEpisodesText) {
                     when {
+                        isUnreleased -> "Unreleased" + (meta.releaseInfo?.let { " • $it" } ?: "")
                         isAnime -> "Play on AniDash"
                         shufflePoolEmpty -> chooseEpisodesText
                         (meta.type == "series" || hasEpisodes) && seriesAction != null ->

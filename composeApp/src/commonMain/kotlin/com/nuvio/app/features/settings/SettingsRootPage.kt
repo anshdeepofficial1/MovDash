@@ -65,13 +65,6 @@ internal fun LazyListScope.settingsRootContent(
                     }
                     SettingsCategory.Watch -> {
                         SettingsPageRow(
-                            page = SettingsPage.ContentDiscovery,
-                            description = Res.string.compose_settings_root_content_discovery_description,
-                            isTablet = isTablet,
-                            onPageClick = onPageClick,
-                        )
-                        SettingsGroupDivider(isTablet = isTablet)
-                        SettingsPageRow(
                             page = SettingsPage.Playback,
                             description = Res.string.settings_playback_subtitle,
                             isTablet = isTablet,

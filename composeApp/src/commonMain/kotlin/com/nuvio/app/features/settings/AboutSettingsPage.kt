@@ -48,16 +48,30 @@ internal fun LazyListScope.aboutSettingsContent(
             isTablet = isTablet,
         ) {
             SettingsGroup(isTablet = isTablet) {
-                if (showSupportersContributorsPage) {
-                    SettingsNavigationRow(
-                        title = stringResource(Res.string.compose_settings_page_supporters_contributors),
-                        description = stringResource(Res.string.about_supporters_contributors_subtitle),
-                        icon = SettingsPage.SupportersContributors.icon,
-                        isTablet = isTablet,
-                        onClick = onSupportersContributorsClick,
-                    )
-                    SettingsGroupDivider(isTablet = isTablet)
-                }
+                SettingsNavigationRow(
+                    title = "Developer",
+                    description = "Anshdeep Singh • github.com/anshdeepofficial1",
+                    icon = SettingsPage.SupportersContributors.icon,
+                    isTablet = isTablet,
+                    onClick = { uriHandler.openUri("https://github.com/anshdeepofficial1") },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsNavigationRow(
+                    title = "Source Code & GitHub",
+                    description = "github.com/anshdeepofficial1/ZYLO",
+                    icon = SettingsPage.LicensesAttributions.icon,
+                    isTablet = isTablet,
+                    onClick = { uriHandler.openUri("https://github.com/anshdeepofficial1/ZYLO") },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsNavigationRow(
+                    title = "Support & Sponsor 💖",
+                    description = "Help keep ZYLO 100% free and ad-free",
+                    icon = Icons.Rounded.Policy,
+                    isTablet = isTablet,
+                    onClick = { uriHandler.openUri("https://buymeacoffee.com/anshdeepofficial") },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
                 SettingsNavigationRow(
                     title = stringResource(Res.string.compose_settings_page_privacy_policy),
                     description = stringResource(Res.string.compose_settings_root_privacy_policy_description),
@@ -74,8 +88,6 @@ internal fun LazyListScope.aboutSettingsContent(
                     onClick = onLicensesAttributionsClick,
                 )
                 if (onCheckForUpdatesClick != null) {
-                    SettingsGroupDivider(isTablet = isTablet)
-                    UpdateChannelSettingsRow(isTablet = isTablet)
                     SettingsGroupDivider(isTablet = isTablet)
                     SettingsNavigationRow(
                         title = stringResource(Res.string.compose_settings_root_check_updates_title),
