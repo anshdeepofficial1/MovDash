@@ -1,5 +1,6 @@
 import { Router } from "../../ui/navigation/router.js";
 import { takeBrowserRoute } from "../../ui/navigation/browserRouteUrl.js";
+import { Platform } from "../../platform/index.js";
 import { AuthManager } from "../auth/authManager.js";
 import { MAX_PROFILES, ProfileManager } from "../../core/profile/profileManager.js";
 import { ProfileSyncService } from "../../core/profile/profileSyncService.js";
