@@ -57,3 +57,16 @@ export function readBrowserRoute(location = {}) {
   if (route === "folderDetail" && !params.folderId) return { route: "library", params: {} };
   return { route, params };
 }
+
+// Keep a startup deep link across the sign-in/profile gate, but consume it
+// only after the chosen profile is actually activated.
+let pendingRoute = null;
+export function stageBrowserRoute(location, profileId = null) {
+  pendingRoute = { target: readBrowserRoute(location), profileId: profileId == null ? null : String(profileId) };
+}
+export function takeBrowserRoute(profileId) {
+  const pending = pendingRoute;
+  pendingRoute = null;
+  if (!pending || (pending.profileId != null && pending.profileId !== String(profileId))) return null;
+  return pending.target;
+}
