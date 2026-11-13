@@ -18,7 +18,10 @@ export async function probeStreamCandidate(
 ) {
   if (!active()) return null;
   const identity = streamProbeIdentity(stream);
-  let url = String(stream.url || stream.externalUrl || "").trim();
+  // externalUrl is a browser navigation target, not a media source.
+  // Never send an external-only webpage to the media probe or resolver.
+  let url = String(stream.url || "").trim();
+  if (!url && String(stream.externalUrl || "").trim()) return null;
   if (!/^https?:/i.test(url)) url = "";
   if (mode === "client" && /^torrent-file:[a-f0-9]{40}:\d+$/.test(identity)) {
     const cached = await prober.probe("", { identity, reason: "label-cache" });
