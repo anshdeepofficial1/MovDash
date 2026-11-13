@@ -26,6 +26,8 @@ jobs:
         run: npm ci
       - name: Verify account identity and watch progress reconciliation
         run: node --test js/core/app/appIdentity.test.mjs js/core/profile/watchProgressMerge.test.mjs js/core/profile/watchProgressSync.twoDevice.test.mjs
+      - name: Verify external navigation is not probed as media
+        run: node --test --test-name-pattern="external navigation-only" js/core/player/probeStreamCandidate.test.mjs
       - name: Build production web assets
         run: |
           node scripts/zylo-vercel-build.mjs
