@@ -79,6 +79,12 @@ object AddonRepository {
             defaultAddons
         } else {
             var deduped = dedupeManifestUrls(rawStoredUrls)
+            if (!deduped.contains("https://torrentio.strem.fun/manifest.json")) {
+                deduped = deduped + "https://torrentio.strem.fun/manifest.json"
+            }
+            if (!deduped.contains("https://mediafusion.elfhosted.com/manifest.json")) {
+                deduped = deduped + "https://mediafusion.elfhosted.com/manifest.json"
+            }
             if (!deduped.contains("https://hd.plavio.site/manifest.json")) {
                 deduped = deduped + "https://hd.plavio.site/manifest.json"
             }
