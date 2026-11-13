@@ -137,3 +137,19 @@ test("failed or timed-out resolution finishes without starting a media probe; st
   assert.equal(probes, 0);
   assert.equal(published, 0);
 });
+
+test("external navigation-only entries are never requested by a media probe", async () => {
+  for (const mode of ["client", "server"]) {
+    const result = await probeStreamCandidate(
+      { probe: async () => assert.fail("must not probe a webpage") },
+      { id: "external-only", externalUrl: "https://example.test/watch.html" },
+      {
+        mode,
+        resolver: {
+          canResolveStream: () => assert.fail("must not resolve a navigation-only entry")
+        }
+      }
+    );
+    assert.equal(result, null);
+  }
+});
