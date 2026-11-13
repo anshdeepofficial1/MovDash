@@ -251,6 +251,20 @@ function selectAgeRating(data = {}, type = "movie") {
 }
 
 export const TmdbMetadataService = {
+  async fetchCredits({ tmdbId, contentType, language = null, signal = undefined } = {}) {
+    const settings = TmdbSettingsStore.get();
+    const apiKey = getEffectiveTmdbApiKey();
+    if (!settings.enabled || !settings.useCredits || !apiKey || !tmdbId) return null;
+    const type = resolveType(contentType);
+    const lang = normalizeTmdbLanguageCode(language || settings.language);
+    const params = new URLSearchParams({ api_key: apiKey, language: lang });
+    const response = await fetch(
+      `${TMDB_BASE_URL}/${type}/${encodeURIComponent(String(tmdbId))}/credits?${params}`,
+      { signal }
+    );
+    return response.ok ? await response.json() : null;
+  },
+
   async fetchEnrichment({ tmdbId, contentType, language = null } = {}) {
     const settings = TmdbSettingsStore.get();
     const apiKey = getEffectiveTmdbApiKey();
