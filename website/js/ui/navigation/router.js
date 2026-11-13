@@ -36,6 +36,7 @@ import { ProfileManager } from "../../core/profile/profileManager.js";
 import { RouteStateStore } from "./routeStateStore.js";
 import { getBrowserVerticalScrollOwner } from "./browserScrollPosition.js";
 import { setBrowserRouteTitle } from "./browserDocumentTitle.js";
+import { browserRouteUrl } from "./browserRouteUrl.js";
 import {
   canStackRouteUnderItself,
   createRouteContainer,
@@ -358,7 +359,7 @@ export const Router = {
       }
       if (Date.now() < Number(this.suppressPopstateUntil || 0)) {
         if (window?.history && typeof window.history.pushState === "function") {
-          window.history.pushState(this.createBrowserHistoryState(), "");
+          window.history.pushState(this.createBrowserHistoryState(), "", Platform.isBrowser() ? browserRouteUrl(this.current, this.currentParams) : undefined);
         }
         this.settlePreviousRouteBack(false);
         return;
@@ -411,7 +412,7 @@ export const Router = {
             previousIndex,
             previousRoute
           );
-          window.history.pushState(this.createBrowserHistoryState(), "");
+          window.history.pushState(this.createBrowserHistoryState(), "", Platform.isBrowser() ? browserRouteUrl(this.current, this.currentParams) : undefined);
         }
         this.settlePreviousRouteBack(false);
         return;
@@ -1093,16 +1094,29 @@ export const Router = {
 
     if (window?.history && typeof window.history.pushState === "function") {
       if (!this.historyInitialized) {
-        this.browserHistoryIndex = getNuvioHistoryIndex(window.history.state) ?? 0;
-        this.browserHistoryProvenance = null;
+        const existingState = window.history.state;
+        const sameRoute = existingState?.route === routeName;
+        this.browserHistoryIndex = sameRoute ? getNuvioHistoryIndex(existingState) ?? 0 : 0;
+        this.browserHistoryProvenance = sameRoute ? getNuvioHistoryProvenance(existingState) : null;
+        if (Platform.isBrowser() && options.seedHomeHistory && this.browserHistoryIndex === 0 && routeName !== "home") {
+          const homeState = this.createBrowserHistoryState("home", {}, 0, null);
+          window.history.replaceState(homeState, "", browserRouteUrl("home"));
+          this.browserHistoryIndex = 1;
+          this.browserHistoryProvenance = this.createBrowserHistoryProvenance(0, "home");
+          const state = this.createBrowserHistoryState();
+          window.history.pushState(state, "", browserRouteUrl(state.route, state.params));
+          this.historyInitialized = true;
+          await Screen.afterNavigationCommit?.(this.currentParams, navigationContext);
+          return;
+        }
         const state = this.createBrowserHistoryState();
-        window.history.replaceState(state, "");
+        window.history.replaceState(state, "", Platform.isBrowser() ? browserRouteUrl(state.route, state.params) : undefined);
         this.historyInitialized = true;
       } else if (!fromHistory) {
         if (replaceHistory || NON_BACKSTACK_ROUTES.has(previousRoute)) {
           RouteStateStore.clearByHistoryEntry(this.browserHistoryIndex);
           const state = this.createBrowserHistoryState();
-          window.history.replaceState(state, "");
+          window.history.replaceState(state, "", Platform.isBrowser() ? browserRouteUrl(state.route, state.params) : undefined);
         } else {
           const previousIndex = this.browserHistoryIndex;
           this.browserHistoryIndex = Math.max(0, Number(this.browserHistoryIndex || 0)) + 1;
@@ -1111,7 +1125,7 @@ export const Router = {
             previousRoute
           );
           const state = this.createBrowserHistoryState();
-          window.history.pushState(state, "");
+          window.history.pushState(state, "", Platform.isBrowser() ? browserRouteUrl(state.route, state.params) : undefined);
         }
       }
     }
@@ -1208,6 +1222,9 @@ export const Router = {
             previousRoute: departingRoute
           }
         );
+        if (Platform.isBrowser() && window.history?.replaceState) {
+          window.history.replaceState(this.createBrowserHistoryState(), "", browserRouteUrl("home"));
+        }
         return;
       }
 
@@ -1235,6 +1252,9 @@ export const Router = {
     });
 
     await this.routes[previousRoute].mount(previousParams, navigationContext);
+    if (Platform.isBrowser() && window.history?.replaceState) {
+      window.history.replaceState(this.createBrowserHistoryState(), "", browserRouteUrl(previousRoute, previousParams));
+    }
   },
 
   getCurrent() {
