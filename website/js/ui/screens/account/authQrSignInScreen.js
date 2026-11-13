@@ -121,6 +121,8 @@ export const AuthQrSignInScreen = {
 
       if (!result) {
         const raw = QrLoginService.getLastError();
+        const frame = this.container?.querySelector("#qr-container");
+        if (frame) frame.textContent = "QR unavailable. Select Refresh to retry.";
         this.setStatus(this.toFriendlyQrError(raw));
         return;
       }
@@ -138,6 +140,8 @@ export const AuthQrSignInScreen = {
       );
     } catch (error) {
       if (this.isMounted && sessionId === activeQrSessionId) {
+        const frame = this.container?.querySelector("#qr-container");
+        if (frame) frame.textContent = "QR unavailable. Select Refresh to retry.";
         this.setStatus(this.toFriendlyQrError(error?.message));
       }
     } finally {
