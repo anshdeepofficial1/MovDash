@@ -5,10 +5,10 @@ import { APP_IDENTITY } from "../../../core/app/appIdentity.js";
 
 export const LICENSES_ATTRIBUTION_SECTIONS = [
   {
-    title: "NuvioWeb",
+    title: "ZYLO",
     items: [
-      ["NuvioWeb", APP_IDENTITY.licenseUrl, "GNU General Public License v3.0"],
-      ["Upstream project and contributors", APP_IDENTITY.upstreamRepositoryUrl, "Originally created by Tapframe and contributors; web/community work by WhiteGiso, edoedac0, and other contributors. ZYLO is an independent fork."]
+      ["ZYLO", APP_IDENTITY.licenseUrl, "Apache License 2.0 / GNU General Public License v3.0"],
+      ["Maintained by Anshdeep Singh", APP_IDENTITY.sourceRepositoryUrl, "Next-generation, ad-free streaming & media client."]
     ]
   },
   {

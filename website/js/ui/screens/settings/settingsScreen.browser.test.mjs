@@ -70,19 +70,13 @@ test("Device Code dialog renders shared copy and trusted-link actions only while
   );
 });
 
-test("About renders independent fork identity and quiet community fallbacks", async () => {
+test("About renders ZYLO branding and developer attribution", async () => {
   const source = await settingsScreenSource();
 
   assert.match(source, /Version \$\{escapeHtml\(APP_IDENTITY\.version\)\}/);
-  assert.match(source, /Based on Nuvio \$\{escapeHtml\(APP_IDENTITY\.upstreamVersion\)\}/);
-  assert.match(source, /Maintained by \$\{escapeHtml\(APP_IDENTITY\.maintainer\)\}/);
-  assert.match(
-    source,
-    /Independent community fork\. Not affiliated with or endorsed by NuvioMedia\./
-  );
-  assert.match(source, /title: "View Contributors on GitHub"/);
-  assert.match(source, /hasDesktopSupporterSource\(\)/);
-  assert.doesNotMatch(source, /Contributors API is not configured\.|Unable to load supporters\./);
+  assert.match(source, /Made with ❤️ by Anshdeep Singh/);
+  assert.match(source, /title: "Developer"/);
+  assert.match(source, /title: "Source Code & GitHub"/);
 });
 
 test("mobile Playback selector rows preserve full-width copy while toggles retain their normal row", async () => {

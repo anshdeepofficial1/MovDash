@@ -220,7 +220,7 @@ const SETTINGS_RAIL_SCROLL_STIFFNESS = 180;
 const SETTINGS_RAIL_SCROLL_DAMPING_RATIO = 0.95;
 const SETTINGS_MARQUEE_VELOCITY_PX_PER_SECOND = 90; // ATV 45dp/s -> 90px/s
 const CURRENT_APP_VERSION = APP_IDENTITY.version;
-const PRIVACY_URL = "https://nuvio.tv/privacy-policy";
+const PRIVACY_URL = "https://github.com/anshdeepofficial1/ZYLO";
 
 function isDesktopSettingsBrowser() {
   return Platform.isBrowser();

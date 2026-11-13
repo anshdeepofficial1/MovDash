@@ -10,7 +10,13 @@ const ADDON_ENABLED_STATES_KEY = "installedAddonEnabledStates";
 const PROFILES_KEY = "profiles";
 const PROFILE_SCOPED_VERSION = 1;
 const MANIFEST_SUFFIX = "/manifest.json";
-const DEFAULT_ADDON_URLS = ["https://v3-cinemeta.strem.io", "https://opensubtitles-v3.strem.io"];
+const DEFAULT_ADDON_URLS = [
+  "https://v3-cinemeta.strem.io",
+  "https://opensubtitles-v3.strem.io",
+  "https://torrentio.strem.fun",
+  "https://mediafusion.elfhosted.com",
+  "https://anime-kitsu.strem.fun"
+];
 
 export class AddonRepository {
   constructor() {

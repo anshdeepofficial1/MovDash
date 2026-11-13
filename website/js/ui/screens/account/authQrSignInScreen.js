@@ -152,33 +152,60 @@ export const AuthQrSignInScreen = {
     }
   },
 
-  renderQr({ loginUrl, code }) {
+  renderQr({ loginUrl, code, qrImageUrl }) {
     const qrContainer = this.container?.querySelector("#qr-container");
     const codeText = this.container?.querySelector("#qr-code-text");
     if (!qrContainer || !codeText) return false;
     codeText.innerText = I18n.t("auth.qr.codeLabel", { code });
-    try {
-      const url = new URL(String(loginUrl || ""));
-      if (url.protocol !== "https:" || url.username || url.password) {
-        throw new Error("Invalid QR login URL");
+
+    const qrContent =
+      String(loginUrl || "").trim() ||
+      (code ? `https://api.nuvio.tv/auth/v1/tv?code=${encodeURIComponent(code)}` : "");
+
+    if (qrContent) {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.className = "qr-image qr-image-canvas";
+        canvas.setAttribute("aria-label", I18n.t("auth.qr.qrImageAlt"));
+        QrCodeGenerator.generate(canvas, qrContent, 512);
+
+        try {
+          const image = document.createElement("img");
+          image.className = "qr-image";
+          image.alt = I18n.t("auth.qr.qrImageAlt");
+          image.src = canvas.toDataURL("image/png");
+          image.onerror = () => {
+            qrContainer.replaceChildren(canvas);
+          };
+          qrContainer.replaceChildren(image);
+          return true;
+        } catch {
+          qrContainer.replaceChildren(canvas);
+          return true;
+        }
+      } catch (err) {
+        console.warn("Local QR generation failed, checking fallback:", err);
       }
-      const canvas = document.createElement("canvas");
-      QrCodeGenerator.generate(canvas, url.href, 512);
-      const image = document.createElement("img");
-      image.className = "qr-image";
-      image.alt = I18n.t("auth.qr.qrImageAlt");
-      image.src = canvas.toDataURL("image/png");
-      image.onerror = () => {
-        if (!qrContainer.contains(image)) return;
-        qrContainer.textContent = "Unable to display QR. Refresh to retry.";
-        this.setStatus("QR image could not be displayed. Return to email sign-in if needed.");
-      };
-      qrContainer.replaceChildren(image);
-      return true;
-    } catch {
-      qrContainer.textContent = "Unable to generate QR. Refresh to retry.";
-      return false;
     }
+
+    if (qrImageUrl) {
+      try {
+        const image = document.createElement("img");
+        image.className = "qr-image";
+        image.alt = I18n.t("auth.qr.qrImageAlt");
+        image.src = qrImageUrl;
+        image.onerror = () => {
+          qrContainer.textContent = "Unable to load QR. Select Refresh to retry.";
+        };
+        qrContainer.replaceChildren(image);
+        return true;
+      } catch {
+        // continue
+      }
+    }
+
+    qrContainer.textContent = "Unable to generate QR. Select Refresh to retry.";
+    return false;
   },
 
   clearQr() {

@@ -81,7 +81,7 @@ test("Compose defaults every production service to stable without a tag environm
 test("Docker Quick Deploy documents hosted defaults and server-only Trakt configuration", async () => {
   const [environmentTemplate, readme, environmentDocs] = await Promise.all([
     readRepositoryFile(".env.example"),
-    readRepositoryFile("README.md"),
+    readRepositoryFile("UPSTREAM_README.md"),
     readRepositoryFile("docs/environment.md")
   ]);
   const dockerSection = readme.split("## Self-host with Docker", 2)[1];
