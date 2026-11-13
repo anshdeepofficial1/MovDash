@@ -45,5 +45,15 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/(home|search|discover|library|settings|detail|streams|watch|account|sign-in|profiles|setup|addons|plugins|cast|catalog)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/(settings|library|sign-in|setup)/:path*",
+      "destination": "/index.html"
+    }
   ]
 }
