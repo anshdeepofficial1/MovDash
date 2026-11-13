@@ -6,6 +6,7 @@ import { AuthManager } from "../../../core/auth/authManager.js";
 import { I18n } from "../../../i18n/index.js";
 import { Platform } from "../../../platform/index.js";
 import { QrCodeGenerator } from "../../../core/qr/qrCodeGenerator.js";
+import { renderLoginQr } from "../../../core/qr/renderLoginQr.js";
 import { renderBackButtonIcon } from "../../components/backButtonIcon.js";
 
 let pollInterval = null;
@@ -152,60 +153,16 @@ export const AuthQrSignInScreen = {
     }
   },
 
-  renderQr({ loginUrl, code, qrImageUrl }) {
-    const qrContainer = this.container?.querySelector("#qr-container");
-    const codeText = this.container?.querySelector("#qr-code-text");
-    if (!qrContainer || !codeText) return false;
-    codeText.innerText = I18n.t("auth.qr.codeLabel", { code });
-
-    const qrContent =
-      String(loginUrl || "").trim() ||
-      (code ? `https://api.nuvio.tv/auth/v1/tv?code=${encodeURIComponent(code)}` : "");
-
-    if (qrContent) {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.className = "qr-image qr-image-canvas";
-        canvas.setAttribute("aria-label", I18n.t("auth.qr.qrImageAlt"));
-        QrCodeGenerator.generate(canvas, qrContent, 512);
-
-        try {
-          const image = document.createElement("img");
-          image.className = "qr-image";
-          image.alt = I18n.t("auth.qr.qrImageAlt");
-          image.src = canvas.toDataURL("image/png");
-          image.onerror = () => {
-            qrContainer.replaceChildren(canvas);
-          };
-          qrContainer.replaceChildren(image);
-          return true;
-        } catch {
-          qrContainer.replaceChildren(canvas);
-          return true;
-        }
-      } catch (err) {
-        console.warn("Local QR generation failed, checking fallback:", err);
-      }
-    }
-
-    if (qrImageUrl) {
-      try {
-        const image = document.createElement("img");
-        image.className = "qr-image";
-        image.alt = I18n.t("auth.qr.qrImageAlt");
-        image.src = qrImageUrl;
-        image.onerror = () => {
-          qrContainer.textContent = "Unable to load QR. Select Refresh to retry.";
-        };
-        qrContainer.replaceChildren(image);
-        return true;
-      } catch {
-        // continue
-      }
-    }
-
-    qrContainer.textContent = "Unable to generate QR. Select Refresh to retry.";
-    return false;
+  renderQr({ loginUrl, code }) {
+    return renderLoginQr({
+      loginUrl,
+      code,
+      container: this.container?.querySelector("#qr-container"),
+      codeText: this.container?.querySelector("#qr-code-text"),
+      document,
+      generator: QrCodeGenerator,
+      translate: (key, data) => I18n.t(key, data)
+    });
   },
 
   clearQr() {

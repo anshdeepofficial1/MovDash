@@ -7,8 +7,10 @@ export const LICENSES_ATTRIBUTION_SECTIONS = [
   {
     title: "ZYLO",
     items: [
-      ["ZYLO", APP_IDENTITY.licenseUrl, "Apache License 2.0 / GNU General Public License v3.0"],
-      ["Maintained by Anshdeep Singh", APP_IDENTITY.sourceRepositoryUrl, "Next-generation, ad-free streaming & media client."]
+      ["ZYLO", APP_IDENTITY.licenseUrl, "GNU General Public License v3.0"],
+      ["Maintained by Anshdeep Singh", APP_IDENTITY.sourceRepositoryUrl, "Independent media client."],
+      ["Upstream project and contributors", APP_IDENTITY.upstreamRepositoryUrl, "Originally created by Tapframe and contributors; web/community work by WhiteGiso, edoedac0, and other contributors. ZYLO is an independent fork."],
+      ["Upstream notice", "https://github.com/anshdeepofficial1/ZYLO/blob/main/UPSTREAM_NOTICE.md", "Original author and license acknowledgments."]
     ]
   },
   {
