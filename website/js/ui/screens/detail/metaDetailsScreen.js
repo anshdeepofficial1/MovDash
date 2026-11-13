@@ -654,7 +654,7 @@ function extractCast(meta = {}) {
       name: entry?.name || "",
       character: entry?.character || "",
       photo: toPhoto(entry?.photo || ""),
-      tmdbId: null
+      tmdbId: entry?.tmdbId || entry?.id || null
     };
   });
 
@@ -735,7 +735,7 @@ function extractCast(meta = {}) {
       ...linkCastEntries,
       ...creditEntries,
       ...crewEntries
-    ]).slice(0, 18);
+    ]);
   }
   if (appExtraEntries.length) {
     return mergeCastEntries(appExtraEntries, [
@@ -743,20 +743,20 @@ function extractCast(meta = {}) {
       ...linkCastEntries,
       ...creditEntries,
       ...crewEntries
-    ]).slice(0, 12);
+    ]);
   }
   if (directEntries.length) {
     return mergeCastEntries(directEntries, [
       ...linkCastEntries,
       ...creditEntries,
       ...crewEntries
-    ]).slice(0, 12);
+    ]);
   }
   if (linkCastEntries.length) {
-    return mergeCastEntries(linkCastEntries, [...creditEntries, ...crewEntries]).slice(0, 12);
+    return mergeCastEntries(linkCastEntries, [...creditEntries, ...crewEntries]);
   }
   if (creditEntries.length || crewEntries.length) {
-    return [...creditEntries, ...crewEntries].slice(0, 12);
+    return [...creditEntries, ...crewEntries];
   }
 
   return [];
@@ -2371,14 +2371,21 @@ export const MetaDetailsScreen = {
       // Addon metadata often provides cast names without portrait URLs. In that
       // case it is still useful to merge TMDB credits rather than treating the
       // non-empty name list as complete cast data.
-      if (!this.castItems.some((person) => String(person?.photo || "").trim())) {
-        const fallbackCast = await withTimeout(this.fetchTmdbCastFallback(this.meta), 3200, []);
-        if (Array.isArray(fallbackCast) && fallbackCast.length) {
-          this.castItems = extractCast({
-            castMembers: this.castItems,
-            cast: fallbackCast
-          });
-        }
+      // Credits can arrive independently, even when the full enrichment times
+      // out or the base addon already supplied a few cast names and photos.
+      const castMeta = this.meta;
+      if (!Array.isArray(castMeta?.credits?.cast) || !castMeta.credits.cast.length ||
+          this.castItems.some((person) => !String(person?.photo || "").trim())) {
+        void withTimeout(this.fetchTmdbCastFallback(castMeta), 10000, [])
+          .then((fallbackCast) => {
+            if (token !== this.detailLoadToken || !Array.isArray(fallbackCast) || !fallbackCast.length) return;
+            this.castItems = extractCast({
+              castMembers: this.castItems,
+              cast: fallbackCast
+            });
+            this.updateRenderedDetailSections(this.meta);
+          })
+          .catch(() => {});
       }
       this.selectedSeason = this.resolveInitialSelectedSeason(
         this.resumeProgress || progress,
@@ -3666,12 +3673,12 @@ export const MetaDetailsScreen = {
     if (!tmdbId) {
       return [];
     }
-    const enrichment = await TmdbMetadataService.fetchEnrichment({
+    const credits = await TmdbMetadataService.fetchCredits({
       tmdbId,
       contentType: normalizedType,
       language: settings.language
     });
-    const fallbackCast = extractCast({ credits: enrichment?.credits || null });
+    const fallbackCast = extractCast({ credits });
     return Array.isArray(fallbackCast) ? fallbackCast : [];
   },
 
@@ -5188,7 +5195,6 @@ export const MetaDetailsScreen = {
     }
     const className = kind === "movie" ? "movie-cast-track" : "series-cast-track";
     const cards = this.castItems
-      .slice(0, 18)
       .map((person) => {
         const tmdbPersonId = String(person?.tmdbId || "").trim();
         const browserPersonNavigation =
