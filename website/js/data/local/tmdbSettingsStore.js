@@ -4,7 +4,7 @@ import { TMDB_API_KEY } from "../../config.js";
 const KEY = "tmdbSettings";
 
 const DEFAULTS = {
-  enabled: false,
+  enabled: Boolean(String(TMDB_API_KEY || "").trim()),
   apiKey: "",
   modernHomeEnabled: false,
   enrichContinueWatching: true,
@@ -39,7 +39,9 @@ export function normalizeTmdbLanguageCode(value = DEFAULTS.language) {
 function normalizeTmdbSettings(value = {}) {
   const source = value && typeof value === "object" ? value : {};
   return {
-    enabled: Boolean(source.enabled),
+    enabled: source.enabled == null
+      ? Boolean(String(source.apiKey || TMDB_API_KEY || "").trim())
+      : Boolean(source.enabled),
     apiKey: String(source.apiKey || "").trim(),
     modernHomeEnabled: Boolean(source.modernHomeEnabled),
     enrichContinueWatching: source.enrichContinueWatching !== false,
