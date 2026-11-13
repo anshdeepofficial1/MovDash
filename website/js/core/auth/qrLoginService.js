@@ -346,7 +346,7 @@ async function startRpc(deviceNonce, redirectBaseUrl, includeDeviceName = true) 
   }
 
   const data = await response.json();
-  return data?.[0] || null;
+  return (Array.isArray(data) ? data[0] : data) || null;
 }
 
 export const QrLoginService = {
@@ -403,12 +403,13 @@ export const QrLoginService = {
         throw new Error("Empty response from start_tv_login_session");
       }
 
+      if (!String(session.code || "").trim() || !String(session.qr_content || session.web_url || "").trim()) {
+        throw new Error("QR service returned an incomplete login session");
+      }
       return {
         code: session.code,
         loginUrl: session.qr_content || session.web_url || null,
-        qrImageUrl:
-          session.qr_image_url ||
-          `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(session.qr_content || session.web_url || "")}`,
+        // Generate the QR locally in the browser; do not disclose the login URL to a QR image service.
         expiresAt: toEpochMillis(session),
         pollIntervalSeconds: Number(session.poll_interval_seconds || 3),
         deviceNonce
