@@ -26,6 +26,8 @@ jobs:
         run: npm ci
       - name: Verify account identity and watch progress reconciliation
         run: node --test js/core/app/appIdentity.test.mjs js/core/profile/watchProgressMerge.test.mjs js/core/profile/watchProgressSync.twoDevice.test.mjs
+      - name: Verify full cast metadata
+        run: node --test js/ui/screens/detail/castCompleteness.test.mjs
       - name: Build production web assets
         run: |
           node scripts/zylo-vercel-build.mjs
