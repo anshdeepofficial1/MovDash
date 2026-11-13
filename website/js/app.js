@@ -2,6 +2,7 @@ import { initializeDeviceCapabilitySession } from "./core/player/deviceCapabilit
 import "./core/diagnostics/consoleDebugBuffer.js";
 import { detailWatchedEnrichmentService } from "./data/repository/detailWatchedEnrichmentService.js";
 import { Router } from "./ui/navigation/router.js";
+import { stageBrowserRoute, takeBrowserRoute } from "./ui/navigation/browserRouteUrl.js";
 import { FocusEngine } from "./ui/navigation/focusEngine.js";
 import { PlayerController } from "./core/player/playerController.js";
 import { AuthManager } from "./core/auth/authManager.js";
@@ -51,6 +52,9 @@ globalThis.__NUVIO_BUILD_STAMP__ = BUILD_STAMP;
 const GUEST_QR_BYPASS_KEY = "skipAuthQrGate";
 const SIGNED_OUT_ALLOWED_ROUTES = new Set(["trakt"]);
 let hasSelectedProfileThisSession = false;
+function isBrowserReload() {
+  return Platform.isBrowser() && globalThis.performance?.getEntriesByType?.("navigation")?.[0]?.type === "reload";
+}
 let appShellRendered = false;
 const STARTUP_PERF_DEBUG = Boolean(globalThis.__NUVIO_DEBUG_STARTUP_PERF__);
 const hadServiceWorkerControllerAtBoot = Boolean(globalThis.navigator?.serviceWorker?.controller);
@@ -129,7 +133,7 @@ function renderFatalError(error) {
   document.body.innerHTML = `
     <div style="min-height:100vh;background:#0f1115;color:#f4f7fb;padding:48px;font-family:Arial,sans-serif;">
       <div style="max-width:960px;margin:0 auto;">
-        <h1 style="margin:0 0 16px;font-size:42px;">Nuvio failed to start</h1>
+        <h1 style="margin:0 0 16px;font-size:42px;">ZYLO failed to start</h1>
         <p style="margin:0 0 20px;font-size:20px;color:#c7d0dd;">Startup hit an error before the app UI rendered.</p>
         <pre style="white-space:pre-wrap;word-break:break-word;background:#171b22;border:1px solid #2b3340;border-radius:12px;padding:20px;font-size:18px;line-height:1.5;">${message}</pre>
       </div>
@@ -187,7 +191,7 @@ async function resolveProfileStartup() {
       activeProfileHasPin,
       hasSelectedProfileThisSession,
       rememberLastProfileEnabled:
-        Boolean(activeProfile) && ProfileManager.isRememberLastProfileEnabled(),
+        Boolean(activeProfile) && (ProfileManager.isRememberLastProfileEnabled() || isBrowserReload()),
       hasEverSelectedProfile: ProfileManager.hasEverSelectedProfile()
     }),
     activeProfileId: activeProfile?.id,
@@ -227,7 +231,11 @@ async function enterWithLastProfile() {
         pullRemoteSettings: !Platform.isBrowser()
       })
     : "home";
-  if (experienceRoute !== "home") {
+  const pendingRoute = takeBrowserRoute(activeProfile?.id);
+  const restore = Platform.isBrowser() && experienceRoute === "home" ? pendingRoute : null;
+  if (restore) {
+    await Router.navigate(restore.route, restore.params, { seedHomeHistory: true });
+  } else if (experienceRoute !== "home") {
     await Router.navigate(experienceRoute, {}, { replaceHistory: true, skipStackPush: true });
   } else {
     await Router.navigate("home");
@@ -308,6 +316,7 @@ async function bootstrapApp() {
   markBootStage("Checking playback capabilities");
   initializeDeviceCapabilitySession();
   const isDesktopBrowser = Platform.isBrowser();
+  if (isDesktopBrowser) stageBrowserRoute(window.location, ProfileManager.hasEverSelectedProfile() ? ProfileManager.getActiveProfileId() : null);
   document.documentElement.classList.toggle("desktop-browser", isDesktopBrowser);
   document.body.classList.toggle("desktop-browser", isDesktopBrowser);
   // What kind of device this is, and which layout it should therefore get. The
@@ -354,7 +363,7 @@ async function bootstrapApp() {
         // Honor "remember last profile" for guests too: skip the picker and go
         // straight in with the last profile (guests have no PIN).
         if (
-          ProfileManager.isRememberLastProfileEnabled() &&
+          (ProfileManager.isRememberLastProfileEnabled() || isBrowserReload()) &&
           ProfileManager.hasEverSelectedProfile()
         ) {
           enterWithLastProfile().catch((error) => {

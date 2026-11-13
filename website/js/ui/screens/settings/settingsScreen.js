@@ -10256,10 +10256,11 @@ export const SettingsScreen = {
     const expanded = this.expandedSections.about || {};
     this.actionMap.set("about:source", () => openExternalUrl(APP_IDENTITY.sourceRepositoryUrl));
     this.actionMap.set("about:issues", () => openExternalUrl(APP_IDENTITY.issuesUrl));
-    this.actionMap.set("about:upstream", () => openExternalUrl(APP_IDENTITY.upstreamRepositoryUrl));
+    this.actionMap.set("about:developer", () => openExternalUrl("https://github.com/anshdeepofficial1"));
+    this.actionMap.set("about:sponsor", () => openExternalUrl("https://buymeacoffee.com/anshdeepofficial"));
     this.actionMap.set("about:license", () => openExternalUrl(APP_IDENTITY.licenseUrl));
     this.actionMap.set("about:privacy", () => {
-      window.open?.(PRIVACY_URL, "_blank");
+      window.open?.("https://github.com/anshdeepofficial1/ZYLO#privacy-policy", "_blank");
     });
     if (isDesktopBrowser) {
       this.actionMap.set("about:supporters:toggle", () => {
@@ -10308,17 +10309,14 @@ export const SettingsScreen = {
                 }`
               : `<p class="settings-about-copy">Version ${escapeHtml(APP_IDENTITY.version)}</p>`
           }
-          <p class="settings-about-copy">Based on Nuvio ${escapeHtml(APP_IDENTITY.upstreamVersion)}</p>
-          <p class="settings-about-copy">Originally created by Tapframe and contributors.</p>
-          <p class="settings-about-copy">Built upon web/community work by WhiteGiso, edoedac0, and other contributors.</p>
-          <p class="settings-about-copy">Maintained by ${escapeHtml(APP_IDENTITY.maintainer)}.</p>
-          <p class="settings-about-copy">Independent community fork. Not affiliated with or endorsed by NuvioMedia.</p>
+          <p class="settings-about-copy">Made with ❤️ by Anshdeep Singh</p>
         </div>
         <div class="settings-stack">
-          ${this.renderActionRow({ focusKey: "about:source", title: "Source Code", subtitle: "View this community fork on GitHub.", external: true })}
-          ${this.renderActionRow({ focusKey: "about:issues", title: "Report an Issue", subtitle: "Open an issue for this community fork.", external: true })}
-          ${this.renderActionRow({ focusKey: "about:upstream", title: "Upstream Project", subtitle: "View the original Nuvio project.", external: true })}
-          ${this.renderActionRow({ focusKey: "about:license", title: "View License", subtitle: "NuvioWeb is licensed under the GNU General Public License v3.0.", external: true })}
+          ${this.renderActionRow({ focusKey: "about:source", title: "Source Code & GitHub", subtitle: "github.com/anshdeepofficial1/ZYLO", external: true })}
+          ${this.renderActionRow({ focusKey: "about:issues", title: "Report an Issue", subtitle: "Report a ZYLO issue on GitHub.", external: true })}
+          ${this.renderActionRow({ focusKey: "about:developer", title: "Developer", subtitle: "Anshdeep Singh • github.com/anshdeepofficial1", external: true })}
+          ${this.renderActionRow({ focusKey: "about:sponsor", title: "Support & Sponsor 💖", subtitle: "Help keep ZYLO free and ad-free", external: true })}
+          ${this.renderActionRow({ focusKey: "about:license", title: "View License", subtitle: "GNU General Public License v3.0.", external: true })}
           ${this.renderActionRow({
             focusKey: "about:checkUpdates",
             title: t("about_check_updates", {}, "Check for updates"),
@@ -10336,24 +10334,6 @@ export const SettingsScreen = {
             subtitle: t("settings.about.privacyPolicy.subtitle"),
             external: true
           })}
-          ${
-            isDesktopBrowser
-              ? this.renderCollapsibleRow({
-                  focusKey: "about:supporters:toggle",
-                  title: "Contributors",
-                  subtitle: "People who have contributed to this NuvioWeb community fork.",
-                  expanded: Boolean(expanded.supportersContributors),
-                  bodyHtml: expanded.supportersContributors
-                    ? this.renderDesktopAboutCommunity()
-                    : "",
-                  classes: "settings-collapsible-about"
-                })
-              : this.renderActionRow({
-                  focusKey: "about:supporters",
-                  title: "Contributors",
-                  subtitle: "People who have contributed to this NuvioWeb community fork."
-                })
-          }
           ${
             isDesktopBrowser
               ? this.renderCollapsibleRow({

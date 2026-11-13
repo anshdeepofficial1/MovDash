@@ -32,6 +32,8 @@ jobs:
         run: node --test js/ui/screens/detail/castCompleteness.test.mjs
       - name: Verify QR login rendering
         run: node --test js/ui/screens/account/authQrSignInScreen.test.mjs
+      - name: Verify browser navigation and refresh policy
+        run: node --test js/ui/navigation/browserRouteUrl.test.mjs
       - name: Build production web assets
         run: |
           node scripts/zylo-vercel-build.mjs
