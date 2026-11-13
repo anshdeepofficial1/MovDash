@@ -2,7 +2,7 @@ import { initializeDeviceCapabilitySession } from "./core/player/deviceCapabilit
 import "./core/diagnostics/consoleDebugBuffer.js";
 import { detailWatchedEnrichmentService } from "./data/repository/detailWatchedEnrichmentService.js";
 import { Router } from "./ui/navigation/router.js";
-import { readBrowserRoute } from "./ui/navigation/browserRouteUrl.js";
+import { stageBrowserRoute, takeBrowserRoute } from "./ui/navigation/browserRouteUrl.js";
 import { FocusEngine } from "./ui/navigation/focusEngine.js";
 import { PlayerController } from "./core/player/playerController.js";
 import { AuthManager } from "./core/auth/authManager.js";
@@ -52,7 +52,6 @@ globalThis.__NUVIO_BUILD_STAMP__ = BUILD_STAMP;
 const GUEST_QR_BYPASS_KEY = "skipAuthQrGate";
 const SIGNED_OUT_ALLOWED_ROUTES = new Set(["trakt"]);
 let hasSelectedProfileThisSession = false;
-let initialBrowserRoute = null;
 function isBrowserReload() {
   return Platform.isBrowser() && globalThis.performance?.getEntriesByType?.("navigation")?.[0]?.type === "reload";
 }
@@ -232,8 +231,8 @@ async function enterWithLastProfile() {
         pullRemoteSettings: !Platform.isBrowser()
       })
     : "home";
-  const restore = Platform.isBrowser() && experienceRoute === "home" ? initialBrowserRoute : null;
-  initialBrowserRoute = null;
+  const pendingRoute = takeBrowserRoute(activeProfile?.id);
+  const restore = Platform.isBrowser() && experienceRoute === "home" ? pendingRoute : null;
   if (restore) {
     await Router.navigate(restore.route, restore.params, { seedHomeHistory: true });
   } else if (experienceRoute !== "home") {
@@ -317,7 +316,7 @@ async function bootstrapApp() {
   markBootStage("Checking playback capabilities");
   initializeDeviceCapabilitySession();
   const isDesktopBrowser = Platform.isBrowser();
-  initialBrowserRoute = isDesktopBrowser ? readBrowserRoute(window.location) : null;
+  if (isDesktopBrowser) stageBrowserRoute(window.location, ProfileManager.hasEverSelectedProfile() ? ProfileManager.getActiveProfileId() : null);
   document.documentElement.classList.toggle("desktop-browser", isDesktopBrowser);
   document.body.classList.toggle("desktop-browser", isDesktopBrowser);
   // What kind of device this is, and which layout it should therefore get. The
