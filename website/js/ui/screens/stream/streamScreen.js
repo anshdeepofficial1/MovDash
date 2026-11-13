@@ -3403,6 +3403,7 @@ export const StreamScreen = {
       automaticSourceSelection: !offlineObjectUrl && automatic && !this.params?.manualSelection,
       sourceProbe: null,
       streamUrl: playerSource || null,
+      externalFrameUrl: selected.externalFrameUrl || null,
       playbackPlan,
       itemId: this.params?.itemId || null,
       itemType: itemType || "movie",

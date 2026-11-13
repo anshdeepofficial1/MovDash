@@ -194,14 +194,14 @@ object StreamsRepository {
         log.d { "Found ${streamAddons.size} addons for stream type=$type id=$videoId" }
 
         val zyloDirectPlaceholder = AddonStreamGroup(
-            addonName = "ZYLO Direct",
-            addonId = "zylo_direct",
+            addonName = "ZYLO Servers",
+            addonId = "zylo_servers",
             streams = emptyList(),
             isLoading = true,
         )
 
         // Initialise loading placeholders
-        val installedAddonOrder = listOf("ZYLO Direct") + streamAddons.map { it.addonName }
+        val installedAddonOrder = listOf("ZYLO Servers") + streamAddons.map { it.addonName }
         val initialGroups = listOf(zyloDirectPlaceholder) + StreamAutoPlaySelector.orderAddonStreams(streamAddons.map { addon ->
             AddonStreamGroup(
                 addonName = addon.addonName,
