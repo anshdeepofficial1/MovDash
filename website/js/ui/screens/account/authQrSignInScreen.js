@@ -5,6 +5,7 @@ import { ScreenUtils } from "../../navigation/screen.js";
 import { AuthManager } from "../../../core/auth/authManager.js";
 import { I18n } from "../../../i18n/index.js";
 import { Platform } from "../../../platform/index.js";
+import { QrCodeGenerator } from "../../../core/qr/qrCodeGenerator.js";
 import { renderBackButtonIcon } from "../../components/backButtonIcon.js";
 
 let pollInterval = null;
@@ -124,7 +125,10 @@ export const AuthQrSignInScreen = {
         return;
       }
 
-      this.renderQr(result);
+      if (!this.renderQr(result)) {
+        this.setStatus("Could not render the QR code. Refresh to retry or return to email sign-in.");
+        return;
+      }
       this.setStatus(I18n.t("auth.qr.scanAndSignIn"));
       this.startPolling(
         result.code,
@@ -132,6 +136,10 @@ export const AuthQrSignInScreen = {
         result.pollIntervalSeconds || 3,
         sessionId
       );
+    } catch (error) {
+      if (this.isMounted && sessionId === activeQrSessionId) {
+        this.setStatus(this.toFriendlyQrError(error?.message));
+      }
     } finally {
       if (this.isMounted && sessionId === activeQrSessionId) {
         this.isStartingQr = false;
@@ -140,26 +148,40 @@ export const AuthQrSignInScreen = {
     }
   },
 
-  renderQr({ qrImageUrl, code }) {
+  renderQr({ loginUrl, code }) {
     const qrContainer = this.container?.querySelector("#qr-container");
     const codeText = this.container?.querySelector("#qr-code-text");
-
-    if (!qrContainer || !codeText) {
-      return;
-    }
-
-    qrContainer.innerHTML = `
-      <img src="${qrImageUrl}" class="qr-image" alt="${I18n.t("auth.qr.qrImageAlt")}" />
-    `;
-
+    if (!qrContainer || !codeText) return false;
     codeText.innerText = I18n.t("auth.qr.codeLabel", { code });
+    try {
+      const url = new URL(String(loginUrl || ""));
+      if (url.protocol !== "https:" || url.username || url.password) {
+        throw new Error("Invalid QR login URL");
+      }
+      const canvas = document.createElement("canvas");
+      QrCodeGenerator.generate(canvas, url.href, 512);
+      const image = document.createElement("img");
+      image.className = "qr-image";
+      image.alt = I18n.t("auth.qr.qrImageAlt");
+      image.src = canvas.toDataURL("image/png");
+      image.onerror = () => {
+        if (!qrContainer.contains(image)) return;
+        qrContainer.textContent = "Unable to display QR. Refresh to retry.";
+        this.setStatus("QR image could not be displayed. Return to email sign-in if needed.");
+      };
+      qrContainer.replaceChildren(image);
+      return true;
+    } catch {
+      qrContainer.textContent = "Unable to generate QR. Refresh to retry.";
+      return false;
+    }
   },
 
   clearQr() {
     const qrContainer = this.container?.querySelector("#qr-container");
     const codeText = this.container?.querySelector("#qr-code-text");
     if (qrContainer) {
-      qrContainer.innerHTML = "";
+      qrContainer.textContent = "Preparing QR code…";
     }
     if (codeText) {
       codeText.innerText = "";
