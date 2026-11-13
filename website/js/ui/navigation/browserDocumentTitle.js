@@ -1,6 +1,8 @@
 import { Platform } from "../../platform/index.js";
 
-const APP_TITLE = "Nuvio";
+import { APP_IDENTITY } from "../../core/app/appIdentity.js";
+
+const APP_TITLE = APP_IDENTITY.name;
 
 const ROUTE_TITLES = {
   home: "",
@@ -47,7 +49,7 @@ export function setBrowserDocumentTitle(value = "") {
     return;
   }
   const title = normalizeTitlePart(value);
-  document.title = title ? `${title} - ${APP_TITLE}` : APP_TITLE;
+  document.title = title ? `${APP_TITLE} — ${title}` : APP_TITLE;
 }
 
 export function setBrowserRouteTitle(routeName) {
