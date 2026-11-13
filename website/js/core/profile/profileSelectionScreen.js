@@ -1,4 +1,5 @@
 import { Router } from "../../ui/navigation/router.js";
+import { takeBrowserRoute } from "../../ui/navigation/browserRouteUrl.js";
 import { AuthManager } from "../auth/authManager.js";
 import { MAX_PROFILES, ProfileManager } from "../../core/profile/profileManager.js";
 import { ProfileSyncService } from "../../core/profile/profileSyncService.js";
@@ -2395,11 +2396,17 @@ export const ProfileSelectionScreen = {
       const experienceRoute = await resolveExperienceRoute(profileId, {
         pullRemoteSettings: false
       });
-      await Router.navigate(
-        experienceRoute,
-        experienceRoute === "home" ? { forceReload: true } : {},
-        experienceRoute === "home" ? {} : { replaceHistory: true, skipStackPush: true }
-      );
+      const pendingRoute = takeBrowserRoute(profileId);
+      if (Platform.isBrowser() && experienceRoute === "home" && pendingRoute && pendingRoute.route !== "home") {
+        await Router.navigate("home", { forceReload: true }, { replaceHistory: true, skipStackPush: true });
+        await Router.navigate(pendingRoute.route, pendingRoute.params);
+      } else {
+        await Router.navigate(
+          experienceRoute,
+          experienceRoute === "home" ? { forceReload: true } : {},
+          experienceRoute === "home" ? {} : { replaceHistory: true, skipStackPush: true }
+        );
+      }
       logProfileSelectionTiming("profile-activation-route-mounted", activationStartedAt);
       // Keep the overlay up until Home has actually painted its first real
       // content (catalog rows/hero), not just until hydration resolves or
