@@ -77,6 +77,8 @@ test("About renders ZYLO branding and developer attribution", async () => {
   assert.match(source, /Made with ❤️ by Anshdeep Singh/);
   assert.match(source, /title: "Developer"/);
   assert.match(source, /title: "Source Code & GitHub"/);
+  assert.match(source, /PRIVACY_URL = "https:\/\/github\.com\/anshdeepofficial1\/ZYLO\/blob\/main\/PRIVACY\.md"/);
+  assert.doesNotMatch(source, /label: "Nuvio player"/);
 });
 
 test("mobile Playback selector rows preserve full-width copy while toggles retain their normal row", async () => {
