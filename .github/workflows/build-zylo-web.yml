@@ -30,6 +30,8 @@ jobs:
         run: node --test --test-name-pattern="external navigation-only" js/core/player/probeStreamCandidate.test.mjs
       - name: Verify full cast metadata
         run: node --test js/ui/screens/detail/castCompleteness.test.mjs
+      - name: Verify browser navigation and refresh policy
+        run: node --test js/ui/navigation/browserRouteUrl.test.mjs
       - name: Build production web assets
         run: |
           node scripts/zylo-vercel-build.mjs
