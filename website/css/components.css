@@ -11399,6 +11399,38 @@ button:focus-visible {
   scrollbar-width: none;
 }
 
+.player-external-frame-back {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: max(16px, env(safe-area-inset-left));
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(18, 18, 24, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.player-external-frame-back:hover {
+  background: rgba(30, 30, 42, 0.95);
+  transform: scale(1.04);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.player-external-frame-back:active {
+  transform: scale(0.97);
+}
+
 .player-external-frame-shell::-webkit-scrollbar {
   display: none;
 }

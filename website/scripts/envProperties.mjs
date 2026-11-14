@@ -46,7 +46,7 @@ const DEFAULT_ENV_VALUES = {
   NUVIO_SUPABASE_URL: "",
   NUVIO_SUPABASE_ANON_KEY: "",
   NUVIO_SUPABASE_FALLBACK_URL: "",
-  TV_LOGIN_WEB_BASE_URL: "",
+  TV_LOGIN_WEB_BASE_URL: "https://zyloweb.vercel.app/link",
   YOUTUBE_PROXY_URL: "youtube-proxy.html",
   INTRODB_API_URL: "https://api.introdb.app/",
   PROBE_ENDPOINT: "",

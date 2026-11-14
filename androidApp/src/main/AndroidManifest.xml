@@ -95,8 +95,28 @@
 
                 <data
                     android:scheme="https"
+                    android:host="zyloweb.vercel.app"
+                    android:pathPrefix="/party/" />
+                <data
+                    android:scheme="https"
+                    android:host="zyloweb.vercel.app"
+                    android:pathPrefix="/movie/" />
+                <data
+                    android:scheme="https"
+                    android:host="zyloweb.vercel.app"
+                    android:pathPrefix="/series/" />
+                <data
+                    android:scheme="https"
                     android:host="nuvio.tv"
                     android:pathPrefix="/party/" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="zylo" />
             </intent-filter>
         </activity>
 

@@ -96,6 +96,28 @@ object CollectionRepository {
                     )
                 ),
             ),
+            Collection(
+                id = "zylo_punjabi",
+                title = "Punjabi Cinema",
+                folders = listOf(
+                    CollectionFolder(
+                        id = "zylo_punjabi_folder",
+                        title = "Punjabi Cinema",
+                        sources = listOf(
+                            CollectionSource(
+                                provider = "tmdb",
+                                tmdbSourceType = TmdbCollectionSourceType.DISCOVER.name,
+                                mediaType = "movie",
+                                sortBy = TmdbCollectionSort.POPULAR_DESC.value,
+                                filters = TmdbCollectionFilters(
+                                    withOriginalLanguage = "pa",
+                                    withOriginCountry = "IN",
+                                ),
+                            )
+                        ),
+                    )
+                ),
+            ),
         )
 
         if (payload.isNullOrBlank()) {
@@ -110,7 +132,7 @@ object CollectionRepository {
             rawCollectionsJson = parsed
             val decoded = json.decodeFromJsonElement<List<Collection>>(parsed)
             val normalized = normalizeCollections(decoded, source = "local storage")
-            val hasIndian = normalized.any { it.id == "zylo_bollywood" || it.id == "zylo_south" }
+            val hasIndian = normalized.any { it.id == "zylo_bollywood" || it.id == "zylo_south" || it.id == "zylo_punjabi" }
             val finalCollections = if (!hasIndian) normalized + defaultIndianCollections else normalized
             _collections.value = CollectionMobileSettingsRepository.applyToCollections(finalCollections)
             if (finalCollections.size != decoded.size) {

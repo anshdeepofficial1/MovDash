@@ -10,18 +10,20 @@ const ROUTES = {
   supportersContributors: "settings/contributors", licensesAttributions: "settings/licenses",
   plugin: "addons", plugins: "plugins", catalogOrder: "settings/catalogs",
   castDetail: "cast", catalogSeeAll: "catalog", folderDetail: "library/folder",
-  collectionEdit: "library/collection/edit", collectionFolderEdit: "library/folder/edit"
+  collectionEdit: "library/collection/edit", collectionFolderEdit: "library/folder/edit",
+  link: "link"
 };
 const FIELDS = {
   settingsSection: ["section"], search: ["query"],
   detail: ["itemId", "itemType"], stream: ["itemId", "itemType", "videoId", "season", "episode"],
   player: ["itemId", "itemType"], moviPlayer: ["itemId", "itemType"],
   castDetail: ["tmdbId", "personId", "name"], catalogSeeAll: ["addonId", "catalogId", "type", "name"],
-  folderDetail: ["folderId"], collectionEdit: ["collectionId"], collectionFolderEdit: ["folderId"]
+  folderDetail: ["folderId"], collectionEdit: ["collectionId"], collectionFolderEdit: ["folderId"],
+  link: ["code"]
 };
 const RESTORABLE = new Set(["home", "search", "discover", "library", "settings", "settingsSection",
   "detail", "account", "plugin", "plugins", "catalogOrder", "licensesAttributions", "debugConsole",
-  "folderDetail"]);
+  "folderDetail", "link"]);
 function safeValue(value) {
   if (!["string", "number"].includes(typeof value)) return "";
   const text = String(value).trim();

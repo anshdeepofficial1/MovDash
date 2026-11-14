@@ -841,7 +841,7 @@ fun MetaDetailsScreen(
                 }
                 val onPrimaryPlayClick: () -> Unit = {
                     if (isAnime) {
-                        AniDashLauncher.launchAniDash(meta.name, meta.id)
+                        AniDashLauncher.launchAniDash(meta.name, meta.id, seriesAction?.seasonNumber, seriesAction?.episodeNumber)
                     } else when {
                         shufflePoolEmpty -> showShuffle = true
                         (meta.type == "series" || hasEpisodes) && seriesAction != null -> {

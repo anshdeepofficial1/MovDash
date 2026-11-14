@@ -59,13 +59,13 @@ fun buildMetaDeepLinkUrl(
     type: String,
     id: String,
 ): String = buildString {
-    append("nuvio://meta?type=")
+    append("zylo://meta?type=")
     append(type.trim().encodeURLParameter())
     append("&id=")
     append(id.trim().encodeURLParameter())
 }
 
-fun buildDownloadsDeepLinkUrl(): String = "nuvio://downloads"
+fun buildDownloadsDeepLinkUrl(): String = "zylo://downloads"
 
 internal fun parseAppDeepLink(url: String): AppDeepLink? {
     val parsedUrl = runCatching { Url(url) }.getOrNull() ?: return null
@@ -80,9 +80,19 @@ internal fun parseAppDeepLink(url: String): AppDeepLink? {
     val host = parsedUrl.host.lowercase()
     val pathSegments = parsedUrl.pathSegments.map(String::trim).filter(String::isNotBlank)
     if (scheme == "https") {
-        return if (host == "nuvio.tv" && pathSegments.firstOrNull() == "party") partyDeepLink(pathSegments.getOrNull(1)) else null
+        if (host == "zyloweb.vercel.app" || host == "zylod.vercel.app" || host == "nuvio.tv") {
+            val firstSegment = pathSegments.firstOrNull()?.lowercase()
+            return when (firstSegment) {
+                "party" -> partyDeepLink(pathSegments.getOrNull(1) ?: firstParameter(parsedUrl, "code"))
+                "movie", "series", "detail", "details", "watch", "meta" -> {
+                    parseMetaFromPath(pathSegments) ?: parseMetaFromParameters(parsedUrl)
+                }
+                else -> null
+            }
+        }
+        return null
     }
-    if (scheme != "nuvio") return null
+    if (scheme != "zylo" && scheme != "nuvio") return null
 
     return when (host) {
         "meta" -> {

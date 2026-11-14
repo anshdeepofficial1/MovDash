@@ -73,16 +73,20 @@ function generateDeviceNonce() {
 }
 
 function resolveRedirectBaseUrl() {
-  if (TV_LOGIN_WEB_BASE_URL) {
-    return TV_LOGIN_WEB_BASE_URL;
-  }
-  if (typeof window !== "undefined") {
+  let base = TV_LOGIN_WEB_BASE_URL;
+  if (!base && typeof window !== "undefined") {
     const protocol = String(window.location?.protocol || "");
     if (protocol === "http:" || protocol === "https:") {
-      return window.location.origin;
+      base = `${window.location.origin}/link`;
     }
   }
-  return TV_LOGIN_WEB_BASE_URL;
+  if (!base) {
+    base = "https://zyloweb.vercel.app/link";
+  }
+  if (!base.endsWith("/link") && !base.endsWith("/link/")) {
+    base = base.replace(/\/+$/, "") + "/link";
+  }
+  return base;
 }
 
 function extractOrigin(url) {
@@ -95,20 +99,12 @@ function extractOrigin(url) {
 
 function buildRedirectCandidates() {
   const candidates = [];
-  const base = resolveRedirectBaseUrl();
-  if (base) {
-    candidates.push(base);
-    if (base.endsWith("/")) {
-      candidates.push(base.slice(0, -1));
-    } else {
-      candidates.push(`${base}/`);
-    }
-    const origin = extractOrigin(base);
-    if (origin) {
-      candidates.push(origin);
-      candidates.push(`${origin}/`);
-    }
+  const primary = resolveRedirectBaseUrl();
+  if (primary) {
+    candidates.push(primary);
   }
+  candidates.push("https://zyloweb.vercel.app/link");
+  candidates.push("https://zylod.vercel.app/link");
   return Array.from(new Set(candidates.filter(Boolean)));
 }
 
@@ -320,6 +316,47 @@ async function fetchWithCallerSessionRecovery(requestFactory) {
 }
 
 async function startRpc(deviceNonce, redirectBaseUrl, includeDeviceName = true) {
+  const devicePayload = {
+    p_device_nonce: deviceNonce,
+    p_redirect_base_url: redirectBaseUrl,
+    p_device_type: "web"
+  };
+  if (includeDeviceName) {
+    devicePayload.p_device_name = Environment.getDeviceLabel();
+  }
+
+  try {
+    const response = await fetchWithCallerSessionRecovery(() =>
+      fetchSupabaseAuth("/rest/v1/rpc/start_device_login_session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${getBearerToken()}`
+        },
+        body: JSON.stringify(devicePayload)
+      })
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      const raw = (Array.isArray(data) ? data[0] : data) || null;
+      if (raw && (raw.device_code || raw.code)) {
+        return {
+          code: raw.device_code || raw.code,
+          userCode: raw.user_code || raw.code,
+          qr_content: raw.verification_uri_complete || raw.verification_uri || raw.qr_content || raw.web_url,
+          web_url: raw.verification_uri_complete || raw.verification_uri || raw.web_url,
+          expires_at: raw.expires_at,
+          expires_at_millis: raw.expires_at ? Date.parse(raw.expires_at) : undefined,
+          poll_interval_seconds: raw.poll_interval_seconds || 3
+        };
+      }
+    }
+  } catch (_) {
+    // Continue to fallback
+  }
+
   const payload = {
     p_device_nonce: deviceNonce,
     p_redirect_base_url: redirectBaseUrl
@@ -346,7 +383,17 @@ async function startRpc(deviceNonce, redirectBaseUrl, includeDeviceName = true) 
   }
 
   const data = await response.json();
-  return (Array.isArray(data) ? data[0] : data) || null;
+  const raw = (Array.isArray(data) ? data[0] : data) || null;
+  if (!raw) return null;
+  return {
+    code: raw.device_code || raw.code,
+    userCode: raw.user_code || raw.code,
+    qr_content: raw.verification_uri_complete || raw.verification_uri || raw.qr_content || raw.web_url,
+    web_url: raw.verification_uri_complete || raw.verification_uri || raw.web_url,
+    expires_at: raw.expires_at,
+    expires_at_millis: raw.expires_at_millis || (raw.expires_at ? Date.parse(raw.expires_at) : undefined),
+    poll_interval_seconds: raw.poll_interval_seconds || 3
+  };
 }
 
 export const QrLoginService = {
@@ -408,6 +455,7 @@ export const QrLoginService = {
       }
       return {
         code: session.code,
+        userCode: session.userCode || session.code,
         loginUrl: session.qr_content || session.web_url || null,
         // Generate the QR locally in the browser; do not disclose the login URL to a QR image service.
         expiresAt: toEpochMillis(session),
@@ -502,6 +550,48 @@ export const QrLoginService = {
     } catch (error) {
       lastError = String(error?.message || "QR exchange failed");
       console.error("QR exchange error:", error);
+      return false;
+    }
+  },
+
+  async approve(userCode) {
+    lastError = null;
+    try {
+      if (!hasQrAuthConfig()) {
+        lastError = "QR auth is not configured";
+        return false;
+      }
+      const token = SessionStore.accessToken;
+      if (!token || SessionStore.isAnonymousSession) {
+        lastError = "Please sign in first to link this device";
+        return false;
+      }
+      const cleanCode = String(userCode || "")
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toUpperCase();
+      if (!cleanCode) {
+        lastError = "Invalid link code";
+        return false;
+      }
+      const response = await fetchSupabaseAuth("/rest/v1/rpc/approve_tv_login_session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          p_code: cleanCode
+        })
+      });
+
+      if (!response.ok) {
+        lastError = await parseErrorText(response);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      lastError = String(error?.message || "Approval failed");
       return false;
     }
   },

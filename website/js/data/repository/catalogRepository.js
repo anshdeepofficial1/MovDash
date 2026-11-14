@@ -1,6 +1,7 @@
 import { safeApiCall } from "../../core/network/safeApiCall.js";
 import { CatalogApi } from "../remote/api/catalogApi.js";
 import { addonRepository } from "./addonRepository.js";
+import { getEffectiveTmdbApiKey } from "../local/tmdbSettingsStore.js";
 
 const ADDON_POSTER_SHAPES = ["poster", "landscape", "square"];
 
@@ -50,6 +51,50 @@ class CatalogRepository {
         status: "success",
         data: cached
       };
+    }
+
+    if (String(addonId || "").startsWith("zylo-")) {
+      return safeApiCall(async () => {
+        const apiKey = getEffectiveTmdbApiKey();
+        let lang = "hi";
+        if (catalogId === "zylo_south") lang = "te|ta|ml|kn";
+        else if (catalogId === "zylo_punjabi") lang = "pa";
+        const page = Math.floor(skip / 20) + 1;
+        const url = `https://api.themoviedb.org/3/discover/movie?api_key=${encodeURIComponent(apiKey)}&with_original_language=${encodeURIComponent(lang)}&with_origin_country=IN&sort_by=popularity.desc&page=${page}`;
+        const resp = await fetch(url, signal ? { signal } : {});
+        const json = resp.ok ? await resp.json() : { results: [] };
+        const items = (Array.isArray(json?.results) ? json.results : []).map((m) => ({
+          id: `tmdb:${m.id}`,
+          type: "movie",
+          name: m.title || m.original_title || "Untitled",
+          poster: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null,
+          background: m.backdrop_path ? `https://image.tmdb.org/t/p/w1280${m.backdrop_path}` : null,
+          landscapePoster: m.backdrop_path ? `https://image.tmdb.org/t/p/w1280${m.backdrop_path}` : null,
+          description: m.overview || "",
+          releaseInfo: String(m.release_date || "").slice(0, 4),
+          released: m.release_date || "",
+          imdbRating: typeof m.vote_average === "number" ? m.vote_average : null,
+          rating: typeof m.vote_average === "number" ? m.vote_average : null,
+          addonId,
+          addonName,
+          catalogType: type
+        }));
+        const row = {
+          addonId,
+          addonName,
+          addonBaseUrl: "https://zylo.app",
+          catalogId,
+          catalogName,
+          apiType: type,
+          items,
+          isLoading: false,
+          hasMore: items.length > 0,
+          currentPage: page,
+          supportsSkip: true
+        };
+        this.catalogCache.set(cacheKey, row);
+        return row;
+      });
     }
 
     const url = this.buildCatalogUrl({

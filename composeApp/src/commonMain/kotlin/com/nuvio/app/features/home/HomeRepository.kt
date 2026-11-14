@@ -3,6 +3,7 @@ package com.nuvio.app.features.home
 import com.nuvio.app.features.addons.ManagedAddon
 import com.nuvio.app.features.addons.AddonRepository
 import com.nuvio.app.features.addons.enabledAddons
+import com.nuvio.app.features.catalog.CatalogPage
 import com.nuvio.app.features.catalog.CatalogTarget
 import com.nuvio.app.features.catalog.fetchCatalogPage
 import com.nuvio.app.core.poster.CustomPosterUrlRepository
@@ -11,6 +12,9 @@ import com.nuvio.app.core.poster.withCustomPosterUrls
 import com.nuvio.app.features.collection.Collection
 import com.nuvio.app.features.collection.CollectionRepository
 import com.nuvio.app.features.collection.CollectionSource
+import com.nuvio.app.features.collection.TmdbCollectionFilters
+import com.nuvio.app.features.collection.TmdbCollectionSort
+import com.nuvio.app.features.collection.TmdbCollectionSourceType
 import com.nuvio.app.features.collection.TmdbCollectionSourceResolver
 import com.nuvio.app.features.collection.catalogRouteKey
 import com.nuvio.app.features.collection.findCollectionCatalog
@@ -232,6 +236,56 @@ object HomeRepository {
 
     private suspend fun HomeCatalogDefinition.toSection(forceRefresh: Boolean): HomeCatalogSection {
         serverConnectionId?.let { connectionId -> return toServerSection(connectionId) }
+        if (key.startsWith("zylo:movie:")) {
+            val lang = when (catalogId) {
+                "zylo_bollywood" -> "hi"
+                "zylo_south" -> "te|ta|ml|kn"
+                "zylo_punjabi" -> "pa"
+                else -> "hi"
+            }
+            val source = CollectionSource(
+                provider = "tmdb",
+                tmdbSourceType = TmdbCollectionSourceType.DISCOVER.name,
+                mediaType = "movie",
+                sortBy = TmdbCollectionSort.POPULAR_DESC.value,
+                filters = TmdbCollectionFilters(
+                    withOriginalLanguage = lang,
+                    withOriginCountry = "IN",
+                ),
+            )
+            val page = runCatching {
+                TmdbCollectionSourceResolver.resolve(source = source, page = 1)
+            }.getOrNull() ?: CatalogPage(items = emptyList(), rawItemCount = 0, nextSkip = null)
+
+            CustomPosterUrlRepository.ensureLoaded()
+            val pattern = CustomPosterUrlRepository.patternForScreen(com.nuvio.app.core.poster.CustomPosterScreen.HOME)
+            val rawItems = if (pattern.isNotBlank()) {
+                page.items.withCustomPosterUrls(pattern)
+            } else {
+                page.items
+            }
+            val items = if (HomeCatalogSettingsRepository.snapshot().hideUnreleasedContent) {
+                rawItems.filterReleasedItems(CurrentDateProvider.todayIsoDate())
+            } else {
+                rawItems
+            }
+
+            return HomeCatalogSection(
+                key = key,
+                title = defaultTitle,
+                subtitle = addonName,
+                addonName = addonName,
+                target = CatalogTarget.Addon(
+                    manifestUrl = "",
+                    contentType = type,
+                    catalogId = catalogId,
+                    supportsPagination = false,
+                ),
+                items = items.take(HOME_CATALOG_PREVIEW_FETCH_LIMIT),
+                availableItemCount = items.size,
+                hasMore = false,
+            )
+        }
         CustomPosterUrlRepository.ensureLoaded()
         val pattern = CustomPosterUrlRepository.patternForScreen(com.nuvio.app.core.poster.CustomPosterScreen.HOME)
         val page = fetchCatalogPage(

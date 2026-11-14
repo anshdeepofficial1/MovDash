@@ -4963,17 +4963,32 @@ export const PlayerScreen = {
       StartupLoadingOverlay.finish();
       root.innerHTML = `
         <div class="player-external-frame-shell">
+          <button type="button" class="player-external-frame-back" data-player-frame-back aria-label="Back">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Back</span>
+          </button>
           <iframe
             class="player-external-frame"
             src="${escapeHtml(this.externalFrameUrl)}"
-            title="${escapeHtml(this.params.playerTitle || "Trailer")}"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            referrerpolicy="strict-origin-when-cross-origin"
+            title="${escapeHtml(this.params.playerTitle || "Player")}"
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+            referrerpolicy="no-referrer-when-downgrade"
             allowfullscreen
             scrolling="no"
           ></iframe>
         </div>
       `;
+      const backBtn = root.querySelector("[data-player-frame-back]");
+      if (backBtn) {
+        backBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.navigateBackToStreamScreen();
+        });
+      }
     } else {
       const header = this.getPlayerHeaderData();
       const loadingMeta = this.getLoadingOverlayMeta();
@@ -10384,7 +10399,17 @@ export const PlayerScreen = {
           currentSourceCandidate
         );
         this.clearPlaybackStallGuard();
-        this.releaseStartupAudioGate({ resume: false });
+        if (startup && (sourceCandidate?.externalFrameUrl || sourceCandidate?.externalUrl)) {
+        const frameUrl = String(sourceCandidate.externalFrameUrl || sourceCandidate.externalUrl || "").trim();
+        if (frameUrl) {
+          this.releaseStartupAudioGate({ resume: false });
+          this.externalFrameUrl = frameUrl;
+          this.renderPlayerUi();
+          return;
+        }
+      }
+
+      this.releaseStartupAudioGate({ resume: false });
         this.showStartupError(startupErrorMessage, {
           mediaErrorCode,
           detail: playbackErrorDetail,
@@ -10403,6 +10428,16 @@ export const PlayerScreen = {
       this.markPlaybackSourceFailed(this.activePlaybackUrl);
 
       this.clearPlaybackStallGuard();
+      if (startup && (sourceCandidate?.externalFrameUrl || sourceCandidate?.externalUrl)) {
+        const frameUrl = String(sourceCandidate.externalFrameUrl || sourceCandidate.externalUrl || "").trim();
+        if (frameUrl) {
+          this.releaseStartupAudioGate({ resume: false });
+          this.externalFrameUrl = frameUrl;
+          this.renderPlayerUi();
+          return;
+        }
+      }
+
       this.releaseStartupAudioGate({ resume: false });
       this.loadingVisible = false;
       this.paused = true;
@@ -13530,6 +13565,16 @@ export const PlayerScreen = {
           sourceCandidate
         });
         return;
+      }
+
+      if (startup && (sourceCandidate?.externalFrameUrl || sourceCandidate?.externalUrl)) {
+        const frameUrl = String(sourceCandidate.externalFrameUrl || sourceCandidate.externalUrl || "").trim();
+        if (frameUrl) {
+          this.releaseStartupAudioGate({ resume: false });
+          this.externalFrameUrl = frameUrl;
+          this.renderPlayerUi();
+          return;
+        }
       }
 
       this.releaseStartupAudioGate({ resume: false });
@@ -19843,7 +19888,13 @@ ${!Environment.isBrowser() ? `<button type="button" class="player-episode-stream
       await this.openOfflineDownloadOptions(stream, this.getPanelDownloadContext(stream, episode));
       return true;
     }
-    if (!target || this.isExternalFrameMode()) {
+    if (!target) return false;
+    const frameBack = target.closest?.("[data-player-frame-back]");
+    if (frameBack) {
+      this.navigateBackToStreamScreen();
+      return true;
+    }
+    if (this.isExternalFrameMode()) {
       return false;
     }
     this.syncPointerFocus(target);

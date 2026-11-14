@@ -9707,7 +9707,32 @@ export const HomeScreen = {
 
     const addons = await addonRepository.getInstalledAddons();
     this.collections = CollectionsStore.get();
-    const catalogDescriptors = [];
+    const catalogDescriptors = [
+      {
+        addonBaseUrl: "https://zylo.app",
+        addonId: "zylo-bollywood",
+        addonName: "Bollywood & Hindi Hits",
+        catalogId: "zylo_bollywood",
+        catalogName: "Bollywood & Hindi Hits",
+        type: "movie"
+      },
+      {
+        addonBaseUrl: "https://zylo.app",
+        addonId: "zylo-south",
+        addonName: "South Indian Cinema",
+        catalogId: "zylo_south",
+        catalogName: "South Indian Cinema",
+        type: "movie"
+      },
+      {
+        addonBaseUrl: "https://zylo.app",
+        addonId: "zylo-punjabi",
+        addonName: "Punjabi Cinema",
+        catalogId: "zylo_punjabi",
+        catalogName: "Punjabi Cinema",
+        type: "movie"
+      }
+    ];
 
     addons.forEach((addon) => {
       addon.catalogs

@@ -8,6 +8,7 @@ import { AccountScreen } from "../screens/account/accountScreen.js";
 import { AuthQrSignInScreen } from "../screens/account/authQrSignInScreen.js";
 import { AuthSignInScreen } from "../screens/account/authSignInScreen.js";
 import { SyncCodeScreen } from "../screens/account/syncCodeScreen.js";
+import { DeviceLinkScreen } from "../screens/account/deviceLinkScreen.js";
 import { ProfileSelectionScreen } from "../../core/profile/profileSelectionScreen.js";
 import { MetaDetailsScreen } from "../screens/detail/metaDetailsScreen.js";
 import { LibraryScreen } from "../screens/library/libraryScreen.js";
@@ -216,6 +217,7 @@ export const Router = {
     authQrSignIn: AuthQrSignInScreen,
     authSignIn: AuthSignInScreen,
     syncCode: SyncCodeScreen,
+    link: DeviceLinkScreen,
     profileSelection: ProfileSelectionScreen,
     essentialAddonSetup: EssentialAddonSetupScreen,
     quickSetup: QuickSetupScreen,
@@ -565,7 +567,7 @@ export const Router = {
   // Resolve this before first mount too, otherwise a retained Settings layer
   // can remain above a newly opened sign-in form.
   getRouteContainer(routeName) {
-    const containerId = ["authSignIn", "authQrSignIn", "syncCode"].includes(routeName)
+    const containerId = ["authSignIn", "authQrSignIn", "syncCode", "link"].includes(routeName)
       ? "account"
       : routeName;
     // FolderDetail inherits Home behavior, but before its first mount it also

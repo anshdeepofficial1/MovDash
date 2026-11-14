@@ -11,7 +11,7 @@ internal data class PlaybackBufferSettings(
 ) {
     companion object {
         const val DEFAULT_MIN_BUFFER_MS = 15_000
-        const val DEFAULT_MAX_BUFFER_MS = 45_000
+        const val DEFAULT_MAX_BUFFER_MS = 100_000
         const val DEFAULT_BUFFER_FOR_PLAYBACK_MS = 5_000
         const val DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = 3_000
         const val DEFAULT_BACK_BUFFER_MS = 10_000

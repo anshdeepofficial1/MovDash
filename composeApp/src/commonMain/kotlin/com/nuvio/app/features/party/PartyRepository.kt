@@ -692,7 +692,7 @@ object PartyRepository {
         )
     }
 
-    private const val DEFAULT_NAME = "Nuvio"
+    private const val DEFAULT_NAME = "Zylo"
     private val COLOR_PATTERN = Regex("^#[0-9A-Fa-f]{6}$")
     private val HEARTBEAT_INTERVAL = 2.minutes
     private val PERSIST_DELAY = 1.5.seconds
@@ -712,7 +712,7 @@ fun formatPartyCode(code: String): String =
     normalizePartyCode(code).let { if (it.length == PARTY_CODE_LENGTH) "${it.take(3)} ${it.drop(3)}" else it }
 
 fun partyInviteLink(code: String): String =
-    if (ServerConfigurationRepository.active.value.isCustom) "nuvio://party/$code" else "https://nuvio.tv/party/$code"
+    if (ServerConfigurationRepository.active.value.isCustom) "zylo://party/$code" else "https://zyloweb.vercel.app/party/$code"
 
 const val PARTY_CODE_LENGTH = 6
 private const val PARTY_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"

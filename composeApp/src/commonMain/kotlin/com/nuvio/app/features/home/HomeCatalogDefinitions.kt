@@ -42,8 +42,44 @@ fun buildAddonCatalogRefreshSignature(addons: List<ManagedAddon>): List<String> 
         signature.value()
     }.sorted()
 
-fun buildHomeCatalogDefinitions(addons: List<ManagedAddon>): List<HomeCatalogDefinition> =
-    addons.enabledAddons().mapNotNull { addon ->
+fun buildHomeCatalogDefinitions(addons: List<ManagedAddon>): List<HomeCatalogDefinition> {
+    val regionalDefinitions = listOf(
+        HomeCatalogDefinition(
+            key = "zylo:movie:bollywood",
+            defaultTitle = "Bollywood & Hindi Hits",
+            catalogName = "Bollywood & Hindi Hits",
+            addonName = "ZYLO Regional",
+            manifestUrl = "",
+            type = "movie",
+            catalogId = "zylo_bollywood",
+            supportsPagination = true,
+            descriptorSignature = "zylo_bollywood",
+        ),
+        HomeCatalogDefinition(
+            key = "zylo:movie:south",
+            defaultTitle = "South Indian Cinema",
+            catalogName = "South Indian Cinema",
+            addonName = "ZYLO Regional",
+            manifestUrl = "",
+            type = "movie",
+            catalogId = "zylo_south",
+            supportsPagination = true,
+            descriptorSignature = "zylo_south",
+        ),
+        HomeCatalogDefinition(
+            key = "zylo:movie:punjabi",
+            defaultTitle = "Punjabi Cinema",
+            catalogName = "Punjabi Cinema",
+            addonName = "ZYLO Regional",
+            manifestUrl = "",
+            type = "movie",
+            catalogId = "zylo_punjabi",
+            supportsPagination = true,
+            descriptorSignature = "zylo_punjabi",
+        ),
+    )
+
+    val addonDefinitions = addons.enabledAddons().mapNotNull { addon ->
         val manifest = addon.manifest ?: return@mapNotNull null
         addon to manifest
     }.flatMap { (addon, manifest) ->
@@ -68,7 +104,10 @@ fun buildHomeCatalogDefinitions(addons: List<ManagedAddon>): List<HomeCatalogDef
                     descriptorSignature = buildHomeCatalogDescriptorSignature(addon, manifest, catalog),
                 )
             }
-    }.distinctBy(HomeCatalogDefinition::key) + ServerCatalog.homeDefinitions()
+    }
+
+    return (regionalDefinitions + addonDefinitions).distinctBy(HomeCatalogDefinition::key) + ServerCatalog.homeDefinitions()
+}
 
 private fun buildHomeCatalogDescriptorSignature(
     addon: ManagedAddon,

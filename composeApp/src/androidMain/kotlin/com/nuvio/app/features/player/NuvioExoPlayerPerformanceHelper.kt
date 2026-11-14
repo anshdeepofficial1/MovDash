@@ -15,7 +15,7 @@ internal object NuvioExoPlayerPerformanceHelper {
     const val NATIVE_ARENA_CHUNK_SIZE = 64 * 1024
     private const val MIN_BUFFER_MB = 25
     private const val MIN_BUFFER_MS = 15_000
-    private const val MAX_BUFFER_MS = 45_000
+    private const val MAX_BUFFER_MS = 100_000
     private const val BUFFER_FOR_PLAYBACK_MS = 3_000
     private const val LOCAL_FILE_MIN_BUFFER_MS = 5_000
     private const val LOCAL_FILE_MAX_BUFFER_MS = 15_000
@@ -98,7 +98,7 @@ internal object NuvioExoPlayerPerformanceHelper {
                 .setBackBuffer(PlaybackBufferSettings.DEFAULT_BACK_BUFFER_MS, true)
                 .setBufferDurationsMs(
                     DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
-                    50_000,
+                    100_000,
                     DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
                     DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS,
                 )

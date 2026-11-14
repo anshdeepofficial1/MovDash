@@ -5,7 +5,7 @@ import android.net.Uri
 import com.nuvio.app.features.settings.AppIconPlatform
 
 actual object AniDashLauncher {
-    actual fun launchAniDash(title: String, id: String) {
+    actual fun launchAniDash(title: String, id: String, season: Int?, episode: Int?) {
         val context = AppIconPlatform.appContext ?: return
         val pm = context.packageManager
 
@@ -20,6 +20,8 @@ actual object AniDashLauncher {
             if (launchIntent != null) {
                 launchIntent.putExtra("anime_title", title)
                 launchIntent.putExtra("anime_id", id)
+                if (season != null) launchIntent.putExtra("season_number", season)
+                if (episode != null) launchIntent.putExtra("episode_number", episode)
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(launchIntent)
                 return
@@ -40,6 +42,8 @@ actual object AniDashLauncher {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         putExtra("anime_title", title)
                         putExtra("anime_id", id)
+                        if (season != null) putExtra("season_number", season)
+                        if (episode != null) putExtra("episode_number", episode)
                     }
                     if (intent.resolveActivity(pm) != null) {
                         context.startActivity(intent)
@@ -50,9 +54,13 @@ actual object AniDashLauncher {
         }
 
         // Try launching via custom AniDash URI scheme
+        val uriBuilder = StringBuilder("anidash://anime?title=").append(Uri.encode(title)).append("&id=").append(Uri.encode(id))
+        if (season != null) uriBuilder.append("&season=").append(season)
+        if (episode != null) uriBuilder.append("&episode=").append(episode)
+
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            Uri.parse("anidash://anime?title=${Uri.encode(title)}&id=${Uri.encode(id)}")
+            Uri.parse(uriBuilder.toString())
         ).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }

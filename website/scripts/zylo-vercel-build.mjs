@@ -7,7 +7,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const config = path.join(root, ".zylo-build.properties");
 const publicKeys = [
   "NUVIO_SUPABASE_URL", "NUVIO_SUPABASE_ANON_KEY",
-  "NUVIO_SUPABASE_FALLBACK_URL", "TMDB_API_KEY", "TRAKT_CLIENT_ID",
+  "NUVIO_SUPABASE_FALLBACK_URL", "TV_LOGIN_WEB_BASE_URL", "TMDB_API_KEY", "TRAKT_CLIENT_ID",
   "SIMKL_CLIENT_ID", "INTRODB_API_URL"
 ];
 // The public upstream client identifier is the same one shipped by the
@@ -38,7 +38,8 @@ const accountValues = {
 if (new URL(accountValues.NUVIO_SUPABASE_FALLBACK_URL).protocol !== "https:") throw new Error("Account fallback requires HTTPS.");
 const settings = [
   "PROBE_MODE=off", "REMUX_MODE=off", "TRANSCODE_MODE=none",
-  "SIMKL_APP_NAME=ZYLO"
+  "SIMKL_APP_NAME=ZYLO",
+  "TV_LOGIN_WEB_BASE_URL=https://zyloweb.vercel.app/link"
 ];
 for (const key of publicKeys) {
   const value = accountValues[key] || process.env[key];

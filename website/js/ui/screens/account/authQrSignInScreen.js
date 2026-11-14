@@ -153,10 +153,10 @@ export const AuthQrSignInScreen = {
     }
   },
 
-  renderQr({ loginUrl, code }) {
+  renderQr({ loginUrl, code, userCode }) {
     return renderLoginQr({
       loginUrl,
-      code,
+      code: userCode || code,
       container: this.container?.querySelector("#qr-container"),
       codeText: this.container?.querySelector("#qr-code-text"),
       document,
