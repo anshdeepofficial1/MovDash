@@ -1,7 +1,7 @@
 // Public navigation identifiers only. Never serialize playback URLs, tokens or
 // arbitrary route state into the address bar.
 const ROUTES = {
-  home: "home", search: "search", discover: "discover", library: "library",
+  home: "home", publicHome: "browse", search: "search", discover: "discover", library: "library",
   settings: "settings", settingsSection: "settings/section", detail: "detail",
   stream: "streams", player: "watch", moviPlayer: "watch", account: "account",
   authSignIn: "sign-in", authQrSignIn: "sign-in/qr", syncCode: "sign-in/code",
