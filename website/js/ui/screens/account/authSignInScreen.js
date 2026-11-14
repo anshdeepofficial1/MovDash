@@ -163,7 +163,7 @@ export const AuthSignInScreen = {
       Router.navigate("authQrSignIn");
     });
     this.container.querySelector("[data-action='continueGuest']")?.addEventListener("click", () => {
-      continueWithoutAccount();
+      Router.navigate("publicHome", {}, { replaceHistory: true, skipStackPush: true });
     });
     // Revealing the password re-renders the field, which would drop what has
     // been typed and where the caret was. Both are carried over.
