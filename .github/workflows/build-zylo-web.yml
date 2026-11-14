@@ -37,7 +37,7 @@ jobs:
       - name: Verify browser navigation and refresh policy
         run: node --test js/ui/navigation/browserRouteUrl.test.mjs
       - name: Verify regional catalogs and official edition discovery
-        run: node --test js/core/tmdb/tmdbDiscover.test.mjs js/core/tmdb/verifiedEditions.test.mjs js/data/repository/catalogRepository.test.mjs
+        run: node --test js/core/tmdb/tmdbDiscover.test.mjs js/core/tmdb/verifiedEditions.test.mjs js/data/repository/catalogRepository.test.mjs js/ui/screens/home/guestHomeData.test.mjs
       - name: Build production web assets
         run: |
           node scripts/zylo-vercel-build.mjs
