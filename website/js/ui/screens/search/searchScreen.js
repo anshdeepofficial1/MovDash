@@ -55,6 +55,7 @@ import {
   resolveDesktopMediaTrailerSource
 } from "../../components/desktopMediaPreviewData.js";
 import { filterReleasedItems } from "../../../core/util/releaseInfoUtils.js";
+import { findVerifiedEditions } from "../../../core/tmdb/verifiedEditions.js";
 import {
   buildSearchScheduleIndices,
   buildSearchTargets,
@@ -832,7 +833,22 @@ export const SearchScreen = {
   },
 
   renderRows() {
+    const verifiedEditions = this.mode === "search" ? findVerifiedEditions(this.query) : [];
+    const officialEditionMarkup = verifiedEditions.length ? `
+      <section class="search-results-row" aria-label="Verified editions">
+        <h3 class="search-results-title">Verified editions</h3>
+        <div class="search-results-track">
+          ${verifiedEditions.map(edition => `
+            <div class="search-result-card">
+              <a class="search-result-name focusable" href="${escapeHtml(edition.source)}" target="_blank" rel="noopener noreferrer">${escapeHtml(edition.title)}</a>
+              <div class="search-result-date">${edition.year} · Alternate cut</div>
+              <div class="search-result-date">Official provider: ${escapeHtml(edition.provider)}</div>
+              <div class="search-result-date">Availability varies by region</div>
+            </div>`).join("")}
+        </div>
+      </section>` : "";
     if (!Array.isArray(this.rows) || !this.rows.length) {
+      if (officialEditionMarkup) return officialEditionMarkup;
       if (this.mode === "search") {
         return `
           <div class="search-empty-state search-empty-state-results">
@@ -859,7 +875,7 @@ export const SearchScreen = {
       `;
     }
 
-    return this.rows
+    return officialEditionMarkup + this.rows
       .map((row, rowIndex) => {
         const rowKey = row.stateKey || buildRowStateKey(row, rowIndex);
         const seeAllLabel = t("action_see_all", {}, "See All");
