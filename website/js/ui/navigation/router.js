@@ -7,6 +7,7 @@ import { PlayerSettingsStore } from "../../data/local/playerSettingsStore.js";
 import { AccountScreen } from "../screens/account/accountScreen.js";
 import { AuthQrSignInScreen } from "../screens/account/authQrSignInScreen.js";
 import { AuthSignInScreen } from "../screens/account/authSignInScreen.js";
+import { PublicHomeScreen } from "../screens/home/publicHomeScreen.js";
 import { SyncCodeScreen } from "../screens/account/syncCodeScreen.js";
 import { DeviceLinkScreen } from "../screens/account/deviceLinkScreen.js";
 import { ProfileSelectionScreen } from "../../core/profile/profileSelectionScreen.js";
@@ -211,6 +212,7 @@ export const Router = {
 
   routes: {
     home: HomeScreen,
+    publicHome: PublicHomeScreen,
     player: PlayerScreen,
     moviPlayer: MoviPlayerScreen,
     account: AccountScreen,
