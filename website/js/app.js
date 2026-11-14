@@ -7,6 +7,7 @@ import { FocusEngine } from "./ui/navigation/focusEngine.js";
 import { PlayerController } from "./core/player/playerController.js";
 import { AuthManager } from "./core/auth/authManager.js";
 import { AuthState } from "./core/auth/authState.js";
+import { isPublicHomeEntry } from "./ui/screens/home/guestHomeData.js";
 import { DeviceSessionRegistration } from "./core/auth/deviceSessionRegistration.js";
 import { ProfileManager } from "./core/profile/profileManager.js";
 import { ProfileSyncService } from "./core/profile/profileSyncService.js";
@@ -357,6 +358,10 @@ async function bootstrapApp() {
       hasSelectedProfileThisSession = false;
       const shouldBypassQr = Boolean(LocalStore.get(GUEST_QR_BYPASS_KEY, false));
       if (isSignedOutRouteAllowed()) {
+        return;
+      }
+      if (Platform.isBrowser() && isPublicHomeEntry(window.location.pathname)) {
+        void Router.navigate("home", {}, { replaceHistory: true, skipStackPush: true });
         return;
       }
       if (shouldBypassQr) {

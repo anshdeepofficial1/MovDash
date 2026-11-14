@@ -586,6 +586,7 @@ export const Router = {
       this.current &&
       (this.current !== routeName || options?.stackUnderItself) &&
       !NEVER_SUSPEND_ROUTES.has(this.current) &&
+      !this.routes[this.current]?.guestHomeActive &&
       !options?.replaceHistory &&
       !NON_BACKSTACK_ROUTES.has(this.current) &&
       Number.isInteger(outgoingHistoryIndex)
