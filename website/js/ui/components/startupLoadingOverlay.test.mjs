@@ -58,6 +58,8 @@ async function fixture(run) {
     children: {
       ".player-loading-status": child(),
       ".player-loading-detail": child(),
+      ".unified-startup-spinner": child(),
+      ".startup-loading-exit": { ...child(), hidden: true },
       ".startup-probe-actions": child(),
       ".startup-probe-skip": child(),
       ".startup-probe-choose": child(),
@@ -511,5 +513,48 @@ test("attempt details respect the loading-status setting and allow only known me
     overlay.setPlaybackAttempt({ sourceNumber: "secret", route: "secret", failedRoute: "secret" });
     assert.equal(status.textContent, "Preparing video…");
     assert.equal(detail.textContent, "");
+  });
+});
+
+test("prolonged startup gives a visible exit and cannot be overwritten by stage changes", async () => {
+  await fixture(({ overlay, nodes, settings }) => {
+    let callback = null;
+    let cancelled = 0;
+    const realSetTimeout = globalThis.setTimeout;
+    const realClearTimeout = globalThis.clearTimeout;
+    globalThis.setTimeout = (fn, ms) => {
+      assert.equal(ms, 45_000);
+      callback = fn;
+      return 123;
+    };
+    globalThis.clearTimeout = id => {
+      assert.equal(id, 123);
+      cancelled++;
+    };
+    try {
+      overlay.begin({ itemKey: "sample", title: "Test video" });
+      overlay.begin({ itemKey: "sample" }, "opening");
+      const node = nodes[0];
+      assert.ok(callback);
+      assert.equal(node.children[".startup-loading-exit"].hidden, true);
+      callback();
+      assert.equal(node.children[".player-loading-status"].textContent, "Playback has not started.");
+      assert.equal(node.children[".unified-startup-spinner"].classList.contains("hidden"), true);
+      assert.equal(node.children[".startup-loading-exit"].hidden, false);
+      settings.showPlayerLoadingStatus = false;
+      overlay.setStage("frame");
+      assert.equal(node.children[".player-loading-status"].textContent, "Playback has not started.");
+      let back = 0;
+      overlay.setBackHandler(() => back++);
+      node.children[".startup-loading-exit"].onclick();
+      assert.equal(back, 1);
+      assert.equal(nodes.length, 0);
+      overlay.begin({ itemKey: "new-sample" });
+      overlay.finish();
+      assert.equal(cancelled, 1);
+    } finally {
+      globalThis.setTimeout = realSetTimeout;
+      globalThis.clearTimeout = realClearTimeout;
+    }
   });
 });
