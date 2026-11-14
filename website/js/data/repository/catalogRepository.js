@@ -2,6 +2,7 @@ import { safeApiCall } from "../../core/network/safeApiCall.js";
 import { CatalogApi } from "../remote/api/catalogApi.js";
 import { addonRepository } from "./addonRepository.js";
 import { getEffectiveTmdbApiKey } from "../local/tmdbSettingsStore.js";
+import { fetchTmdbDiscover } from "../../core/tmdb/tmdbDiscover.js";
 
 const ADDON_POSTER_SHAPES = ["poster", "landscape", "square"];
 
@@ -56,17 +57,17 @@ class CatalogRepository {
     if (String(addonId || "").startsWith("zylo-")) {
       return safeApiCall(async () => {
         const apiKey = getEffectiveTmdbApiKey();
-        let lang = "hi";
-        if (catalogId === "zylo_south") lang = "te|ta|ml|kn";
-        else if (catalogId === "zylo_punjabi") lang = "pa";
-        const page = Math.floor(skip / 20) + 1;
-        let url = `https://api.themoviedb.org/3/discover/movie?api_key=${encodeURIComponent(apiKey)}&with_original_language=${encodeURIComponent(lang)}&with_origin_country=IN&sort_by=popularity.desc&page=${page}`;
-        if (catalogId === "zylo_cartoons") {
-          url = `https://api.themoviedb.org/3/discover/tv?api_key=${encodeURIComponent(apiKey)}&with_genres=16,10751&sort_by=popularity.desc&page=${page}`;
-        }
-        const resp = await fetch(url, signal ? { signal } : {});
-        const json = resp.ok ? await resp.json() : { results: [] };
+        if (!apiKey) throw new Error("TMDB API key is not configured");
         const isCartoons = catalogId === "zylo_cartoons";
+        const language = catalogId === "zylo_south" ? "te|ta|ml|kn" : catalogId === "zylo_punjabi" ? "pa" : "hi";
+        const page = Math.floor(skip / 20) + 1;
+        const params = new URLSearchParams({ api_key: apiKey, page: String(page), sort_by: "popularity.desc" });
+        if (isCartoons) params.set("with_genres", "16,10751");
+        else {
+          params.set("with_original_language", language);
+          params.set("with_origin_country", "IN");
+        }
+        const json = await fetchTmdbDiscover({ mediaType: isCartoons ? "tv" : "movie", params, signal });
         const items = (Array.isArray(json?.results) ? json.results : []).map((m) => ({
           id: `tmdb:${m.id}`,
           type: isCartoons ? "series" : "movie",
@@ -92,7 +93,7 @@ class CatalogRepository {
           apiType: type,
           items,
           isLoading: false,
-          hasMore: items.length > 0,
+          hasMore: page < json.total_pages,
           currentPage: page,
           supportsSkip: true
         };
