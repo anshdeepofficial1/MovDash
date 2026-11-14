@@ -9,6 +9,7 @@ import { watchedItemsRepository } from "../../../data/repository/watchedItemsRep
 import { CollectionsStore } from "../../../data/local/collectionsStore.js";
 import { LayoutPreferences } from "../../../data/local/layoutPreferences.js";
 import { TmdbService } from "../../../core/tmdb/tmdbService.js";
+import { fetchTmdbDiscover } from "../../../core/tmdb/tmdbDiscover.js";
 import {
   getEffectiveTmdbApiKey,
   TmdbSettingsStore
@@ -480,7 +481,7 @@ async function fetchJson(url, options = {}) {
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(
-      String(payload?.message || payload?.error || response.statusText || "Request failed")
+      String(payload?.status_message || payload?.message || payload?.error || response.statusText || "Request failed")
     );
   }
   return { response, payload };
@@ -725,8 +726,7 @@ async function fetchTmdbSourceItems(source = {}, page = 1) {
     );
     params.set("with_status", "0|3|4");
   }
-  const url = `${TMDB_API_URL}/discover/${mediaType}?${params.toString()}`;
-  const { payload } = await fetchJson(url);
+  const payload = await fetchTmdbDiscover({ mediaType, params });
   return {
     items: (Array.isArray(payload?.results) ? payload.results : [])
       .map((item) => mapTmdbListItem(item, mediaType))
