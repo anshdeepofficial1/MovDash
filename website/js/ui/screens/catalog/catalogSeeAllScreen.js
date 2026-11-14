@@ -210,7 +210,8 @@ export const CatalogSeeAllScreen = {
     this.items = this.layoutPrefs?.hideUnreleasedContent
       ? filterReleasedItems(initialItems)
       : [...initialItems];
-    this.nextSkip = this.items.length ? 100 : 0;
+    // Regional cards may be a truncated preview; reload page one and deduplicate.
+    this.nextSkip = String(params?.addonId || "").startsWith("zylo-") ? 0 : (this.items.length ? 100 : 0);
     this.loading = false;
     this.hasMore = true;
     this.lastFocusedKey = this.items[0]?.id ? `item:${this.items[0].id}` : null;
@@ -240,7 +241,7 @@ export const CatalogSeeAllScreen = {
     }
 
     this.render();
-    if (!this.items.length) {
+    if (!this.items.length || this.nextSkip === 0) {
       await this.loadNextPage();
     }
   },
@@ -299,9 +300,9 @@ export const CatalogSeeAllScreen = {
         this.items.push(item);
         addedCount += 1;
       });
-      this.nextSkip = skip + 100;
+      this.nextSkip = skip + (String(descriptor.addonId || "").startsWith("zylo-") ? 20 : 100);
     }
-    this.hasMore = rawIncoming.length > 0;
+    this.hasMore = Boolean(result.data?.hasMore && rawIncoming.length > 0);
     this.loading = false;
     this.pendingRestoreFocus = true;
     this.preserveViewportOnNextRender = Boolean(preserveViewport && addedCount > 0);
