@@ -2,6 +2,9 @@ import { playbackCompletionPreparation } from "../../../data/repository/playback
 import { isWatchProgressFromOtherSource } from "../../../data/repository/watchProgressProvenance.js";
 import { watchProgressCardKey } from "../../../domain/model/watchProgress.js";
 import { Router } from "../../navigation/router.js";
+import { AuthManager } from "../../../core/auth/authManager.js";
+import { AuthState } from "../../../core/auth/authState.js";
+import { guestProfilePresentation, loadGuestHomeRows } from "./guestHomeData.js";
 import { ensureSpatialFocusVisible, ScreenUtils } from "../../navigation/screen.js";
 import { addonRepository } from "../../../data/repository/addonRepository.js";
 import { catalogRepository } from "../../../data/repository/catalogRepository.js";
@@ -2826,6 +2829,7 @@ export const HomeScreen = {
   },
 
   captureRouteState({ nextRoute } = {}) {
+    if (this.guestHomeActive) return null;
     const route = String(nextRoute || "");
     const isBrowserDrillDown = BROWSER_HOME_DRILL_DOWN_ROUTES.has(route);
     if (Platform.isBrowser() && !isBrowserDrillDown) {
@@ -3905,6 +3909,7 @@ export const HomeScreen = {
   },
 
   requestRender(options = {}) {
+    if (this.guestHomeActive) return;
     if (!this.container || Router.getCurrent() !== "home") {
       // Dropping it outright is what left an already-correct row unpainted: a
       // return from an external player lands on Stream, so the write that
@@ -7427,6 +7432,7 @@ export const HomeScreen = {
   // Android TV app. Clears the remembered content focus so we land on the very
   // first row, resets the scroll position, then moves focus into the content.
   onSidebarReselect() {
+    if (this.guestHomeActive) { this.container?.querySelector(".home-main")?.scrollTo?.(0, 0); return; }
     const viewport = this.getHomeViewport();
     if (viewport) {
       viewport.scrollTop = 0;
@@ -9001,9 +9007,126 @@ export const HomeScreen = {
     viewport.addEventListener("scroll", this.boundHomeViewportScrollHandler, { passive: true });
   },
 
+  // Signed-out browsing uses the actual Home route, shell, hero and card renderers.
+  // It does not initialize profile stores, sync, addons, or playback.
+  async mountGuestHome() {
+    this.guestHomeActive = true;
+    this.homeLoadToken = (this.homeLoadToken || 0) + 1;
+    this.hasLoadedOnce = false;
+    this.guestHomeRows = [];
+    this.guestHomeSearch = false;
+    this.guestHomeQuery = "";
+    this.guestHomeStatus = "Loading movies…";
+    this.renderGuestHome();
+    void this.reloadGuestHome();
+  },
+
+  async reloadGuestHome(query = this.guestHomeQuery || "") {
+    this.guestHomeController?.abort();
+    const controller = new AbortController();
+    this.guestHomeController = controller;
+    this.guestHomeQuery = query;
+    this.guestHomeStatus = query ? "Searching…" : "Loading movies…";
+    this.guestHomeRows = [];
+    this.renderGuestHome();
+    try {
+      const rows = await loadGuestHomeRows({ signal: controller.signal, query });
+      if (controller.signal.aborted || !this.guestHomeActive) return;
+      this.guestHomeRows = rows;
+      this.guestHomeStatus = rows.some(row => row.result.data.items.length) ? "" : "No movies found.";
+    } catch {
+      if (controller.signal.aborted || !this.guestHomeActive) return;
+      this.guestHomeStatus = "Catalog unavailable. Try again.";
+    }
+    this.renderGuestHome();
+  },
+
+  renderGuestHome() {
+    if (!this.guestHomeActive || !this.container) return;
+    const rows = this.guestHomeRows || [];
+    const heroItem = this.guestHomeSearch ? null : rows.flatMap(row => row.result.data.items).find(item => item.background) || null;
+    const { markup } = renderModernHomeLayout({
+      rows,
+      heroItem,
+      heroCandidates: heroItem ? [heroItem] : [],
+      showHeroSection: Boolean(heroItem),
+      continueWatchingItems: [],
+      upcomingItems: [],
+      rowItemLimit: 20,
+      showCatalogTypeSuffix: false,
+      buildModernHeroPresentation,
+      renderHeroBackdropImage,
+      renderContinueWatchingSection,
+      createPosterCardMarkup,
+      createSeeAllCardMarkup,
+      formatCatalogRowTitle,
+      shouldDeferRowImages: () => false,
+      watchedTitleIds: new Set(),
+      escapeHtml,
+      escapeAttribute
+    });
+    const navigation = renderDesktopNavigation({ selectedRoute: this.guestHomeSearch ? "search" : "home", profile: guestProfilePresentation() });
+    this.container.innerHTML = `
+      <div class="home-shell home-screen-shell home-layout-modern desktop-navigation-enabled${heroItem ? "" : " home-hero-disabled"}" style="${escapeAttribute(buildModernHomeSizingStyle({}))}">
+        ${navigation}
+        <main class="home-main home-screen-main">
+          <div class="home-route-content">
+            ${this.guestHomeSearch ? `<form class="home-guest-search" data-guest-search><input type="search" aria-label="Search movies" placeholder="Search movies" value="${escapeAttribute(this.guestHomeQuery || "")}"><button type="submit">Search</button></form>` : ""}
+            ${this.guestHomeStatus ? `<div class="home-guest-status" role="status">${escapeHtml(this.guestHomeStatus)}${this.guestHomeStatus.includes("unavailable") ? ' <button type="button" data-guest-retry>Retry</button>' : ""}</div>` : ""}
+            ${markup}
+          </div>
+        </main>
+      </div>`;
+    bindDesktopNavigationEvents(this.container, route => {
+      if (route === "home" || route === "search") {
+        const search = route === "search";
+        if (this.guestHomeSearch !== search) {
+          this.guestHomeSearch = search;
+          void this.reloadGuestHome("");
+        }
+        if (search) this.container.querySelector("[data-guest-search] input")?.focus();
+        return;
+      }
+      void Router.navigate("authSignIn");
+    });
+    this.container.querySelector("[data-guest-search]")?.addEventListener("submit", event => {
+      event.preventDefault();
+      void this.reloadGuestHome(event.currentTarget.querySelector("input").value.trim());
+    });
+    this.container.querySelector("[data-guest-retry]")?.addEventListener("click", () => void this.reloadGuestHome());
+    const openMetadata = id => {
+      const match = /^tmdb:(\d+)$/.exec(String(id || ""));
+      if (match) window.open("https://www.themoviedb.org/movie/" + match[1], "_blank", "noopener,noreferrer");
+    };
+    this.container.querySelectorAll(".home-content-card[data-item-id]").forEach(card => {
+      card.setAttribute("role", "link");
+      card.addEventListener("click", () => openMetadata(card.dataset.itemId));
+      card.addEventListener("keydown", event => {
+        if(event.key === "Enter" || event.key === " ") { event.preventDefault(); openMetadata(card.dataset.itemId); }
+      });
+    });
+    if (heroItem) {
+      const copy = this.container.querySelector(".home-hero-copy");
+      if (copy) {
+        const details = document.createElement("button");
+        details.type = "button";
+        details.className = "desktop-hero-details-button";
+        details.textContent = "View Details";
+        details.addEventListener("click", () => openMetadata(heroItem.id));
+        copy.append(details);
+      }
+    }
+  },
+
   async mount(params = {}, navigationContext = {}) {
     const mountStart = HOME_PERF_DEBUG ? homePerfNow() : 0;
     this.container = document.getElementById("home");
+    if (Platform.isBrowser() && AuthManager.getAuthState() === AuthState.SIGNED_OUT) {
+      ScreenUtils.show(this.container);
+      await this.mountGuestHome();
+      return;
+    }
+    this.guestHomeActive = false;
     this.bindCollectionStoreSubscription();
     this.bindCatalogHydrationSubscriptions();
     this.bindContinueWatchingStoreSubscriptions();
@@ -9434,6 +9557,7 @@ export const HomeScreen = {
   // happened, or a Watch Progress source switched while Home was covered, was
   // to reload the page.
   onRouteRevealed() {
+    if (this.guestHomeActive) return;
     if (
       this.loadedWatchProgressSourceKey ===
         watchProgressRepository.getContinueWatchingSourceKey() &&
@@ -9620,6 +9744,7 @@ export const HomeScreen = {
   },
 
   async loadData({ background = false, preserveReturnState = false } = {}) {
+    if (this.guestHomeActive) { await this.reloadGuestHome(); return; }
     if (isBrowserOfflineNow()) {
       this.browserOfflineHome = true;
       this.browserOfflineHomeRecoverable = false;
@@ -10530,6 +10655,7 @@ export const HomeScreen = {
   },
 
   render() {
+    if (this.guestHomeActive) return;
     const renderStart = HOME_PERF_DEBUG ? homePerfNow() : 0;
     this.deferredRenderPending = false;
     this.cancelScheduledRender();
@@ -12536,6 +12662,7 @@ export const HomeScreen = {
   },
 
   onKeyDown(event) {
+    if (this.guestHomeActive) return;
     if (
       Platform.isBrowser() &&
       event?.target?.closest?.(
@@ -12667,6 +12794,7 @@ export const HomeScreen = {
   },
 
   consumeBackRequest() {
+    if (this.guestHomeActive) return false;
     if (this._homeHoldDialog) {
       this._homeHoldDialog.destroy();
       if (this.continueWatchingMenu) {
@@ -13196,6 +13324,15 @@ export const HomeScreen = {
   },
 
   cleanup() {
+    if (this.guestHomeActive) {
+      this.guestHomeController?.abort();
+      this.guestHomeController = null;
+      this.guestHomeActive = false;
+      this.guestHomeRows = [];
+      this.container?.replaceChildren();
+      ScreenUtils.hide(this.container);
+      return;
+    }
     if (this.browserOfflineHomeEventsBound) {
       window.removeEventListener("offline", this.browserOfflineHomeOfflineHandler);
       window.removeEventListener("online", this.browserOfflineHomeOnlineHandler);
