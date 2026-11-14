@@ -7,6 +7,7 @@ import { FocusEngine } from "./ui/navigation/focusEngine.js";
 import { PlayerController } from "./core/player/playerController.js";
 import { AuthManager } from "./core/auth/authManager.js";
 import { AuthState } from "./core/auth/authState.js";
+import { shouldOpenPublicHome } from "./core/auth/publicHomePolicy.js";
 import { DeviceSessionRegistration } from "./core/auth/deviceSessionRegistration.js";
 import { ProfileManager } from "./core/profile/profileManager.js";
 import { ProfileSyncService } from "./core/profile/profileSyncService.js";
@@ -50,7 +51,7 @@ const BUILD_STAMP = typeof __NUVIO_BUILD_STAMP__ === "string" ? __NUVIO_BUILD_ST
 globalThis.__NUVIO_BUILD_STAMP__ = BUILD_STAMP;
 
 const GUEST_QR_BYPASS_KEY = "skipAuthQrGate";
-const SIGNED_OUT_ALLOWED_ROUTES = new Set(["trakt"]);
+const SIGNED_OUT_ALLOWED_ROUTES = new Set(["trakt", "publicHome"]);
 let hasSelectedProfileThisSession = false;
 function isBrowserReload() {
   return Platform.isBrowser() && globalThis.performance?.getEntriesByType?.("navigation")?.[0]?.type === "reload";
@@ -357,6 +358,10 @@ async function bootstrapApp() {
       hasSelectedProfileThisSession = false;
       const shouldBypassQr = Boolean(LocalStore.get(GUEST_QR_BYPASS_KEY, false));
       if (isSignedOutRouteAllowed()) {
+        return;
+      }
+      if (shouldOpenPublicHome({ isBrowser: Platform.isBrowser(), pathname: window.location.pathname, hasLegacyGuestChoice: shouldBypassQr })) {
+        void Router.navigate("publicHome", {}, { replaceHistory: true, skipStackPush: true });
         return;
       }
       if (shouldBypassQr) {
