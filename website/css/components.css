@@ -21836,6 +21836,21 @@ html[data-card-depth="true"][data-card-depth-trailers="true"] .detail-trailer-ca
   outline: 3px solid white;
 }
 
+.startup-loading-exit:not([hidden]) {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 6px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  color: white;
+  background: rgba(18, 18, 20, 0.7);
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.startup-loading-exit:focus-visible { outline: 2px solid white; outline-offset: 2px; }
+.unified-startup-overlay .unified-startup-spinner.hidden { display: none; }
+
 .startup-probe-actions:not([hidden]) {
   display: flex;
   flex-wrap: wrap;

@@ -37,6 +37,9 @@ let backHandler = null;
 let probeActions = null;
 let orientation = null;
 let artworkResize = null;
+let startupDeadline = null;
+let startupDelayed = false;
+const STARTUP_NOTICE_MS = 45_000;
 
 export const StartupLoadingOverlay = {
   get orientation() {
@@ -47,6 +50,24 @@ export const StartupLoadingOverlay = {
   },
   get probing() {
     return Boolean(probeActions);
+  },
+  // A presentation deadline, not a provider retry or playback policy.
+  markStartupDelayed() {
+    if (!host) return;
+    startupDelayed = true;
+    const status = host.querySelector(".player-loading-status");
+    if (status) {
+      status.textContent = I18n.t("startup_loading_delayed", {}, { fallback: "Playback has not started." });
+      status.classList.toggle("hidden", false);
+    }
+    const detail = host.querySelector(".player-loading-detail");
+    if (detail) {
+      detail.textContent = I18n.t("startup_loading_delayed_help", {}, { fallback: "The video is taking too long to load. Go back to leave this screen." });
+      detail.classList.toggle("hidden", false);
+    }
+    host.querySelector(".unified-startup-spinner")?.classList.toggle("hidden", true);
+    const exit = host.querySelector(".startup-loading-exit");
+    if (exit) exit.hidden = false;
   },
   setProbeActions(actions, meta) {
     if (meta?.itemKey && presentation.itemKey && meta.itemKey !== presentation.itemKey)
@@ -108,6 +129,7 @@ export const StartupLoadingOverlay = {
           ${renderLoadingIndicator({ className: "unified-startup-spinner" })}
           <div class="player-loading-status" role="status" aria-live="polite"></div>
           <div class="player-loading-detail hidden"></div>
+          <button type="button" class="startup-loading-exit focusable" hidden>Go back</button>
           <div class="startup-probe-actions" hidden>
             <button type="button" class="focusable startup-probe-skip"></button>
             <button type="button" class="focusable startup-probe-choose"></button>
@@ -115,6 +137,11 @@ export const StartupLoadingOverlay = {
         </div>`;
       const back = host.querySelector(".startup-loading-back");
       if (back) back.onclick = () => this.back();
+      const exit = host.querySelector(".startup-loading-exit");
+      if (exit) {
+        exit.textContent = I18n.t("common.back", {}, { fallback: "Go back" });
+        exit.onclick = () => this.back();
+      }
       const skip = host.querySelector(".startup-probe-skip");
       if (skip) {
         skip.textContent = I18n.t("skip_generic", {}, { fallback: "Skip" });
@@ -126,6 +153,11 @@ export const StartupLoadingOverlay = {
         choose.onclick = () => probeActions?.onChooseStream();
       }
       document.body.appendChild(host);
+      const owner = host;
+      startupDeadline = setTimeout(() => {
+        startupDeadline = null;
+        if (host === owner) this.markStartupDelayed();
+      }, STARTUP_NOTICE_MS);
       orientation = createPlayerOrientation(host, {
         preference: meta.orientation || "landscape",
         manageBody: false,
@@ -204,6 +236,10 @@ export const StartupLoadingOverlay = {
     else if (STAGES[nextStage]) stage = nextStage;
     const actions = host?.querySelector(".startup-probe-actions");
     if (actions) actions.hidden = !probeActions;
+    if (startupDelayed) {
+      this.markStartupDelayed();
+      return;
+    }
     if (stage === "frame" || stage === "restoring") relayText = "";
     const node = host?.querySelector(".player-loading-status");
     if (!node) return;
@@ -323,6 +359,9 @@ export const StartupLoadingOverlay = {
     this.setStage(stage);
   },
   finish(_reason = "finished") {
+    if (startupDeadline !== null) clearTimeout(startupDeadline);
+    startupDeadline = null;
+    startupDelayed = false;
     if (artworkResize) globalThis.removeEventListener?.("resize", artworkResize);
     artworkResize = null;
     orientation?.destroy();
