@@ -225,6 +225,12 @@ internal fun settingsSearchEntries(
         title = pageTitles.getValue(SettingsPage.About),
         description = stringResource(Res.string.compose_settings_root_about_description),
     )
+    addPage(
+        page = SettingsPage.Downloads,
+        key = "downloads",
+        title = pageTitles.getValue(SettingsPage.Downloads),
+        description = stringResource(Res.string.compose_settings_root_downloads_description),
+    )
     playbackSections.forEach { section ->
         addRow(
             page = section.page,

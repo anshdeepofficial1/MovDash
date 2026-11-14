@@ -1,7 +1,7 @@
 package com.nuvio.app.features.player
 
 internal data class PlaybackBufferSettings(
-    val enabled: Boolean = false,
+    val enabled: Boolean = true,
     val minBufferMs: Int = DEFAULT_MIN_BUFFER_MS,
     val maxBufferMs: Int = DEFAULT_MAX_BUFFER_MS,
     val bufferForPlaybackMs: Int = DEFAULT_BUFFER_FOR_PLAYBACK_MS,

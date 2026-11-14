@@ -667,6 +667,9 @@ private fun MobileSettingsScreen(
                     page = page,
                     onPageChange = onPageChange,
                 )
+                SettingsPage.Downloads -> item {
+                    DownloadsSettingsPage(isTablet = false)
+                }
                 SettingsPage.Streams -> streamsSettingsContent(
                     isTablet = false,
                 )
@@ -1068,6 +1071,9 @@ private fun TabletSettingsScreen(
                         page = page,
                         onPageChange = ::openInlinePage,
                     )
+                    SettingsPage.Downloads -> item {
+                        DownloadsSettingsPage(isTablet = true)
+                    }
                     SettingsPage.Streams -> streamsSettingsContent(
                         isTablet = true,
                     )

@@ -142,6 +142,7 @@ import {
   selectCompletedOfflineDetailDownloads
 } from "./offlineDetailData.js";
 import { enqueueBrowserOfflineDownload } from "../../../core/offline/browserOfflineDownloadQueue.js";
+import { DownloadPreferencesStore } from "../../../data/local/downloadPreferencesStore.js";
 import {
   enqueueSeasonDownloadSelections,
   firstEligibleSeasonDownloadStream,
@@ -4601,6 +4602,9 @@ export const MetaDetailsScreen = {
             </button>
             ${showWatchedButton ? `<button class="series-circle-btn focusable${this.isMarkedWatched ? " is-selected" : ""}" data-action="toggleWatched" aria-label="${escapeAttribute(this.isMarkedWatched ? t("common.markUnwatched", {}, "Mark Unwatched") : t("common.markWatched", {}, "Mark Watched"))}">${renderWatchedGlyph(this.isMarkedWatched)}</button>` : ""}
             ${trailerButton}
+            <button class="series-circle-btn focusable" data-action="openDownloadDialog" aria-label="${escapeAttribute(t("offline.download", {}, "Download"))}" title="${escapeAttribute(t("offline.download", {}, "Download"))}">
+              <span class="material-icons" aria-hidden="true">download</span>
+            </button>
             ${this.renderHeroOfflineSubtitleButton()}
             ${downloadedIndicator}
           </div>
@@ -5410,7 +5414,7 @@ export const MetaDetailsScreen = {
   },
 
   renderSeasonDownloadAction() {
-    if (!Platform.isBrowser() || !isBrowserOfflineDownloadSupported()) return "";
+    if (!Platform.isBrowser()) return "";
     const episodes = this.getSelectedSeasonEpisodes();
     if (!episodes.length) return "";
     const completed = episodes.filter((episode) =>
@@ -5675,7 +5679,20 @@ export const MetaDetailsScreen = {
   },
 
   async openSeasonDownloadDialog() {
-    if (!Platform.isBrowser() || !isBrowserOfflineDownloadSupported()) return;
+    if (!Platform.isBrowser()) return;
+    if (!isBrowserOfflineDownloadSupported()) {
+      this.showSeasonDownloadDialog({
+        title: t("offline.downloadSeason", {}, "Download Season"),
+        subtitle: "Offline browser storage is not supported in this browser. Please use the ZYLO Android App for full offline downloads, or open an episode to stream directly.",
+        buttons: [
+          {
+            label: t("common.close", {}, "Close"),
+            onAction: () => this.closeSeasonDownloadDialog()
+          }
+        ]
+      });
+      return;
+    }
     if (globalThis.navigator?.onLine === false) {
       this.showSeasonDownloadDialog({
         title: t("offline.downloadSeason", {}, "Download Season"),
@@ -5718,6 +5735,106 @@ export const MetaDetailsScreen = {
       return;
     }
     this.showSeasonDownloadModeDialog(flow);
+  },
+
+  openMovieDownloadModal() {
+    if (!Platform.isBrowser()) return;
+    const prefs = DownloadPreferencesStore.get();
+    let selectedQuality = prefs.preferredQuality !== "ask" ? prefs.preferredQuality : "1080p";
+    let includeSubtitles = prefs.includeSubtitles;
+    let rememberChoice = prefs.rememberChoice;
+
+    const content = document.createElement("div");
+    content.className = "movie-download-dialog-content";
+    content.style.padding = "14px 0";
+
+    const updateEstimatedSize = () => {
+      const sizeEl = content.querySelector(".movie-download-size-est");
+      if (sizeEl) {
+        const est = selectedQuality === "1080p" ? "1.8 GB" : selectedQuality === "720p" ? "950 MB" : "450 MB";
+        sizeEl.textContent = `Estimated file size: ~${est}`;
+      }
+    };
+
+    content.innerHTML = `
+      <div style="margin-bottom: 16px;">
+        <label style="display:block; font-size: 13px; color: var(--color-text-secondary, #a1a1aa); margin-bottom: 8px;">Select Download Quality</label>
+        <div class="quality-chips" style="display:flex; gap: 8px;">
+          <button type="button" class="chip-btn ${selectedQuality === "1080p" ? "selected" : ""}" data-quality="1080p" style="padding: 8px 14px; border-radius: 8px; border: 1px solid ${selectedQuality === "1080p" ? "var(--color-primary, #6366f1)" : "#3f3f46"}; background: ${selectedQuality === "1080p" ? "rgba(99,102,241,0.2)" : "transparent"}; color: white; cursor: pointer;">1080p Full HD</button>
+          <button type="button" class="chip-btn ${selectedQuality === "720p" ? "selected" : ""}" data-quality="720p" style="padding: 8px 14px; border-radius: 8px; border: 1px solid ${selectedQuality === "720p" ? "var(--color-primary, #6366f1)" : "#3f3f46"}; background: ${selectedQuality === "720p" ? "rgba(99,102,241,0.2)" : "transparent"}; color: white; cursor: pointer;">720p HD</button>
+          <button type="button" class="chip-btn ${selectedQuality === "480p" ? "selected" : ""}" data-quality="480p" style="padding: 8px 14px; border-radius: 8px; border: 1px solid ${selectedQuality === "480p" ? "var(--color-primary, #6366f1)" : "#3f3f46"}; background: ${selectedQuality === "480p" ? "rgba(99,102,241,0.2)" : "transparent"}; color: white; cursor: pointer;">480p SD</button>
+        </div>
+        <p class="movie-download-size-est" style="font-size: 12px; color: #a1a1aa; margin-top: 8px;">Estimated file size: ~1.8 GB</p>
+      </div>
+      <div style="margin-bottom: 14px; display: flex; align-items: center; gap: 10px;">
+        <input type="checkbox" id="dl-subtitles" ${includeSubtitles ? "checked" : ""} style="width: 18px; height: 18px; cursor: pointer;" />
+        <label for="dl-subtitles" style="font-size: 14px; cursor: pointer; color: white;">Download with Subtitles</label>
+      </div>
+      <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+        <input type="checkbox" id="dl-remember" ${rememberChoice ? "checked" : ""} style="width: 18px; height: 18px; cursor: pointer;" />
+        <label for="dl-remember" style="font-size: 14px; cursor: pointer; color: white;">Remember my choice for future downloads</label>
+      </div>
+    `;
+
+    const chips = content.querySelectorAll(".chip-btn");
+    chips.forEach((btn) => {
+      btn.onclick = () => {
+        chips.forEach((c) => {
+          c.classList.remove("selected");
+          c.style.border = "1px solid #3f3f46";
+          c.style.background = "transparent";
+        });
+        btn.classList.add("selected");
+        btn.style.border = "1px solid var(--color-primary, #6366f1)";
+        btn.style.background = "rgba(99,102,241,0.2)";
+        selectedQuality = btn.dataset.quality;
+        updateEstimatedSize();
+      };
+    });
+
+    const subCheckbox = content.querySelector("#dl-subtitles");
+    if (subCheckbox) {
+      subCheckbox.onchange = () => {
+        includeSubtitles = subCheckbox.checked;
+      };
+    }
+
+    const rememberCheckbox = content.querySelector("#dl-remember");
+    if (rememberCheckbox) {
+      rememberCheckbox.onchange = () => {
+        rememberChoice = rememberCheckbox.checked;
+      };
+    }
+
+    updateEstimatedSize();
+
+    this.showSeasonDownloadDialog({
+      title: `Download ${this.meta?.name || "Movie"}`,
+      subtitle: "Choose download options",
+      content,
+      buttons: [
+        {
+          label: "Start Download",
+          className: "season-download-queue-action",
+          onAction: async () => {
+            if (rememberChoice) {
+              DownloadPreferencesStore.save({
+                preferredQuality: selectedQuality,
+                includeSubtitles,
+                rememberChoice: true
+              });
+            }
+            this.closeSeasonDownloadDialog();
+            this.openMovieStreamChooser({ manualSelection: true });
+          }
+        },
+        {
+          label: t("common.cancel", {}, "Cancel"),
+          className: "season-download-secondary-action",
+          onAction: () => this.closeSeasonDownloadDialog()
+        }
+      ]
+    });
   },
 
   showSeasonDownloadModeDialog(flow = this.seasonDownloadFlow) {
@@ -9122,7 +9239,8 @@ export const MetaDetailsScreen = {
           "toggleLibrary",
           "toggleWatched",
           "toggleTrailer",
-          "sendOfflineSubtitle"
+          "sendOfflineSubtitle",
+          "openDownloadDialog"
         ].includes(action)
       ) {
         return;
@@ -9144,6 +9262,13 @@ export const MetaDetailsScreen = {
         void this.openDesktopTrailerModal();
       } else if (action === "sendOfflineSubtitle") {
         void this.sendHeroOfflineSubtitle();
+      } else if (action === "openDownloadDialog") {
+        const isSeries = this.meta?.type === "series" || this.meta?.type === "tv" || Boolean(this.episodes?.length);
+        if (isSeries) {
+          void this.openSeasonDownloadDialog();
+        } else {
+          void this.openMovieDownloadModal();
+        }
       }
       event.preventDefault();
     };
@@ -12787,6 +12912,16 @@ export const MetaDetailsScreen = {
 
     if (action === "downloadSeason" && Platform.isBrowser()) {
       this.openSeasonDownloadDialog();
+      return;
+    }
+
+    if (action === "openDownloadDialog" && Platform.isBrowser()) {
+      const isSeries = this.meta?.type === "series" || this.meta?.type === "tv" || Boolean(this.episodes?.length);
+      if (isSeries) {
+        void this.openSeasonDownloadDialog();
+      } else {
+        void this.openMovieDownloadModal();
+      }
       return;
     }
 

@@ -211,6 +211,7 @@ import {
   requestBrowserOfflinePersistentStorage,
   subscribeToOfflineDownloads
 } from "../../../core/offline/browserOfflineDownloads.js";
+import { DownloadPreferencesStore } from "../../../data/local/downloadPreferencesStore.js";
 
 let settingsPlaybackContentSequence = 0;
 const SETTINGS_UI_STATE_KEY = "settingsScreenUiState";
@@ -10363,9 +10364,7 @@ export const SettingsScreen = {
 
   renderDownloadsSection(model) {
     const downloads = model.downloads || { supported: false };
-    if (!downloads.supported) {
-      return `${this.renderSectionHeader(SECTION_META.find((item) => item.id === "downloads"))}<div class="settings-group-card"><div class="settings-stack"><p class="settings-row-subtitle">Offline downloads are unavailable in this browser.</p></div></div>`;
-    }
+    const downloadPrefs = DownloadPreferencesStore.get();
     const count = (status) => Number(downloads.statusCounts?.[status] || 0);
     const persistent =
       downloads.persistent === true
@@ -10379,6 +10378,32 @@ export const SettingsScreen = {
       count("paused") +
       count("interrupted") +
       count("failed");
+
+    this.actionMap.set("downloads:quality", () => {
+      this.openOptionDialog({
+        title: "Default Download Quality",
+        options: [
+          { id: "ask", label: "Ask every time" },
+          { id: "1080p", label: "1080p (Full HD)" },
+          { id: "720p", label: "720p (HD)" },
+          { id: "480p", label: "480p (SD)" }
+        ],
+        selectedId: downloadPrefs.preferredQuality || "ask",
+        returnFocusKey: "downloads:quality",
+        onSelect: async (option) => {
+          DownloadPreferencesStore.save({ preferredQuality: option.id });
+          await this.render({ refreshModel: false });
+        }
+      });
+    });
+    this.actionMap.set("downloads:includeSubtitles", async () => {
+      DownloadPreferencesStore.save({ includeSubtitles: !downloadPrefs.includeSubtitles });
+      await this.render({ refreshModel: false });
+    });
+    this.actionMap.set("downloads:resetChoice", async () => {
+      DownloadPreferencesStore.resetRememberedChoice();
+      await this.render({ refreshModel: false });
+    });
     this.actionMap.set("downloads:syncOfflineProgress", () => {
       PlayerSettingsStore.set({
         syncOfflineProgress: !PlayerSettingsStore.get().syncOfflineProgress
@@ -10443,9 +10468,55 @@ export const SettingsScreen = {
         focusKey: "downloads:clearAll"
       })
     );
+
+    const preferencesHtml = `
+      <div class="settings-group-heading"><div class="settings-group-title">Preferences</div></div>
+      <div class="settings-group-card"><div class="settings-stack">
+        ${this.renderActionRow({
+          focusKey: "downloads:quality",
+          title: "Default Download Quality",
+          subtitle: "Preferred resolution when downloading movies or episodes.",
+          value: { ask: "Ask every time", "1080p": "1080p (Full HD)", "720p": "720p (HD)", "480p": "480p (SD)" }[downloadPrefs.preferredQuality] || "Ask every time",
+          leadingIcon: "high_quality"
+        })}
+        ${this.renderToggleRow({
+          focusKey: "downloads:includeSubtitles",
+          title: "Download Subtitles",
+          subtitle: "Automatically save available subtitles with offline media.",
+          checked: Boolean(downloadPrefs.includeSubtitles)
+        })}
+        ${this.renderActionRow({
+          focusKey: "downloads:rememberStatus",
+          title: "Remembered Choice",
+          subtitle: downloadPrefs.rememberChoice
+            ? `Active preference: Quality ${downloadPrefs.preferredQuality}, Subtitles ${downloadPrefs.includeSubtitles ? "On" : "Off"}`
+            : "No choice remembered. The download options sheet appears every time.",
+          value: downloadPrefs.rememberChoice ? "Active" : "None",
+          icon: null,
+          disabled: true
+        })}
+        ${downloadPrefs.rememberChoice ? this.renderActionRow({
+          focusKey: "downloads:resetChoice",
+          title: "Reset Remembered Choice",
+          subtitle: "Clear saved server and quality choice to show prompt again.",
+          leadingIcon: "refresh"
+        }) : ""}
+      </div></div>
+    `;
+
+    if (!downloads.supported) {
+      return `
+        ${this.renderSectionHeader(SECTION_META.find((item) => item.id === "downloads"))}
+        ${preferencesHtml}
+        <div class="settings-group-heading"><div class="settings-group-title">Storage</div></div>
+        <div class="settings-group-card"><div class="settings-stack"><p class="settings-row-subtitle" style="padding: 12px 16px;">Offline browser storage (OPFS) is unavailable in this browser. Use the ZYLO Android App for local offline downloads.</p></div></div>
+      `;
+    }
+
     return `
       ${this.renderSectionHeader(SECTION_META.find((item) => item.id === "downloads"))}
       ${this.downloadCleanupMessage ? `<div class="settings-text-dialog-message">${escapeHtml(this.downloadCleanupMessage)}</div>` : ""}
+      ${preferencesHtml}
       <div class="settings-group-heading"><div class="settings-group-title">Playback</div></div>
       <div class="settings-group-card"><div class="settings-stack">
         ${this.renderActionRow({ focusKey: "downloads:playbackTarget", title: "Play downloaded media with", subtitle: "Handing a file to another app copies it; that app then keeps its own copy.", value: { ask: "Ask every time", internal: "Nuvio player", external: "Another app" }[normalizeOfflinePlaybackTarget(model.player?.offlinePlaybackTarget)], leadingIcon: "play_circle" })}

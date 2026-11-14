@@ -56,6 +56,7 @@ const KEY_ALIASES = {
   // costs nothing and gives every locale the string it already has.
   "nav.settings": "nav_settings",
   "home_view_details": "common.viewDetails",
+  "offline.download": "downloads_download",
   "settings.account.signInWithQr": "account_signin_qr_title",
   "settings.account.signInWithQrSubtitle": "account_signin_qr_subtitle",
   "settings.account.signOut": "account_sign_out",

@@ -70,7 +70,7 @@ data class PlayerSettingsUiState(
     val mapDV7ToHevc: Boolean = false,
     val tunnelingEnabled: Boolean = false,
     val exoNativeMemoryEnabled: Boolean = false,
-    val bufferEngineEnabled: Boolean = false,
+    val bufferEngineEnabled: Boolean = true,
     val minBufferMs: Int = PlaybackBufferSettings.DEFAULT_MIN_BUFFER_MS,
     val maxBufferMs: Int = PlaybackBufferSettings.DEFAULT_MAX_BUFFER_MS,
     val bufferForPlaybackMs: Int = PlaybackBufferSettings.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
@@ -163,7 +163,7 @@ object PlayerSettingsRepository {
     private var mapDV7ToHevc = false
     private var tunnelingEnabled = false
     private var exoNativeMemoryEnabled = false
-    private var bufferEngineEnabled = false
+    private var bufferEngineEnabled = true
     private var minBufferMs = PlaybackBufferSettings.DEFAULT_MIN_BUFFER_MS
     private var maxBufferMs = PlaybackBufferSettings.DEFAULT_MAX_BUFFER_MS
     private var bufferForPlaybackMs = PlaybackBufferSettings.DEFAULT_BUFFER_FOR_PLAYBACK_MS
@@ -261,7 +261,7 @@ object PlayerSettingsRepository {
         mapDV7ToHevc = false
         tunnelingEnabled = false
         exoNativeMemoryEnabled = false
-        bufferEngineEnabled = false
+        bufferEngineEnabled = true
         minBufferMs = PlaybackBufferSettings.DEFAULT_MIN_BUFFER_MS
         maxBufferMs = PlaybackBufferSettings.DEFAULT_MAX_BUFFER_MS
         bufferForPlaybackMs = PlaybackBufferSettings.DEFAULT_BUFFER_FOR_PLAYBACK_MS
@@ -400,7 +400,7 @@ object PlayerSettingsRepository {
         vodCacheSizeMb = (PlayerSettingsStorage.loadVodCacheSizeMb() ?: VodCacheSizing.DEFAULT_SIZE_MB)
             .coerceIn(VodCacheSizing.MIN_SIZE_MB, VodCacheSizing.MAX_SIZE_MB)
         applyExoPlayerNativeMemory(exoNativeMemoryEnabled)
-        bufferEngineEnabled = PlayerSettingsStorage.loadBufferEngineEnabled() ?: false
+        bufferEngineEnabled = PlayerSettingsStorage.loadBufferEngineEnabled() ?: true
         minBufferMs = PlayerSettingsStorage.loadMinBufferMs() ?: PlaybackBufferSettings.DEFAULT_MIN_BUFFER_MS
         maxBufferMs = (PlayerSettingsStorage.loadMaxBufferMs() ?: PlaybackBufferSettings.DEFAULT_MAX_BUFFER_MS)
             .coerceAtLeast(minBufferMs)

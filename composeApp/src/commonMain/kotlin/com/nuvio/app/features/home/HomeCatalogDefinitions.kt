@@ -77,6 +77,17 @@ fun buildHomeCatalogDefinitions(addons: List<ManagedAddon>): List<HomeCatalogDef
             supportsPagination = true,
             descriptorSignature = "zylo_punjabi",
         ),
+        HomeCatalogDefinition(
+            key = "zylo:series:cartoons",
+            defaultTitle = "Cartoons & Kids Toons",
+            catalogName = "Cartoons & Kids Toons",
+            addonName = "ZYLO Kids",
+            manifestUrl = "",
+            type = "series",
+            catalogId = "zylo_cartoons",
+            supportsPagination = true,
+            descriptorSignature = "zylo_cartoons",
+        ),
     )
 
     val addonDefinitions = addons.enabledAddons().mapNotNull { addon ->

@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.nuvio.app.core.ui.NuvioLoadingIndicator
+import com.nuvio.app.features.downloads.DownloadOptionsDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -933,70 +934,78 @@ fun MetaDetailsScreen(
                 val onEpisodePlayClick: (MetaVideo) -> Unit = { video ->
                     val season = video.season
                     val episode = video.episode
-                    val playbackVideoId = buildPlaybackVideoId(
-                        parentMetaId = meta.id,
-                        seasonNumber = season,
-                        episodeNumber = episode,
-                        fallbackVideoId = video.id,
-                    )
-                    val streamVideoId = video.id.takeIf { it.isNotBlank() } ?: playbackVideoId
-                    val savedProgress = watchProgressUiState.progressForVideo(
-                        videoId = streamVideoId,
-                        parentMetaId = meta.id,
-                        seasonNumber = season,
-                        episodeNumber = episode,
-                    )
-                        ?.takeUnless { it.isCompleted }
-                    onPlay?.invoke(
-                        meta.type,
-                        streamVideoId,
-                        meta.id,
-                        meta.type,
-                        meta.name,
-                        meta.logo,
-                        meta.poster,
-                        meta.background,
-                        season,
-                        episode,
-                        video.title,
-                        video.thumbnail,
-                        video.overview,
-                        savedProgress?.lastPositionMs,
-                    )
+                    if (isAnime) {
+                        AniDashLauncher.launchAniDash(meta.name, meta.id, season, episode)
+                    } else {
+                        val playbackVideoId = buildPlaybackVideoId(
+                            parentMetaId = meta.id,
+                            seasonNumber = season,
+                            episodeNumber = episode,
+                            fallbackVideoId = video.id,
+                        )
+                        val streamVideoId = video.id.takeIf { it.isNotBlank() } ?: playbackVideoId
+                        val savedProgress = watchProgressUiState.progressForVideo(
+                            videoId = streamVideoId,
+                            parentMetaId = meta.id,
+                            seasonNumber = season,
+                            episodeNumber = episode,
+                        )
+                            ?.takeUnless { it.isCompleted }
+                        onPlay?.invoke(
+                            meta.type,
+                            streamVideoId,
+                            meta.id,
+                            meta.type,
+                            meta.name,
+                            meta.logo,
+                            meta.poster,
+                            meta.background,
+                            season,
+                            episode,
+                            video.title,
+                            video.thumbnail,
+                            video.overview,
+                            savedProgress?.lastPositionMs,
+                        )
+                    }
                 }
                 val onEpisodeManualPlayClick: (MetaVideo) -> Unit = { video ->
                     val season = video.season
                     val episode = video.episode
-                    val playbackVideoId = buildPlaybackVideoId(
-                        parentMetaId = meta.id,
-                        seasonNumber = season,
-                        episodeNumber = episode,
-                        fallbackVideoId = video.id,
-                    )
-                    val streamVideoId = video.id.takeIf { it.isNotBlank() } ?: playbackVideoId
-                    val savedProgress = watchProgressUiState.progressForVideo(
-                        videoId = streamVideoId,
-                        parentMetaId = meta.id,
-                        seasonNumber = season,
-                        episodeNumber = episode,
-                    )
-                        ?.takeUnless { it.isCompleted }
-                    onPlayManually?.invoke(
-                        meta.type,
-                        streamVideoId,
-                        meta.id,
-                        meta.type,
-                        meta.name,
-                        meta.logo,
-                        meta.poster,
-                        meta.background,
-                        season,
-                        episode,
-                        video.title,
-                        video.thumbnail,
-                        video.overview,
-                        savedProgress?.lastPositionMs,
-                    )
+                    if (isAnime) {
+                        AniDashLauncher.launchAniDash(meta.name, meta.id, season, episode)
+                    } else {
+                        val playbackVideoId = buildPlaybackVideoId(
+                            parentMetaId = meta.id,
+                            seasonNumber = season,
+                            episodeNumber = episode,
+                            fallbackVideoId = video.id,
+                        )
+                        val streamVideoId = video.id.takeIf { it.isNotBlank() } ?: playbackVideoId
+                        val savedProgress = watchProgressUiState.progressForVideo(
+                            videoId = streamVideoId,
+                            parentMetaId = meta.id,
+                            seasonNumber = season,
+                            episodeNumber = episode,
+                        )
+                            ?.takeUnless { it.isCompleted }
+                        onPlayManually?.invoke(
+                            meta.type,
+                            streamVideoId,
+                            meta.id,
+                            meta.type,
+                            meta.name,
+                            meta.logo,
+                            meta.poster,
+                            meta.background,
+                            season,
+                            episode,
+                            video.title,
+                            video.thumbnail,
+                            video.overview,
+                            savedProgress?.lastPositionMs,
+                        )
+                    }
                 }
                 if (showShuffle && showShuffleButton) {
                     EpisodeShuffleSheet(
@@ -1010,9 +1019,36 @@ fun MetaDetailsScreen(
                         onPlay = onEpisodePlayClick,
                         onPlayManually = onEpisodeManualPlayClick.takeIf { showManualPlayOption },
                         onStartFromBeginning = { video ->
-                            onPlay?.invoke(meta.type, video.id, meta.id, meta.type, meta.name, meta.logo,
-                                meta.poster, meta.background, video.season, video.episode, video.title,
-                                video.thumbnail, video.overview, 0L)
+                            if (isAnime) {
+                                AniDashLauncher.launchAniDash(meta.name, meta.id, video.season, video.episode)
+                            } else {
+                                onPlay?.invoke(meta.type, video.id, meta.id, meta.type, meta.name, meta.logo,
+                                    meta.poster, meta.background, video.season, video.episode, video.title,
+                                    video.thumbnail, video.overview, 0L)
+                            }
+                        },
+                    )
+                }
+                var showDownloadOptionsDialog by remember { mutableStateOf(false) }
+                var downloadTargetSubtitle by remember { mutableStateOf<String?>(null) }
+                val onDownloadClick: () -> Unit = {
+                    downloadTargetSubtitle = if (meta.type == "series" || hasEpisodes) {
+                        seriesAction?.let { "S${it.seasonNumber} E${it.episodeNumber} • ${it.episodeTitle ?: "Episode"}" } ?: "Season 1"
+                    } else null
+                    showDownloadOptionsDialog = true
+                }
+                val onDownloadSeasonClick: (Int) -> Unit = { seasonNum ->
+                    downloadTargetSubtitle = "Season $seasonNum"
+                    showDownloadOptionsDialog = true
+                }
+                if (showDownloadOptionsDialog) {
+                    DownloadOptionsDialog(
+                        title = meta.name,
+                        subtitle = downloadTargetSubtitle,
+                        onDismiss = { showDownloadOptionsDialog = false },
+                        onConfirm = { quality, server, language, includeSubs, rememberChoice ->
+                            showDownloadOptionsDialog = false
+                            NuvioToastController.show("Starting $quality download for ${meta.name}...")
                         },
                     )
                 }
@@ -1211,6 +1247,7 @@ fun MetaDetailsScreen(
                                                             onWatchedClick = toggleWatched,
                                                             onSaveClick = toggleSaved,
                                                             onSaveLongClick = openLibraryListPicker,
+                                                            onDownloadClick = onDownloadClick,
                                                         )
                                                     }
                                                 } else {
@@ -1331,6 +1368,8 @@ fun MetaDetailsScreen(
                                         onOpenMeta = onOpenMeta,
                                         onCastClick = onCastClick,
                                         onCompanyClick = onCompanyClick,
+                                        onDownloadClick = onDownloadClick,
+                                        onDownloadSeasonClick = onDownloadSeasonClick,
                                         sharedTransitionScope = sharedTransitionScope,
                                         animatedVisibilityScope = animatedVisibilityScope,
                                     )
@@ -2039,6 +2078,8 @@ private fun LazyListScope.configuredMetaSectionItems(
     onOpenMeta: ((MetaPreview) -> Unit)?,
     onCastClick: ((MetaPerson, String?) -> Unit)?,
     onCompanyClick: ((MetaCompany, String) -> Unit)?,
+    onDownloadClick: (() -> Unit)? = null,
+    onDownloadSeasonClick: ((Int) -> Unit)? = null,
     sharedTransitionScope: SharedTransitionScope?,
     animatedVisibilityScope: AnimatedVisibilityScope?,
 ) {
@@ -2349,6 +2390,8 @@ private fun ConfiguredMetaSections(
     onOpenMeta: ((MetaPreview) -> Unit)?,
     onCastClick: ((MetaPerson, String?) -> Unit)?,
     onCompanyClick: ((MetaCompany, String) -> Unit)?,
+    onDownloadClick: (() -> Unit)? = null,
+    onDownloadSeasonClick: ((Int) -> Unit)? = null,
     sharedTransitionScope: SharedTransitionScope?,
     animatedVisibilityScope: AnimatedVisibilityScope?,
 ) {
@@ -2387,6 +2430,7 @@ private fun ConfiguredMetaSections(
                     onWatchedClick = onWatchedClick,
                     onSaveClick = onSaveClick,
                     onSaveLongClick = onSaveLongClick,
+                    onDownloadClick = onDownloadClick,
                 )
             }
             MetaScreenSectionKey.OVERVIEW -> {
@@ -2455,6 +2499,7 @@ private fun ConfiguredMetaSections(
                         onEpisodeClick = onEpisodeClick,
                         onEpisodeLongPress = onEpisodeLongPress,
                         onSeasonLongPress = onSeasonLongPress,
+                        onDownloadSeasonClick = onDownloadSeasonClick,
                     )
                 }
             }

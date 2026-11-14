@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -83,6 +84,8 @@ fun NuvioScreen(
 ) {
     val tokens = MaterialTheme.nuvio
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val cutoutTop = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
+    val safeTop = maxOf(statusBarTop, cutoutTop)
     LazyColumn(
         state = listState,
         modifier = modifier
@@ -90,7 +93,7 @@ fun NuvioScreen(
             .background(tokens.colors.background),
         contentPadding = PaddingValues(
             start = horizontalPadding,
-            top = topPadding ?: tokens.spacing.screenTop + statusBarTop + nuvioPlatformExtraTopPadding,
+            top = topPadding ?: tokens.spacing.screenTop + safeTop + nuvioPlatformExtraTopPadding,
             end = horizontalPadding,
             bottom = nuvioSafeBottomPadding(tokens.spacing.screenBottom),
         ).withVerticalBar(),
@@ -142,6 +145,8 @@ fun NuvioScreenHeader(
 ) {
     val tokens = MaterialTheme.nuvio
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val cutoutTop = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
+    val safeTop = maxOf(statusBarTop, cutoutTop)
     val nativeDetailNavigation = LocalUseNativeNavigation.current &&
         !LocalNativeNavigationBarHidden.current &&
         onBack != null
@@ -156,7 +161,7 @@ fun NuvioScreenHeader(
         )
         return
     }
-    val resolvedTopPadding = topPadding ?: if (includeStatusBarPadding) statusBarTop else NuvioTokens.Space.none
+    val resolvedTopPadding = topPadding ?: if (includeStatusBarPadding) safeTop else NuvioTokens.Space.none
     Box(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -465,6 +470,8 @@ fun NuvioToastHost(
     val tokens = MaterialTheme.nuvio
     val toast by NuvioToastController.currentToast.collectAsState()
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val cutoutTop = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
+    val safeTop = maxOf(statusBarTop, cutoutTop)
     val visibilityState = remember { MutableTransitionState(false) }
     var renderedToast by remember { mutableStateOf<NuvioToastMessage?>(null) }
 
@@ -500,7 +507,7 @@ fun NuvioToastHost(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = statusBarTop + tokens.spacing.listGap)
+                .padding(top = safeTop + tokens.spacing.listGap)
                 .padding(horizontal = tokens.spacing.screenHorizontal),
             contentAlignment = Alignment.TopCenter,
         ) {

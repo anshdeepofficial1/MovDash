@@ -37,6 +37,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -112,6 +115,7 @@ fun DetailSeriesContent(
     onEpisodeClick: ((MetaVideo) -> Unit)? = null,
     onEpisodeLongPress: ((MetaVideo) -> Unit)? = null,
     onSeasonLongPress: ((Int) -> Unit)? = null,
+    onDownloadSeasonClick: ((Int) -> Unit)? = null,
 ) {
     val hasVideos = meta.videos.isNotEmpty()
     if (meta.type != "series" && !hasVideos) return
@@ -206,14 +210,45 @@ fun DetailSeriesContent(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    if (seasons.size == 1) {
-                        DetailSectionTitle(
-                            title = if (meta.type != "series" && seasonForContent <= 0) {
-                                stringResource(Res.string.details_videos)
-                            } else {
-                                seasonForContent.label()
-                            },
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalScrollPadding),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (seasons.size == 1) {
+                            DetailSectionTitle(
+                                title = if (meta.type != "series" && seasonForContent <= 0) {
+                                    stringResource(Res.string.details_videos)
+                                } else {
+                                    seasonForContent.label()
+                                },
+                            )
+                        } else {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                        if (onDownloadSeasonClick != null) {
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .clickable { onDownloadSeasonClick(seasonForContent) }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CloudDownload,
+                                    contentDescription = "Download Season",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                                Text(
+                                    text = "Download Season",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                        }
                     }
                     val seasonEpisodes = groupedEpisodes.getValue(seasonForContent)
                     if (episodeCardStyle == MetaEpisodeCardStyle.Horizontal) {

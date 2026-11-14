@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.Icon
@@ -257,6 +258,7 @@ fun DetailActions(
     onWatchedClick: () -> Unit,
     onSaveClick: () -> Unit,
     onSaveLongClick: (() -> Unit)?,
+    onDownloadClick: (() -> Unit)? = null,
     onMoreClick: (() -> Unit)? = null,
 ) {
     val shuffleAction = onShuffleClick?.let { onClick ->
@@ -290,6 +292,16 @@ fun DetailActions(
                     onLongClick = onSaveLongClick,
                 ),
             )
+            onDownloadClick?.let { onClick ->
+                add(
+                    DetailSecondaryAction(
+                        label = "Download",
+                        icon = Icons.Default.CloudDownload,
+                        isActive = false,
+                        onClick = onClick,
+                    ),
+                )
+            }
             onMoreClick?.let { onClick ->
                 add(
                     DetailSecondaryAction(

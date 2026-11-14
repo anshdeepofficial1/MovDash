@@ -236,23 +236,36 @@ object HomeRepository {
 
     private suspend fun HomeCatalogDefinition.toSection(forceRefresh: Boolean): HomeCatalogSection {
         serverConnectionId?.let { connectionId -> return toServerSection(connectionId) }
-        if (key.startsWith("zylo:movie:")) {
-            val lang = when (catalogId) {
-                "zylo_bollywood" -> "hi"
-                "zylo_south" -> "te|ta|ml|kn"
-                "zylo_punjabi" -> "pa"
-                else -> "hi"
+        if (key.startsWith("zylo:")) {
+            val isCartoons = catalogId == "zylo_cartoons"
+            val source = if (isCartoons) {
+                CollectionSource(
+                    provider = "tmdb",
+                    tmdbSourceType = TmdbCollectionSourceType.DISCOVER.name,
+                    mediaType = "tv",
+                    sortBy = TmdbCollectionSort.POPULAR_DESC.value,
+                    filters = TmdbCollectionFilters(
+                        withGenres = "16,10751",
+                    ),
+                )
+            } else {
+                val lang = when (catalogId) {
+                    "zylo_bollywood" -> "hi"
+                    "zylo_south" -> "te|ta|ml|kn"
+                    "zylo_punjabi" -> "pa"
+                    else -> "hi"
+                }
+                CollectionSource(
+                    provider = "tmdb",
+                    tmdbSourceType = TmdbCollectionSourceType.DISCOVER.name,
+                    mediaType = "movie",
+                    sortBy = TmdbCollectionSort.POPULAR_DESC.value,
+                    filters = TmdbCollectionFilters(
+                        withOriginalLanguage = lang,
+                        withOriginCountry = "IN",
+                    ),
+                )
             }
-            val source = CollectionSource(
-                provider = "tmdb",
-                tmdbSourceType = TmdbCollectionSourceType.DISCOVER.name,
-                mediaType = "movie",
-                sortBy = TmdbCollectionSort.POPULAR_DESC.value,
-                filters = TmdbCollectionFilters(
-                    withOriginalLanguage = lang,
-                    withOriginCountry = "IN",
-                ),
-            )
             val page = runCatching {
                 TmdbCollectionSourceResolver.resolve(source = source, page = 1)
             }.getOrNull() ?: CatalogPage(items = emptyList(), rawItemCount = 0, nextSkip = null)

@@ -9731,6 +9731,14 @@ export const HomeScreen = {
         catalogId: "zylo_punjabi",
         catalogName: "Punjabi Cinema",
         type: "movie"
+      },
+      {
+        addonBaseUrl: "https://zylo.app",
+        addonId: "zylo-cartoons",
+        addonName: "Cartoons & Kids Toons",
+        catalogId: "zylo_cartoons",
+        catalogName: "Cartoons & Kids Toons",
+        type: "series"
       }
     ];
 

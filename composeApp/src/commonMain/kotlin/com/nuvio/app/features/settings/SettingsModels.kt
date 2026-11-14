@@ -5,6 +5,7 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Dns
@@ -83,6 +84,11 @@ internal enum class SettingsPage(
     ),
     Playback(
         titleRes = Res.string.compose_settings_page_playback,
+        category = SettingsCategory.Watch,
+        parentPage = Root,
+    ),
+    Downloads(
+        titleRes = Res.string.compose_settings_root_downloads_title,
         category = SettingsCategory.Watch,
         parentPage = Root,
     ),
@@ -247,6 +253,7 @@ internal val SettingsPage.icon: ImageVector
         SettingsPage.SupportersContributors -> Icons.Default.Favorite
         SettingsPage.LicensesAttributions -> Icons.Default.Info
         SettingsPage.Playback -> Icons.Rounded.PlayArrow
+        SettingsPage.Downloads -> Icons.Default.CloudDownload
         SettingsPage.Appearance -> Icons.Default.Palette
         SettingsPage.Layout -> Icons.Default.GridView
         SettingsPage.About -> Icons.Default.Info

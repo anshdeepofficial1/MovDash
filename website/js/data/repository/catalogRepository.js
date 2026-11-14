@@ -60,24 +60,28 @@ class CatalogRepository {
         if (catalogId === "zylo_south") lang = "te|ta|ml|kn";
         else if (catalogId === "zylo_punjabi") lang = "pa";
         const page = Math.floor(skip / 20) + 1;
-        const url = `https://api.themoviedb.org/3/discover/movie?api_key=${encodeURIComponent(apiKey)}&with_original_language=${encodeURIComponent(lang)}&with_origin_country=IN&sort_by=popularity.desc&page=${page}`;
+        let url = `https://api.themoviedb.org/3/discover/movie?api_key=${encodeURIComponent(apiKey)}&with_original_language=${encodeURIComponent(lang)}&with_origin_country=IN&sort_by=popularity.desc&page=${page}`;
+        if (catalogId === "zylo_cartoons") {
+          url = `https://api.themoviedb.org/3/discover/tv?api_key=${encodeURIComponent(apiKey)}&with_genres=16,10751&sort_by=popularity.desc&page=${page}`;
+        }
         const resp = await fetch(url, signal ? { signal } : {});
         const json = resp.ok ? await resp.json() : { results: [] };
+        const isCartoons = catalogId === "zylo_cartoons";
         const items = (Array.isArray(json?.results) ? json.results : []).map((m) => ({
           id: `tmdb:${m.id}`,
-          type: "movie",
-          name: m.title || m.original_title || "Untitled",
+          type: isCartoons ? "series" : "movie",
+          name: m.title || m.name || m.original_title || m.original_name || "Untitled",
           poster: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null,
           background: m.backdrop_path ? `https://image.tmdb.org/t/p/w1280${m.backdrop_path}` : null,
           landscapePoster: m.backdrop_path ? `https://image.tmdb.org/t/p/w1280${m.backdrop_path}` : null,
           description: m.overview || "",
-          releaseInfo: String(m.release_date || "").slice(0, 4),
-          released: m.release_date || "",
+          releaseInfo: String(m.release_date || m.first_air_date || "").slice(0, 4),
+          released: m.release_date || m.first_air_date || "",
           imdbRating: typeof m.vote_average === "number" ? m.vote_average : null,
           rating: typeof m.vote_average === "number" ? m.vote_average : null,
           addonId,
           addonName,
-          catalogType: type
+          catalogType: isCartoons ? "series" : type
         }));
         const row = {
           addonId,

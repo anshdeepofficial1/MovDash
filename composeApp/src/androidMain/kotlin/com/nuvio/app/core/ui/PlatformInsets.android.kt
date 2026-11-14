@@ -6,6 +6,7 @@ import android.content.ContextWrapper
 import android.view.WindowManager
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
@@ -21,8 +22,11 @@ internal actual val nuvioBottomNavigationExtraVerticalPadding: Dp = 6.dp
 internal actual fun nuvioBottomNavigationBarInsets(): WindowInsets = WindowInsets.navigationBars
 
 @Composable
-internal actual fun platformPhysicalTopInset(): Dp =
-    WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+internal actual fun platformPhysicalTopInset(): Dp {
+    val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val cutout = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
+    return maxOf(statusBar, cutout)
+}
 
 @Composable
 internal actual fun ResizeForKeyboard() {

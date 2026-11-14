@@ -135,12 +135,12 @@ export const CastDetailScreen = {
     const token = this.loadToken;
     try {
       if (Platform.isBrowser()) {
-        const personId = String(this.params?.castId || this.params?.personId || "").trim();
-        if (!TmdbPersonService.isAvailable() || !/^\d+$/.test(personId)) {
-          this.renderError("Person details are unavailable.");
-          return;
+        let personId = String(this.params?.castId || this.params?.personId || "").trim();
+        const castName = String(this.params?.castName || "").trim();
+        if (!/^\d+$/.test(personId) && castName) {
+          personId = (await TmdbPersonService.searchPersonId(castName)) || personId;
         }
-        const person = await TmdbPersonService.fetchPerson({ personId });
+        const person = await TmdbPersonService.fetchPerson({ personId, name: castName });
         if (token !== this.loadToken) return;
         if (!person?.id) {
           this.renderError("Person profile not found.");
@@ -258,6 +258,12 @@ export const CastDetailScreen = {
   getCreditSections() {
     const allCredits = uniqueCredits(this.credits);
     if (Platform.isBrowser()) {
+      const today = todayIsoDate();
+      const upcoming = allCredits
+        .filter((item) => item.releaseDate && item.releaseDate > today)
+        .sort((left, right) =>
+          String(left.releaseDate || "").localeCompare(String(right.releaseDate || ""))
+        );
       return [
         {
           key: "popular",
@@ -268,6 +274,11 @@ export const CastDetailScreen = {
           key: "latest",
           title: t("person_latest", {}, "Latest"),
           items: sortPersonCreditsByLatest(allCredits)
+        },
+        {
+          key: "upcoming",
+          title: t("person_upcoming", {}, "Upcoming"),
+          items: upcoming
         }
       ].filter((section) => section.items.length);
     }

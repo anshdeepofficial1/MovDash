@@ -32,3 +32,6 @@ scripts/*
 *.keystore
 *.p12
 *.pfx
+
+release_apks/
+
